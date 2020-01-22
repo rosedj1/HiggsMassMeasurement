@@ -6,6 +6,7 @@ export PYTHONPATH=$PYTHONPATH:${PWD}/leptonPtErrorCorrector/doCorrection/
 export PYTHONPATH=$PYTHONPATH:${PWD}/leptonPtErrorCorrector/doCorrection/tmp/
 export PYTHONPATH=$PYTHONPATH:${PWD}/doClosure/
 export PYTHONPATH=$PYTHONPATH:${PWD}/doClosure/ZClosure/
+export PYTHONPATH=$PYTHONPATH:/home/rosedj1/HiggsMeasurement/CMSSW_10_2_15/src/HiggsMassMeasurement/
 export PYTHONPATH=$PYTHONPATH:/home/rosedj1/HiggsMeasurement/CMSSW_10_2_15/src/HiggsMassMeasurement/d0_Studies/
 
 export PATH=${PATH}:${PWD}/bin
