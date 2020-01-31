@@ -1,8 +1,3 @@
-charge_dict = {
-    '+':'-13', 
-    '-':'13',
-}
-
 def combine_cut_list(cut_list):
     total_cuts = ''
     for cut in cut_list:
