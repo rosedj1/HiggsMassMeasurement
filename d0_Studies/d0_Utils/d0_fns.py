@@ -6,6 +6,13 @@ def combine_cut_list(cut_list):
     return cut_str
 
 def calc_num_bins(bin_min, bin_max, bin_width):
+    """
+    Calculates the number of bins (int) given: bin_min, bin_max, bin_width
+
+    Parameters
+    ----------
+    bin_min, bin_max, bin_width
+    """
     return int(round( (bin_max-bin_min)/bin_width ))
 
 def make_str_title_friendly(cut_str, keep_whitespace=False):
