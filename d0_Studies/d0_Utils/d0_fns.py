@@ -41,8 +41,8 @@ def calc_ymin_for_legend(n_graphs, text_height=0.042):
 
 def print_header_message(msg):
     n = len(msg)
-    octothorpes = (n+12)*'#'  # I'm probably the first person ever to name a variable 'octothorpes'.
+    octothorpes = (n+12)*'#'  # Am I the first person ever to name a variable 'octothorpes'?
     buff = 5*'#'
-    print octothorpes 
-    print buff, msg, buff
-    print octothorpes
+    print(octothorpes)
+    print(buff, msg, buff)
+    print(octothorpes)

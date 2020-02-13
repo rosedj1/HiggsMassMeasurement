@@ -162,22 +162,22 @@ class HistProxy:
         
             
         if (verbose):
-#             print "deltapT_mean_list:", deltapT_mean_list
-#             print "deltapT_mean_err_list:", deltapT_mean_err_list
+#             print("deltapT_mean_list:", deltapT_mean_list)
+#             print("deltapT_mean_err_list:", deltapT_mean_err_list)
             if bin_style in 'eta':
-                print "Completed %s<pT<%s, %s<eta<%s, %s<d0%s<%s \n" % (pT_low_str, pT_high_str, this_eta_str, next_eta_str, this_d0_str, bspv, next_d0_str)
-                print "Here's the important stored info:"
-                print "self.c", self.c
-                print "self.h", self.h
-                print "self.tree", self.tree
-                print "self.hist_name", self.hist_name
-                print "self.cuts_per_event", self.cuts_per_event
-                print "self.h_mean", self.h_mean
-                print "self.h_mean_err", self.h_mean_err
-                print "self.h_stdev", self.h_stdev
-                print "self.h_stdev_err", self.h_stdev_err
+                print("Completed %s<pT<%s, %s<eta<%s, %s<d0%s<%s \n" % (pT_low_str, pT_high_str, this_eta_str, next_eta_str, this_d0_str, bspv, next_d0_str))
+                print("Here's the important stored info:")
+                print("self.c", self.c)
+                print("self.h", self.h)
+                print("self.tree", self.tree)
+                print("self.hist_name", self.hist_name)
+                print("self.cuts_per_event", self.cuts_per_event)
+                print("self.h_mean", self.h_mean)
+                print("self.h_mean_err", self.h_mean_err)
+                print("self.h_stdev", self.h_stdev)
+                print("self.h_stdev_err", self.h_stdev_err)
             if bin_style in 'pT':
-                print "Completed %s<pT<%s, %s<d0%s<%s \n" % (this_pT_str, next_pT_str, this_d0_str, bspv, next_d0_str)
+                print("Completed %s<pT<%s, %s<d0%s<%s \n" % (this_pT_str, next_pT_str, this_d0_str, bspv, next_d0_str))
                 
         if (make_plots_deltapT_vs_d0):
             return mean, mean_err
