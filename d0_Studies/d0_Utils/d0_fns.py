@@ -6,7 +6,28 @@ def combine_cut_list(cut_list):
     return cut_str
 
 def calc_num_bins(bin_min, bin_max, bin_width):
+    """
+    Calculates the number of bins (int) given: bin_min, bin_max, bin_width
+
+    Parameters
+    ----------
+    bin_min, bin_max, bin_width
+    """
     return int(round( (bin_max-bin_min)/bin_width ))
+
+def calc_x_err_bins(x_val_center_list):
+    """
+    Returns lists of the x-errors, which may be symmetrical or asymmetrical. 
+    """
+    high_err_list = []
+    for x_center in range(len(x_val_center_list)-1):
+        high_err = float( x_val_center_list[x_center+1] - x_val_center_list[x_center] ) / 2
+        high_err_list.append(high_err)
+        
+    low_err_list = [high_err_list[0]] + high_err_list
+    high_err_list = high_err_list + [high_err_list[-1]]
+    
+    return low_err_list, high_err_list
 
 def make_str_title_friendly(cut_str, keep_whitespace=False):
     title = cut_str.replace('&&','_')
@@ -41,8 +62,8 @@ def calc_ymin_for_legend(n_graphs, text_height=0.042):
 
 def print_header_message(msg):
     n = len(msg)
-    octothorpes = (n+12)*'#'  # I'm probably the first person ever to name a variable 'octothorpes'.
+    octothorpes = (n+12)*'#'  # Am I the first person ever to name a variable 'octothorpes'?
     buff = 5*'#'
-    print octothorpes 
-    print buff, msg, buff
-    print octothorpes
+    print(octothorpes)
+    print(buff, msg, buff)
+    print(octothorpes)
