@@ -15,6 +15,20 @@ def calc_num_bins(bin_min, bin_max, bin_width):
     """
     return int(round( (bin_max-bin_min)/bin_width ))
 
+def calc_x_err_bins(x_val_center_list):
+    """
+    Returns lists of the x-errors, which may be symmetrical or asymmetrical. 
+    """
+    high_err_list = []
+    for x_center in range(len(x_val_center_list)-1):
+        high_err = float( x_val_center_list[x_center+1] - x_val_center_list[x_center] ) / 2
+        high_err_list.append(high_err)
+        
+    low_err_list = [high_err_list[0]] + high_err_list
+    high_err_list = high_err_list + [high_err_list[-1]]
+    
+    return low_err_list, high_err_list
+
 def make_str_title_friendly(cut_str, keep_whitespace=False):
     title = cut_str.replace('&&','_')
     title = title.replace('<','_lt_')
