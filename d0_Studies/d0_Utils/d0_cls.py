@@ -1,7 +1,13 @@
 from d0_Utils.d0_dicts import charge_dict
 
+class HistInfo:
+    """
+    Right now, just the most basic object possible.
+    """
+    def __init__(self):
+        pass
+
 class HistProxy:
-    
     def __init__(self,
 #                  infile,
                  tree,
