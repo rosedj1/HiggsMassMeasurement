@@ -5,6 +5,9 @@ from shutil import copy2
 ### CAN PROBABLY JUST USE: from shutil import copyfile ... LOL
 def copyFile(inDir,fileName,outDir):
     '''
+    Make directory (outDir) if it does not exist, then copy file (inDir + filename) to outDir.
+    Also checks to see if file already exists in outDir. If so, do nothing.
+
     inDir       = source dir which contains fileName
     outDir      = destination dir to put fileName
     fileName    = file name
@@ -17,6 +20,9 @@ def copyFile(inDir,fileName,outDir):
 
 ##______________________________________________
 def makeDirs(dir_):                       
+    """
+    If the directory (dir_) does not exist, then make it. 
+    """
     if not os.path.exists(dir_):          
         os.makedirs(os.path.abspath(dir_))
 

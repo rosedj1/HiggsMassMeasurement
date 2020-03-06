@@ -1,4 +1,11 @@
+import os
+
 import numpy as np
+import matplotlib.pyplot as plt
+
+from matplotlib.backends.backend_pdf import PdfPages
+
+from d0_Utils.d0_cls import HistInfo
 
 def combine_cut_list(cut_list):
     total_cuts = ''
@@ -143,7 +150,7 @@ def make_deltapT_pdf(df, year, sample,
     if not os.path.exists(outfile_path):
         os.makedirs(outfile_path)
     if os.path.exists(outfile) and not (overwrite):
-        print(f"Skipping {outfile} since it already exists. To write over the file then set overwrite=True.\n")
+        print(f"Skipping {outfile} since it already exists.\nTo write over the file then set overwrite=True.\n")
         return
         
     status = f"Running over: {year} {sample} {bspv}, pT_range={pT_cut_ls}, eta_range={eta_cut_ls}, wrt {wrt}"
@@ -534,7 +541,7 @@ def make_kinem_comparison_plot(df, year, sample,
     if not os.path.exists(outfile_path):
         os.makedirs(outfile_path)
     if os.path.exists(outfile) and not (overwrite):
-        print(f"Skipping {outfile} since it already exists. To write over the file then set overwrite=True.\n")
+        print(f"Skipping {outfile} since it already exists.\nTo write over the file then set overwrite=True.\n")
         return
         
     status = f"Running over: {year} {sample} {bspv}, pT_range={pT_cut_ls}, eta_range={eta_cut_ls}, wrt {wrt}"
