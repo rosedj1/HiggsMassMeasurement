@@ -765,11 +765,29 @@ def add_underoverflow_entries(data, xmin, xmax):
     mod_data : array-like
         The modified data with fake underflow and overflow entries appended. 
         This way the binned mod_data will show under-overflow entries.
+    n_underflow : int
+        The number of entries in the underflow bin.
+    n_overflow : int
+        The number of entries in the overflow bin.
     """
     n_underflow = len(data[data < xmin])
     n_overflow = len(data[data > xmax])
     
+    # Create new data array where entries that would fall outside x-range
+    # now sit at underflow/overflow bins.
     fake_under = n_underflow * [xmin]
     fake_over = n_overflow * [xmax]
-    mod_data = np.append(data, fake_under + fake_over)
-    return mod_data
+
+    mod_data = data[ (xmin <= data) & (data <= xmax) ]
+    mod_data = np.append(mod_data, fake_under + fake_over)
+
+    n_data_init = len(data)
+    n_data_final = len(mod_data)
+
+    # Make sure that things make sense:
+    if n_data_init != n_data_final:
+        err_msg = (f"The initial number of entries in data ({n_data_init}) is different from "
+                   f"the final number ({n_data_final}), after accounting for underflow/overflow bins.\n"
+                   "Stopping now.")
+        raise RuntimeError(err_msg)
+    return mod_data, n_underflow, n_overflow
