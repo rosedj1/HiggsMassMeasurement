@@ -1,0 +1,22 @@
+lines.marker      : o    ## the default marker
+lines.markersize  : 4            ## markersize, in points
+patch.edgecolor        : white   ## if forced, or patch is not filled
+axes.grid           : True   ## display grid or not
+axes.formatter.limits : -3, 3 ## use scientific notation if log10
+axes.formatter.use_mathtext : True ## When True, use mathtext for scientific
+xtick.top            : True  ## draw ticks on the top side
+xtick.major.size     : 13    ## major tick size in points
+xtick.minor.size     : 6.5      ## minor tick size in points
+xtick.direction      : in    ## direction: in, out, or inout
+xtick.minor.visible  : True  ## visibility of minor ticks on x-axis
+ytick.right          : True  ## draw ticks on the right side
+ytick.major.size     : 13    ## major tick size in points
+ytick.minor.size     : 6.5      ## minor tick size in points
+ytick.direction      : in    ## direction: in, out, or inout
+ytick.minor.visible  : True  ## visibility of minor ticks on y
+legend.edgecolor     : white      ## background patch boundary color
+legend.fancybox      : False     ## if True, use a rounded box for the axis
+image.cmap   : hot_r           ## A colormap name, gray etc...
+errorbar.capsize : 1.5             ## length of end cap on error bars in pixels
+hist.bins : 50                   ## The default number of histogram bins.
+savefig.format      : pdf      ## png, ps, pdf, svg
