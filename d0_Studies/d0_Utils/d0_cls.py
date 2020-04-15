@@ -1,4 +1,12 @@
-from d0_Utils.d0_dicts import charge_dict
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Not all of these may be used here. Just saving time for now.
+from PyUtils.Utils_Files import makeDirs, make_str_title_friendly
+from PyUtils.Utils_Plotting import change_cmap_bkg_to_white, save_plots_to_outpath
+from PyUtils.Utils_Physics import theta2pseudorap, pseudorap2theta
+from d0_Utils.d0_fns import (make_binning_array, calc_dR, calc_dphi, make_stats_legend_for_1dhist, 
+                             make_stats_legend_for_2dhist, make_kinem_subplot, get_stats_1Dhist, get_stats_2Dhist)
 
 class HistInfo:
     """
@@ -6,8 +14,15 @@ class HistInfo:
     """
     def __init__(self):
         pass
+    
 
+    
+    
 class HistProxy:
+    """
+    This class needs serious salvaging. Has not been touched in a long time. 
+    May have useful methods. 
+    """
     def __init__(self,
 #                  infile,
                  tree,

@@ -1,13 +1,16 @@
 import os
 
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 
 from matplotlib.backends.backend_pdf import PdfPages
 
-from d0_Utils.d0_cls import HistInfo
+#from d0_Utils.d0_cls import HistInfo    # Not sure why I can't import this...
 
 def combine_cut_list(cut_list):
+    """Used for ROOT-style cuts while doing tree.Draw()"""
     total_cuts = ''
     for cut in cut_list:
         total_cuts += cut + ' && '
@@ -38,25 +41,9 @@ def calc_x_err_bins(x_val_center_list):
     
     return low_err_list, high_err_list
 
-def make_str_title_friendly(cut_str, keep_whitespace=False):
-    title = cut_str.replace('&&','_')
-    title = title.replace('<','_lt_')
-    title = title.replace('>','_gt_')
-    if not (keep_whitespace): 
-        title = title.replace(' ','')
-    title = title.replace('.','p')
-    title = title.replace('(','')
-    title = title.replace(')','')
-    title = title.replace('-','neg')
-    title = title.replace('+','pos')
-    title = title.replace('||','or')
-    title = title.replace('-13','muPlus')
-    title = title.replace('+13','muMinus')
-    return title
-
 def calc_ymin_for_legend(n_graphs, text_height=0.042):
     """
-    Allows for dynamic expansion of bottom axis of TLegend. 
+    ROOT specific! Allows for dynamic expansion of bottom axis of TLegend. 
     There is probably an in-built function, but I want to write my own!
     
     Parameters
@@ -69,7 +56,7 @@ def calc_ymin_for_legend(n_graphs, text_height=0.042):
     delta_y = text_height*n_graphs
     return 0.9 - delta_y # When you do TCanvas(), it puts the top axis at y = 0.9.
 
-def make_deltapT_pdf(df, year, sample, 
+def make_deltapT2_pdf(df, year, sample, 
                      bspv, 
                      d0_range_ls, 
                      deltapT_range_ls, 
@@ -77,7 +64,6 @@ def make_deltapT_pdf(df, year, sample,
                      eta_cut_ls, 
                      outfile_path,
                      wrt="pT_gen",
-                     shoulder_cut=(False,-999),
                      save_plots=False, overwrite=False):
 
     """
@@ -92,8 +78,6 @@ def make_deltapT_pdf(df, year, sample,
     The df you pass in has a: 
         year : 
         sample : 'MC' or 'Data'
-        
-    FIXME: Get rid of shoulder_cut. It is deprecated. 
     
     #--- Details ---#
     Go through each event and see if mu1 passes all selection criteria.
@@ -118,6 +102,10 @@ def make_deltapT_pdf(df, year, sample,
     d0_max = d0_range_ls[1]
     d0_bin_width = d0_range_ls[2]
 
+    if d0_bin_width < 0.005:
+        err_msg = (f"WARNING: d0_bin_width ({d0_bin_width}) is too small (d0_bin_width < 0.005). Stopping now.\n"
+                   "To get around this, change the value in the function: make_deltapT2_pdf()")
+        raise ValueError(err_msg)    
     deltapT_min = deltapT_range_ls[0]
     deltapT_max = deltapT_range_ls[1]    
     deltapT_bin_width = deltapT_range_ls[2]    
@@ -128,8 +116,9 @@ def make_deltapT_pdf(df, year, sample,
     eta_min = eta_cut_ls[0]
     eta_max = eta_cut_ls[1]
     
-    massZ_min = 50
-        
+    massZ_min = 70
+    massZ_max = 110
+    
     d0_bin_arr = np.arange(d0_min, d0_max+0.5*d0_bin_width, d0_bin_width)  # Includes all bin edges: very first to very last.
     d0_bin_arr_shifted = d0_bin_arr[0:-1] + 0.5*d0_bin_width  # Make sure points are plotted in middle of bin window.
     # d0_n_bins = calc_num_bins(d0_min, d0_max, d0_bin_width)
@@ -142,8 +131,6 @@ def make_deltapT_pdf(df, year, sample,
                  f"__{eta_min}_eta_{eta_max}"
                  f"__{d0_min:.3f}_to_{d0_max:.3f}_increm_{d0_bin_width:.3f}"
                  f"__wrt_{wrt}")
-    if (shoulder_cut[0]):
-        pdf_name += f"__abs_dptoverpt2_lt_{shoulder_cut[1]}"
     pdf_name = make_str_title_friendly(pdf_name) + ".pdf"
     
     outfile = os.path.join(outfile_path, pdf_name)
@@ -154,8 +141,6 @@ def make_deltapT_pdf(df, year, sample,
         return
         
     status = f"Running over: {year} {sample} {bspv}, pT_range={pT_cut_ls}, eta_range={eta_cut_ls}, wrt {wrt}"
-    if (shoulder_cut[0]):
-        status += f", using shoulder_cut={shoulder_cut[1]} GeV"
     print(status)
 
     with PdfPages(outfile) as pdf:
@@ -180,55 +165,31 @@ def make_deltapT_pdf(df, year, sample,
                 mask_d0PV2xcharge = (this_d0_bin < d0PV2xcharge_ser) & (d0PV2xcharge_ser < next_d0_bin)
 
             #--- Create masks ---#
-            mask_massZ = massZ_min < df['massZ']
+            mask_massZ = (massZ_min < df['massZ']) & (df['massZ'] < massZ_max)
             # new_df = df[massZ_min < df['massZ']]    # Turns out to not be efficient to trim DataFrame as you go...
                         
             mask_pT1 = (pT_min < df['pT1']) & (df['pT1'] < pT_max)
             mask_pT2 = (pT_min < df['pT2']) & (df['pT2'] < pT_max)
-            # new_df = new_df[(pT_min < new_df['pT1']) & (new_df['pT1'] < pT_max)]
-            # new_df = new_df[(pT_min < new_df['pT2']) & (new_df['pT2'] < pT_max)]
 
             mask_eta1 = (eta_min < df['eta1']) & (df['eta1'] < eta_max)
             mask_eta2 = (eta_min < df['eta2']) & (df['eta2'] < eta_max)
-            # new_df = new_df[(eta_min < new_df['eta1']) & (new_df['eta1'] < eta_max)]
-            # new_df = new_df[(eta_min < new_df['eta2']) & (new_df['eta2'] < eta_max)]
             
             mask_skip_empty_GENmass2l = 0 < df['GENmass2l']
-            # new_df = new_df[new_df['GENmass2l'] > 0]
             
-            # Fixed the shoulder problem.
-            # if (shoulder_cut[0] and wrt in 'pT_gen'):
-                # mask_shoulder_cut1 = abs((df['pT1'] - df['genLep_pt1']) / df['genLep_pt1']**2) < (shoulder_cut[1])
-                # mask_shoulder_cut2 = abs((df['pT2'] - df['genLep_pt2']) / df['genLep_pt2']**2) < (shoulder_cut[1])
-            # elif (shoulder_cut[0] and wrt in 'pT_reco'):
-                # mask_shoulder_cut1 = abs((df['pT1'] - df['genLep_pt1']) / df['pT1']**2) < (shoulder_cut[1])
-                # mask_shoulder_cut2 = abs((df['pT2'] - df['genLep_pt2']) / df['pT2']**2) < (shoulder_cut[1])
-            # else:
-                # mask_shoulder_cut1 = mask_massZ  # Don't apply a cut on the shoulder. So just copy another mask.
-                # mask_shoulder_cut2 = mask_massZ
-
             # Apply all masks.
             if bspv in 'BS':
                 original_masked_df1 = df[(mask_d0BS1xcharge & mask_skip_empty_GENmass2l & mask_pT1 & mask_eta1 & mask_massZ)]
                 original_masked_df2 = df[(mask_d0BS2xcharge & mask_skip_empty_GENmass2l & mask_pT2 & mask_eta2 & mask_massZ)]
-                # new_df1 = new_df[mask_d0BS1xcharge]
-                # new_df2 = new_df[mask_d0BS2xcharge]
             elif bspv in 'PV':
                 original_masked_df1 = df[(mask_d0PV1xcharge & mask_skip_empty_GENmass2l & mask_pT1 & mask_eta1 & mask_massZ)]
                 original_masked_df2 = df[(mask_d0PV2xcharge & mask_skip_empty_GENmass2l & mask_pT2 & mask_eta2 & mask_massZ)]
-                # new_df1 = new_df[mask_d0PV1xcharge]
-                # new_df2 = new_df[mask_d0PV2xcharge]
 
             if wrt in "pT_gen":
                 deltapT1_over_pTsqrd_ser = (original_masked_df1.pT1 - original_masked_df1.genLep_pt1) / original_masked_df1.genLep_pt1**2
                 deltapT2_over_pTsqrd_ser = (original_masked_df2.pT2 - original_masked_df2.genLep_pt2) / original_masked_df2.genLep_pt2**2
-                # deltapT1_over_pTsqrd_ser = (new_df1.pT1 - new_df1.genLep_pt1) / new_df1.genLep_pt1**2
-                # deltapT2_over_pTsqrd_ser = (new_df2.pT2 - new_df2.genLep_pt2) / new_df2.genLep_pt2**2
             elif wrt in "pT_reco":
                 deltapT1_over_pTsqrd_ser = (original_masked_df1.pT1 - original_masked_df1.genLep_pt1) / original_masked_df1.pT1**2
                 deltapT2_over_pTsqrd_ser = (original_masked_df2.pT2 - original_masked_df2.genLep_pt2) / original_masked_df2.pT2**2
-                # deltapT1_over_pTsqrd_ser = (new_df1.pT1 - new_df1.genLep_pt1) / new_df1.pT1**2
-                # deltapT2_over_pTsqrd_ser = (new_df2.pT2 - new_df2.genLep_pt2) / new_df2.pT2**2
 
             # Muon1 has been checked for each event and one series was made.
             # Then muon2 was checked and a series was made. Combine both series.
@@ -240,12 +201,7 @@ def make_deltapT_pdf(df, year, sample,
                     f"{pT_min}<" + r"$p_{T}^{RECO}$" + f"<{pT_max} GeV, "
                     f"{eta_min}<" + r"$\left| \eta \right|$<" + f"{eta_max}, "
                     f"{massZ_min} GeV<" + r"$m_{\mu\mu}$")
-            if (shoulder_cut[0]):
-                if wrt in "pT_gen":
-                    cuts += r", $\left| \Delta p_{T}/(p_{T}^{GEN})^2 \right|<$" + f"{shoulder_cut[1]}"
-                elif wrt in "pT_reco":
-                    cuts += r", $\left| \Delta p_{T}/(p_{T}^{RECO})^2 \right|<$" + f"{shoulder_cut[1]}"
-                
+
             # Statistics.
             n_entries = len(combined_deltapT_ser)
             mean = combined_deltapT_ser.mean()
@@ -263,7 +219,6 @@ def make_deltapT_pdf(df, year, sample,
             this_hist.eta_range = eta_cut_ls
             this_hist.pT_range = pT_cut_ls
             this_hist.massZ_cut = massZ_min
-            this_hist.shoulder_cut = shoulder_cut[1] if shoulder_cut[0] else None
             this_hist.n_entries = n_entries
             this_hist.hist_mean = mean
             this_hist.hist_mean_err = mean_err
@@ -391,8 +346,6 @@ def make_graph(*graph_tuple, binning_type='eta', verbose=False, save_plots=True,
         title_str += f'{example_graph.pT_range[0]}<' + r'$p_T$' + f'<{example_graph.pT_range[1]} GeV'
     elif binning_type in 'pT':
         title_str += f'{example_graph.eta_range[0]}<' + r'$\left| \eta \right|$' + f'<{example_graph.eta_range[1]}'
-    if example_graph.shoulder_cut is not None:
-        title_str += r", $\left| \Delta p_{T}/(p_{T})^2 \right|$<" + f"{example_graph.shoulder_cut} GeV" + r"$^{-1}$"
     ax.set_title(title_str)
 
     x_min = min([gr.d0_bin_window[0] for gr in example_graph_ls])
@@ -454,8 +407,6 @@ def make_graph(*graph_tuple, binning_type='eta', verbose=False, save_plots=True,
             plotname += f'{example_graph.eta_range[0]}_eta_{example_graph.eta_range[1]}'
         elif binning_type in 'eta':
             plotname += f'{example_graph.pT_range[0]}_pT_{example_graph.pT_range[1]}'
-        if example_graph.shoulder_cut is not None:
-            title_str += f"__abs_dptoverpt2_lt_{example_graph.shoulder_cut}"
         plotname = make_str_title_friendly(plotname)
         
         fullpath = os.path.join(outpath, plotname)
@@ -477,11 +428,10 @@ def make_kinem_comparison_plot(df, year, sample,
                                eta_cut_ls, 
                                outfile_path,
                                wrt="pT_gen",
-                               shoulder_cut=(False,-999),
                                save_plots=False, overwrite=False):
 
     """
-    You don't even have to compare gen vs. reco. It could be pT1 vs. pT2, for instance.
+    UPDATE ME: Plots differences in kinematics and ratio plots. 
     """
     kinem_pT_list = ['genLep_pt1','genLep_pt2','pT1','pT2']
     kinem_eta_list = ['genLep_eta1','genLep_eta2','eta1','eta2']
@@ -533,8 +483,6 @@ def make_kinem_comparison_plot(df, year, sample,
                  f"__{eta_min_abs}_abs_eta_{eta_max_abs}"
                  f"__{d0_min:.3f}_to_{d0_max:.3f}_increm_{d0_bin_width:.3f}")
                 #  f"__wrt_{wrt}")
-    if (shoulder_cut[0]):
-        pdf_name += f"__abs_dptoverpt2_lt_{shoulder_cut[1]}"
     pdf_name = make_str_title_friendly(pdf_name) + ".pdf"
     
     outfile = os.path.join(outfile_path, pdf_name)
@@ -545,8 +493,6 @@ def make_kinem_comparison_plot(df, year, sample,
         return
         
     status = f"Running over: {year} {sample} {bspv}, pT_range={pT_cut_ls}, eta_range={eta_cut_ls}, wrt {wrt}"
-    if (shoulder_cut[0]):
-        status += f", using shoulder_cut={shoulder_cut[1]} GeV"
     print(status)
 
     with PdfPages(outfile) as pdf:
@@ -580,18 +526,13 @@ def make_kinem_comparison_plot(df, year, sample,
             mask_gen_eta = (eta_min_abs < abs(df[f'genLep_eta{lep}'])) & (abs(df[f'genLep_eta{lep}']) < eta_max_abs)
             mask_rec_eta = (eta_min_abs < abs(df[f'eta{lep}'])) & (abs(df[f'eta{lep}']) < eta_max_abs)
             
-            if (shoulder_cut[0]):
-                mask_shoulder_cut = abs((df[f'pT{lep}'] - df[f'genLep_pt{lep}']) / df[f'genLep_pt{lep}']**2) < (shoulder_cut[1])
-            else:
-                mask_shoulder_cut = mask_massZ  # Don't apply a cut on the shoulder. So just copy another mask.
-
             # Apply all masks.
             if bspv in 'BS':
-                original_masked_gen_df = df[(mask_d0BSxcharge & mask_massZ & mask_skip_empty_GENmass2l & mask_gen_pT & mask_gen_eta & mask_shoulder_cut)]
-                original_masked_rec_df = df[(mask_d0BSxcharge & mask_massZ & mask_skip_empty_GENmass2l & mask_rec_pT & mask_rec_eta & mask_shoulder_cut)]
+                original_masked_gen_df = df[(mask_d0BSxcharge & mask_massZ & mask_skip_empty_GENmass2l & mask_gen_pT & mask_gen_eta)]
+                original_masked_rec_df = df[(mask_d0BSxcharge & mask_massZ & mask_skip_empty_GENmass2l & mask_rec_pT & mask_rec_eta)]
             elif bspv in 'PV':
-                original_masked_gen_df = df[(mask_d0PVxcharge & mask_massZ & mask_skip_empty_GENmass2l & mask_gen_pT & mask_gen_eta & mask_shoulder_cut)]
-                original_masked_rec_df = df[(mask_d0PVxcharge & mask_massZ & mask_skip_empty_GENmass2l & mask_rec_pT & mask_rec_eta & mask_shoulder_cut)]
+                original_masked_gen_df = df[(mask_d0PVxcharge & mask_massZ & mask_skip_empty_GENmass2l & mask_gen_pT & mask_gen_eta)]
+                original_masked_rec_df = df[(mask_d0PVxcharge & mask_massZ & mask_skip_empty_GENmass2l & mask_rec_pT & mask_rec_eta)]
 
             kinem_gen_ser = original_masked_gen_df[f'{kinem_gen}']
             kinem_rec_ser = original_masked_rec_df[f'{kinem_rec}']
@@ -605,11 +546,6 @@ def make_kinem_comparison_plot(df, year, sample,
             cuts += f"{pT_min}<" + r"$p_{T}$" + f"<{pT_max} GeV, "
             cuts += f"{eta_min_abs}<" + r"$\left| \eta \right|$<" + f"{eta_max_abs}, "
             cuts += f"{massZ_min} GeV<" + r"$m_{\mu\mu}$"
-            if (shoulder_cut[0]):
-                if wrt in "pT_gen":
-                    cuts += r", $\left| \Delta p_{T}/(p_{T}^{GEN})^2 \right|<$" + f"{shoulder_cut[1]}"
-                elif wrt in "pT_rec":
-                    cuts += r", $\left| \Delta p_{T}/(p_{T}^{RECO})^2 \right|<$" + f"{shoulder_cut[1]}"
                 
             # Gen and Reco stats:
             n_entries_gen = len(kinem_gen_ser)
@@ -642,8 +578,6 @@ def make_kinem_comparison_plot(df, year, sample,
             hist_rec.pT_range = pT_cut_ls
             hist_gen.massZ_cut = massZ_min
             hist_rec.massZ_cut = massZ_min
-            hist_gen.shoulder_cut = shoulder_cut[1] if shoulder_cut[0] else None
-            hist_rec.shoulder_cut = shoulder_cut[1] if shoulder_cut[0] else None
             hist_gen.n_entries = n_entries_gen
             hist_rec.n_entries = n_entries_rec
             hist_gen.hist_mean = mean_gen
@@ -737,14 +671,148 @@ def make_kinem_comparison_plot(df, year, sample,
 
         return graph_info_gen_ls, graph_info_rec_ls
 
+def make_kinem_subplot(lep, ax, data, x_limits, x_bins, x_label, y_label, y_max=-1, log_scale=False):
+    """
+    MAY BE DEPRECATED.
+    Draw a kinematic distribution (e.g. eta1, gen_phi2, etc.) to a subplot in a figure.
+    
+    Parameters
+    ----------
+    lep : int
+        Either `1` or `2`. Indicates which lepton you are referring to. 
+    ax : axis object
+        The axes to which plot will be drawn.
+    data : array-like
+        Data to be histogrammed. 
+    x_limits : 2-element list
+        A list of the x-min and x-max to be plotted.
+    x_bins : array-like 
+        Array of bin edges. Should be of length = len(data)+1. <-- I don't think that's true...
+    x_label : str
+        Label for x-axis.
+    y_label : str
+        Label for y-axis.
+    label_legend : str
+        Label for legend.
+    y_max : float
+        Max on y-axis. If y_max <= 0, then matplotlib will choose y_max.
+    log_scale : bool
+        If True, sets the y-axis to log scale. 
+    """
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(y_label)
+    
+    ax.set_xlim(x_limits)
+    ax.grid(False)
+    
+    mod_data, n_underflow, n_overflow = add_underoverflow_entries(data, x_limits[0], x_limits[1])
+    
+    if y_max > 0: ax.set_ylim([0,y_max])
+    if (log_scale): ax.set_yscale('log')
+        
+    stats = get_stats_1Dhist(data)
+    label_legend = make_stats_legend_for_1dhist(stats)
+    bin_vals, bin_edges, _ = ax.hist(mod_data, bins=x_bins, label=label_legend, histtype='step', color='b')
+    ax.legend(loc='upper right', fontsize=7)
+    return
+  
+#def make_1D_dist(ax, data, x_limits, x_bins, x_label, y_label, title, y_max=-1, log_scale=False):
+#    """
+#    Draw a kinematic distribution (e.g. eta1, gen_phi2, etc.) to an axes object in a figure.
+#    
+#    Parameters
+#    ----------
+#    ax : axes object
+#        The axes to which plot will be drawn.
+#    data : array-like
+#        Data to be histogrammed. 
+#    x_limits : 2-element list
+#        A list of the x-axis range to be plotted: 
+#        x_limits=[x-min, x-max]
+#    x_bins : array-like 
+#        Array of bin edges. Should be of length = len(n_bins)+1.
+#    x_label : str
+#        Label for x-axis.
+#    y_label : str
+#        Label for y-axis.
+#    title : str
+#        Label for title.
+#    y_max : float
+#        Max on y-axis. If y_max <= 0, then matplotlib will choose y_max.
+#    log_scale : bool
+#        If True, sets the y-axis to log scale. 
+#    """
+#    textsize_legend = 9
+#    textsize_axislabels = 12
+#    textsize_title = 12
+#            
+#    ax.set_xlabel(x_label, fontsize=textsize_axislabels)
+#    ax.set_ylabel(y_label, fontsize=textsize_axislabels)
+#    ax.set_title(title, fontsize=textsize_title)
+#    
+#    ax.set_xlim(x_limits)
+#    ax.grid(False)
+#    
+#    mod_data, n_underflow, n_overflow = add_underoverflow_entries(data, x_limits[0], x_limits[1])
+#    
+#    if y_max > 0: ax.set_ylim([0,y_max])
+#    if (log_scale): ax.set_yscale('log')
+#        
+#    stats = get_stats_1Dhist(data)
+#    label_legend = make_stats_legend_for_1dhist(stats)
+#    bin_vals, bin_edges, _ = ax.hist(mod_data, bins=x_bins, label=label_legend, histtype='step', color='b')
+#    ax.legend(loc='upper right', framealpha=0.9, fontsize=textsize_legend)
+#    
+#    return ax, stats
+    
 def print_header_message(msg):
     n = len(msg)
-    octothorpes = (n+12)*'#'  # Am I the first person ever to name a variable 'octothorpes'?
+    octothorpes = (n+12)*'#'  # Who names their variable 'octothorpes'? Honestly?
     buff = 5*'#'
     print(octothorpes)
     print(buff, msg, buff)
     print(octothorpes)
+    
+def make_binning_array(lim_ls):
+    """
+    Turn a list of [bin_min, bin_max, bin_width] into an array of length = (bin_max - bin_min)/bin_width,
+    whose first element is bin_min, last element is bin_max and has spacing bin_width.
+    
+    Returns
+    -------
+    bin_edges : array
+        Contains equally-spaced bin edges, where:
+            bin_edges[0] = left edge of first bin
+            bin_edges[-1] = right edge of last bin
+    binw : float
+        The width of a bin. All are equal width.
+    """
+    ls_min = lim_ls[0]
+    ls_max = lim_ls[1]
+    binw = lim_ls[2]
+    
+    bin_edges = np.arange(ls_min, ls_max+0.5*binw, binw)
+    
+    return bin_edges, binw
 
+def shift_binning_array(bin_arr):
+    """
+    Returns an array of the centers of the bins of bin_arr, excluding the very last bin.
+    
+    Example: 
+        bin_arr = np.array([1, 2, 3, 4])
+        bin_arr_shifted = np.array([1.5, 2.5, 3.5])
+        
+    FIXME: Somewhere in my DarkZ code is this function which can accommodate an asymmetrical bin_arr.
+    """
+    bin_width = bin_arr[1] - bin_arr[0]
+    
+    return bin_arr[:-1] + 0.5 * bin_width
+
+
+#-----------------------------#
+#----- Histogram Helpers -----#
+#-----------------------------#
 def add_underoverflow_entries(data, xmin, xmax):
     """
     Add the entries in the underflow and overflow bins, which would normally not be plotted on a histogram.
@@ -791,3 +859,174 @@ def add_underoverflow_entries(data, xmin, xmax):
                    "Stopping now.")
         raise RuntimeError(err_msg)
     return mod_data, n_underflow, n_overflow
+
+def get_stats_1Dhist(data):
+    """
+    Return the statistics of array-like data.
+    Particularly good for displaying the statistics on binned data in a histogram legend. 
+
+    Parameters
+    ----------
+    data : array-like
+        Your data (in the form of a list, numpy array, series, etc.) 
+
+    Returns
+    -------
+    stats : list
+        A 5-element list of the statistics of data.
+        stats[0] -> n : int
+            Number of entries in data.
+        stats[1] -> mean : float
+            Unweighted average of data. 
+        stats[2] -> mean_err : float
+            Standard error on the mean. 
+        stats[3] -> stdev : float
+            Standard deviation of data.
+        stats[4] -> stdev : float 
+            Standard error on the stdev. 
+    """
+    n = len(data)
+    mean = np.mean(data)
+    mean_err = abs(mean) / np.sqrt(n)
+    stdev = np.std(data)
+    stdev_err = stdev / np.sqrt(2*n)
+    
+    stats = [n, mean, mean_err, stdev, stdev_err]
+
+    return stats
+
+def get_stats_2Dhist(x_data, y_data):
+    """
+    Return the statistics of 2D histogrammed, array-like data.
+    Particularly good for displaying the statistics on binned data in a histogram legend. 
+
+    FIXME: does not do any mean or stdev calculation yet.
+    
+    Parameters
+    ----------
+    data : array-like
+        Your data (in the form of a list, numpy array, series, etc.) 
+
+    Returns
+    -------
+    stats : list
+        A 5-element list of the statistics of data.
+        stats[0] -> n : int
+            Number of entries in 2D hist. Note that this is not 
+        stats[1] -> mean : float
+            Unweighted average of data. 
+        stats[2] -> mean_err : float
+            Standard error on the mean. 
+        stats[3] -> stdev : float
+            Standard deviation of data.
+        stats[4] -> stdev : float 
+            Standard error on the stdev. 
+    """
+    if len(x_data) != len(y_data):
+        raise ValueError("The len(x_data) != len(y_data). Check your data going into this 2D histogram.")
+    n = len(x_data)
+#     mean = np.mean(data)
+#     mean_err = abs(mean) / np.sqrt(n)
+#     stdev = np.std(data)
+#     stdev_err = stdev / np.sqrt(2*n)
+    
+#     stats = [n, mean, mean_err, stdev, stdev_err]
+    stats = [n]
+
+    return stats
+
+def make_stats_legend_for_1dhist(stats_ls):
+    """
+    Create a legend label that displays the statistics of a 1D histogram. 
+    
+    Parameters
+    ----------
+    stats_ls : list
+        A 5-element list of statistics from the 1D data used to make the histogram. 
+        
+        stats_ls[0] -> number of entries in data
+        stats_ls[1] -> mean of data
+        stats_ls[2] -> standard error on the mean of data
+        stats_ls[3] -> standard deviation of data
+        stats_ls[4] -> standard error on the stdev of data
+    
+    Returns
+    -------
+    leg_label : str
+        A string of the data statistics, useful for making a legend label. 
+    """
+    n = stats_ls[0]
+    mean = stats_ls[1]
+    mean_err = stats_ls[2]
+    stdev = stats_ls[3]
+    stdev_err = stats_ls[4]
+
+    leg_label = (f"Total entries = {n}" + "\n"
+                 f'Mean = {mean:.2E}' + r' $\pm$ ' + f'{mean_err:.2E}' + "\n"
+                 f'Std Dev = {stdev:.2E}' + r' $\pm$ ' + f'{stdev_err:.2E}')
+
+    return leg_label
+
+def make_stats_legend_for_2dhist(stats_ls):
+    """
+    Create a legend label that displays the statistics of a 2D histogram. 
+    
+    FIXME: does not show any mean or stdev values yet.
+    
+    Parameters
+    ----------
+    stats_ls : list
+        A 5-element list of statistics from the 1D data used to make the histogram. 
+        
+        stats_ls[0] -> number of entries in data
+        stats_ls[1] -> mean of data
+        stats_ls[2] -> standard error on the mean of data
+        stats_ls[3] -> standard deviation of data
+        stats_ls[4] -> standard error on the stdev of data
+    
+    Returns
+    -------
+    leg_label : str
+        A string of the data statistics, useful for making a legend label. 
+    """
+    n = stats_ls[0]
+#     mean = stats_ls[1]
+#     mean_err = stats_ls[2]
+#     stdev = stats_ls[3]
+#     stdev_err = stats_ls[4]
+
+    leg_label = (f"Total entries = {n}")# + "\n"
+#                  f'Mean = {mean:.2E}' + r' $\pm$ ' + f'{mean_err:.2E}' + "\n"
+#                  f'Std Dev = {stdev:.2E}' + r' $\pm$ ' + f'{stdev_err:.2E}')
+
+    return leg_label
+
+def event_counter(start, stop, step, df, branch):
+    """
+    I THOUGHT I WAS CLEVER WHEN WRITING THIS FUNCTION, BUT THE MUCH MORE EFFICIENT WAY IS:
+    
+    vals, bin_edges = np.histogram(df[branch], bins=np.arange(start, stop * step/2, step))
+    return vals
+    
+    ORIGINAL:
+    Counts the number of events in each bin.
+    This function provides a way to make sure that your histogram is binning the correct number of events per bin.
+    
+    Parameters
+    ----------
+    start : float 
+        The left edge of the very first bin to begin counting.
+    stop : float 
+        The right edge of the very last bin to stop counting. 
+    step : float
+        The bin width. 
+    df : pandas.DataFrame
+        The DataFrame that holds branch.
+    branch : str
+        The DataFrame column name that holds the data to be binned.
+    """
+    # vals = np.arange(start, stop, step)
+    # for v in vals:
+    #     print(f"n_evts with {v:.1f} < eta < {v+step : .1f}:", sum((v < df[branch]) & (df[branch] < v+step) ) )
+    vals, bin_edges = np.histogram(df[branch], bins=np.arange(start, stop * step/2, step))
+    return vals
