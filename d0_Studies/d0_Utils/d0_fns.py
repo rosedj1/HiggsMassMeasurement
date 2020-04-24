@@ -9,6 +9,32 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 #from d0_Utils.d0_cls import HistInfo    # Not sure why I can't import this...
 
+def get_subset_mask(x_vals, x_min, x_max):
+    """
+    Return a mask of an array such that: x_min <= element <= x_max
+    Useful for selecting fit ranges along the 'x-axis'.
+    
+    Apply the mask: x_vals[mask]
+    
+    Parameters
+    ----------
+    x_vals : array
+        The original array from which the subset will be made.
+    x_min : float
+        The minimum value in x_vals to be kept.
+    x_max : float
+        The maximum value in x_vals to be kept.
+        
+    Returns
+    -------
+    mask : bool array
+        An array of booleans. If an element is 'True' then: x_min <= element <= x_max.
+        The mask will be the same length as x_vals. 
+    """
+    mask = (x_min <= x_vals) & (x_vals <= x_max)
+    
+    return mask
+
 def combine_cut_list(cut_list):
     """Used for ROOT-style cuts while doing tree.Draw()"""
     total_cuts = ''
@@ -418,259 +444,83 @@ def make_graph(*graph_tuple, binning_type='eta', verbose=False, save_plots=True,
     
     plt.show()
 
-def make_kinem_comparison_plot(df, year, sample, 
-                               bspv, 
-                               kinem_gen,
-                               kinem_rec,
-                               d0_range_ls, 
-                               x_range_ls, 
-                               pT_cut_ls, 
-                               eta_cut_ls, 
-                               outfile_path,
-                               wrt="pT_gen",
-                               save_plots=False, overwrite=False):
-
-    """
-    UPDATE ME: Plots differences in kinematics and ratio plots. 
-    """
-    kinem_pT_list = ['genLep_pt1','genLep_pt2','pT1','pT2']
-    kinem_eta_list = ['genLep_eta1','genLep_eta2','eta1','eta2']
-    kinem_phi_list = ['genLep_phi1','genLep_phi2','phi1','phi2']
-    
-    kinem_full_list = kinem_pT_list + kinem_eta_list + kinem_phi_list
-
-    textsize_legend = 8
-    textsize_axislabels = 10
-    textsize_ticklabels = 8
-    textsize_title = 10
-    
-    d0_min = d0_range_ls[0]
-    d0_max = d0_range_ls[1]
-    d0_bin_width = d0_range_ls[2]
-
-    x_min = x_range_ls[0]
-    x_max = x_range_ls[1]    
-    x_bin_width = x_range_ls[2]    
-    
-    pT_min = pT_cut_ls[0]
-    pT_max = pT_cut_ls[1]
-    
-    eta_min_abs = eta_cut_ls[0]
-    eta_max_abs = eta_cut_ls[1]
-    
-    massZ_min = 50
-        
-    lep = kinem_gen[-1]  # Get last character of kinematic. Example: pT1 --> 1. Should be a string!
-
-    d0_bin_arr = np.arange(d0_min, d0_max+0.5*d0_bin_width, d0_bin_width)  # Includes all bin edges: very first to very last.
-    d0_bin_arr_shifted = d0_bin_arr[0:-1] + 0.5*d0_bin_width  # Make sure points are plotted in middle of bin window.
-    # d0_n_bins = calc_num_bins(d0_min, d0_max, d0_bin_width)
-    x_val_arr = np.arange(x_min, x_max+0.5*x_bin_width, x_bin_width)
-    
-    # When looking at a particular kinem distribution (say, pT), do not apply pT cuts:
-    if kinem_gen in kinem_pT_list:
-        pT_min = 5
-        pT_max = 100
-    elif kinem_gen in kinem_eta_list:
-        eta_min_abs = 0.0
-        eta_max_abs = 2.4
-    
-    pdf_name  = f"{year}_{sample}_"
-    title_str_pT_min = f"0{pT_min}" if pT_min < 10 else f"{pT_min}"  # For plot-ordering purposes.
-    # Example of Python magic: auto-concatenation of strings.
-    pdf_name += (f"{kinem_gen}_vs_{kinem_rec}__{bspv}"
-                 f"__{title_str_pT_min}_pT_{pT_max}"
-                 f"__{eta_min_abs}_abs_eta_{eta_max_abs}"
-                 f"__{d0_min:.3f}_to_{d0_max:.3f}_increm_{d0_bin_width:.3f}")
-                #  f"__wrt_{wrt}")
-    pdf_name = make_str_title_friendly(pdf_name) + ".pdf"
-    
-    outfile = os.path.join(outfile_path, pdf_name)
-    if not os.path.exists(outfile_path):
-        os.makedirs(outfile_path)
-    if os.path.exists(outfile) and not (overwrite):
-        print(f"Skipping {outfile} since it already exists.\nTo write over the file then set overwrite=True.\n")
-        return
-        
-    status = f"Running over: {year} {sample} {bspv}, pT_range={pT_cut_ls}, eta_range={eta_cut_ls}, wrt {wrt}"
-    print(status)
-
-    with PdfPages(outfile) as pdf:
-        charge_ser = df[f'Id{lep}']
-        charge_ser = charge_ser.replace(13,-1).replace(-13,1)
-
-        d0BSxcharge_ser = charge_ser * df[f'd0BS{lep}']
-        d0PVxcharge_ser = charge_ser * df[f'd0PV{lep}']
-        
-        graph_info_gen_ls = []
-        graph_info_rec_ls = []
-        
-        for k in range(len(d0_bin_arr)-1):
-            this_d0_bin = d0_bin_arr[k]
-            next_d0_bin = d0_bin_arr[k+1]
-            if bspv in 'BS':
-                mask_d0BSxcharge = (this_d0_bin < d0BSxcharge_ser) & (d0BSxcharge_ser < next_d0_bin)
-                # mask_d0BS2xcharge = (this_d0_bin < d0BS2xcharge_ser) & (d0BS2xcharge_ser < next_d0_bin)
-            elif bspv in 'PV':
-                mask_d0PVxcharge = (this_d0_bin < d0PVxcharge_ser) & (d0PVxcharge_ser < next_d0_bin)
-                # mask_d0PV2xcharge = (this_d0_bin < d0PV2xcharge_ser) & (d0PV2xcharge_ser < next_d0_bin)
-
-            # Masks (the cuts).
-            mask_massZ = df['massZ'] > massZ_min
-        
-            mask_skip_empty_GENmass2l = df['GENmass2l'] > 0
+# def make_kinem_comparison_plot(df, year, sample, 
+# 
+#     
+#     pdf_name  = f"{year}_{sample}_"
+#     title_str_pT_min = f"0{pT_min}" if pT_min < 10 else f"{pT_min}"  # For plot-ordering purposes.
+#     # Example of Python magic: auto-concatenation of strings.
+#     pdf_name += (f"{kinem_gen}_vs_{kinem_rec}__{bspv}"
+#                  f"__{title_str_pT_min}_pT_{pT_max}"
+#                  f"__{eta_min_abs}_abs_eta_{eta_max_abs}"
+#                  f"__{d0_min:.3f}_to_{d0_max:.3f}_increm_{d0_bin_width:.3f}")
+#                 #  f"__wrt_{wrt}")
+#     pdf_name = make_str_title_friendly(pdf_name) + ".pdf"
+#     
+#     outfile = os.path.join(outfile_path, pdf_name)
+#     if not os.path.exists(outfile_path):
+#         os.makedirs(outfile_path)
+#     if os.path.exists(outfile) and not (overwrite):
+#         print(f"Skipping {outfile} since it already exists.\nTo write over the file then set overwrite=True.\n")
+#         return
+#         
+#     status = f"Running over: {year} {sample} {bspv}, pT_range={pT_cut_ls}, eta_range={eta_cut_ls}, wrt {wrt}"
+#     print(status)
+# 
+# 
+#         for k in range(len(d0_bin_arr)-1):
+#             this_d0_bin = d0_bin_arr[k]
+#             next_d0_bin = d0_bin_arr[k+1]
+#             if bspv in 'BS':
+#                 mask_d0BSxcharge = (this_d0_bin < d0BSxcharge_ser) & (d0BSxcharge_ser < next_d0_bin)
+#                 # mask_d0BS2xcharge = (this_d0_bin < d0BS2xcharge_ser) & (d0BS2xcharge_ser < next_d0_bin)
+#             elif bspv in 'PV':
+#                 mask_d0PVxcharge = (this_d0_bin < d0PVxcharge_ser) & (d0PVxcharge_ser < next_d0_bin)
+#                 # mask_d0PV2xcharge = (this_d0_bin < d0PV2xcharge_ser) & (d0PV2xcharge_ser < next_d0_bin)
+# 
+# 
+#             
+#             # Example of Python magic. Auto-concatenation of strings.
+#             cuts = f"{this_d0_bin:.3f}" + r"$<d_{0}^{%s}*\mathrm{charge}(\mu)<$"%bspv + f"{next_d0_bin:.3f}, " + "\n"
+#             cuts += f"{pT_min}<" + r"$p_{T}$" + f"<{pT_max} GeV, "
+#             cuts += f"{eta_min_abs}<" + r"$\left| \eta \right|$<" + f"{eta_max_abs}, "
+#             cuts += f"{massZ_min} GeV<" + r"$m_{\mu\mu}$"
+#                 
+#  
+#             # Store info of this plot in HistInfo objects. 
+#             hist_gen = HistInfo()
+#             hist_rec = HistInfo()            
+#             hist_gen.year = year
+#             hist_rec.year = year
+#             hist_gen.sample = sample 
+#             hist_rec.sample = sample
+#             hist_gen.bspv = bspv 
+#             hist_rec.bspv = bspv
+#             hist_gen.d0_bin_window = [this_d0_bin, next_d0_bin] 
+#             hist_rec.d0_bin_window = [this_d0_bin, next_d0_bin]
+#             hist_gen.x_axis_bounds_list = x_range_ls[0:2] # 2-element list 
+#             hist_rec.x_axis_bounds_list = x_range_ls[0:2] # 2-element list
+#             hist_gen.eta_range = eta_cut_ls 
+#             hist_rec.eta_range = eta_cut_ls
+#             hist_gen.pT_range = pT_cut_ls
+#             hist_rec.pT_range = pT_cut_ls
+#             hist_gen.massZ_cut = massZ_min
+#             hist_rec.massZ_cut = massZ_min
+#             hist_gen.n_entries = n_entries_gen
+#             hist_rec.n_entries = n_entries_rec
+#             hist_gen.hist_mean = mean_gen
+#             hist_rec.hist_mean = mean_rec
+#             hist_gen.hist_mean_err = mean_err_gen
+#             hist_rec.hist_mean_err = mean_err_rec
+#             hist_gen.hist_stdev = stdev_gen
+#             hist_rec.hist_stdev = stdev_rec  # Spread of the data.
+#             hist_gen.hist_stdev_err = stdev_err_gen
+#             hist_rec.hist_stdev_err = stdev_err_rec
+#             
+#             graph_info_gen_ls.append(hist_gen)
+#             graph_info_rec_ls.append(hist_rec)
+ 
             
-            mask_gen_pT = (pT_min < df[f'genLep_pt{lep}']) & (df[f'genLep_pt{lep}'] < pT_max)
-            mask_rec_pT = (pT_min < df[f'pT{lep}']) & (df[f'pT{lep}'] < pT_max)
-
-            mask_gen_eta = (eta_min_abs < abs(df[f'genLep_eta{lep}'])) & (abs(df[f'genLep_eta{lep}']) < eta_max_abs)
-            mask_rec_eta = (eta_min_abs < abs(df[f'eta{lep}'])) & (abs(df[f'eta{lep}']) < eta_max_abs)
-            
-            # Apply all masks.
-            if bspv in 'BS':
-                original_masked_gen_df = df[(mask_d0BSxcharge & mask_massZ & mask_skip_empty_GENmass2l & mask_gen_pT & mask_gen_eta)]
-                original_masked_rec_df = df[(mask_d0BSxcharge & mask_massZ & mask_skip_empty_GENmass2l & mask_rec_pT & mask_rec_eta)]
-            elif bspv in 'PV':
-                original_masked_gen_df = df[(mask_d0PVxcharge & mask_massZ & mask_skip_empty_GENmass2l & mask_gen_pT & mask_gen_eta)]
-                original_masked_rec_df = df[(mask_d0PVxcharge & mask_massZ & mask_skip_empty_GENmass2l & mask_rec_pT & mask_rec_eta)]
-
-            kinem_gen_ser = original_masked_gen_df[f'{kinem_gen}']
-            kinem_rec_ser = original_masked_rec_df[f'{kinem_rec}']
-        
-            # Muon1 has been checked for each event and one series was made.
-            # Then muon2 was checked and a series was made. Combine both series.
-            # combined_deltapT_ser = deltapT1_over_pTsqrd_ser.append( deltapT2_over_pTsqrd_ser )
-            
-            # Example of Python magic. Auto-concatenation of strings.
-            cuts = f"{this_d0_bin:.3f}" + r"$<d_{0}^{%s}*\mathrm{charge}(\mu)<$"%bspv + f"{next_d0_bin:.3f}, " + "\n"
-            cuts += f"{pT_min}<" + r"$p_{T}$" + f"<{pT_max} GeV, "
-            cuts += f"{eta_min_abs}<" + r"$\left| \eta \right|$<" + f"{eta_max_abs}, "
-            cuts += f"{massZ_min} GeV<" + r"$m_{\mu\mu}$"
-                
-            # Gen and Reco stats:
-            n_entries_gen = len(kinem_gen_ser)
-            n_entries_rec = len(kinem_rec_ser)
-            mean_gen = kinem_gen_ser.mean()
-            mean_rec = kinem_rec_ser.mean()
-            mean_err_gen = abs(mean_gen) / np.sqrt(n_entries_gen)  # Standard error of the mean.
-            mean_err_rec = abs(mean_rec) / np.sqrt(n_entries_rec)  # Standard error of the mean.
-            stdev_gen = kinem_gen_ser.std()
-            stdev_rec = kinem_rec_ser.std()
-            stdev_err_gen = stdev_gen / np.sqrt(2*n_entries_gen)
-            stdev_err_rec = stdev_rec / np.sqrt(2*n_entries_rec)
-
-            # Store info of this plot in HistInfo objects. 
-            hist_gen = HistInfo()
-            hist_rec = HistInfo()            
-            hist_gen.year = year
-            hist_rec.year = year
-            hist_gen.sample = sample 
-            hist_rec.sample = sample
-            hist_gen.bspv = bspv 
-            hist_rec.bspv = bspv
-            hist_gen.d0_bin_window = [this_d0_bin, next_d0_bin] 
-            hist_rec.d0_bin_window = [this_d0_bin, next_d0_bin]
-            hist_gen.x_axis_bounds_list = x_range_ls[0:2] # 2-element list 
-            hist_rec.x_axis_bounds_list = x_range_ls[0:2] # 2-element list
-            hist_gen.eta_range = eta_cut_ls 
-            hist_rec.eta_range = eta_cut_ls
-            hist_gen.pT_range = pT_cut_ls
-            hist_rec.pT_range = pT_cut_ls
-            hist_gen.massZ_cut = massZ_min
-            hist_rec.massZ_cut = massZ_min
-            hist_gen.n_entries = n_entries_gen
-            hist_rec.n_entries = n_entries_rec
-            hist_gen.hist_mean = mean_gen
-            hist_rec.hist_mean = mean_rec
-            hist_gen.hist_mean_err = mean_err_gen
-            hist_rec.hist_mean_err = mean_err_rec
-            hist_gen.hist_stdev = stdev_gen
-            hist_rec.hist_stdev = stdev_rec  # Spread of the data.
-            hist_gen.hist_stdev_err = stdev_err_gen
-            hist_rec.hist_stdev_err = stdev_err_rec
-            
-            graph_info_gen_ls.append(hist_gen)
-            graph_info_rec_ls.append(hist_rec)
-            
-            #----------------#
-            #--- Plot It. ---#
-            #----------------#
-            fig = plt.figure()
-            ax = fig.add_axes([0.17,0.33,0.825,0.54])  # [low_left_corner_x, low_left_corner_y, width, height]
-            ax_ratio = fig.add_axes([0.17,0.12,0.825,0.20])
-            
-            label_legend_gen = (f"GEN: {n_entries_gen} entries" + "\n"
-                                f'Mean = {mean_gen:.2E}' + r' $\pm$ ' + f'{mean_err_gen:.2E}',
-                                f'Std Dev = {stdev_gen:.2E}' + r' $\pm$ ' + f'{stdev_err_gen:.2E}')
-            label_legend_rec = (f"RECO: {n_entries_rec} entries" + "\n"
-                                f'Mean = {mean_rec:.2E}' + r' $\pm$ ' + f'{mean_err_rec:.2E}',
-                                f'Std Dev = {stdev_rec:.2E}' + r' $\pm$ ' + f'{stdev_err_rec:.2E}')
-            hist_bin_vals_gen, bin_edges_gen, _ = ax.hist(kinem_gen_ser, bins=x_val_arr, histtype='step', color='green', label=label_legend_gen)
-            hist_bin_vals_rec, bin_edges_rec, _ = ax.hist(kinem_rec_ser, bins=x_val_arr, histtype='step', color='red', label=label_legend_rec)
-            
-            hist_bin_vals_gen_modified = hist_bin_vals_gen.copy()
-            hist_bin_vals_gen_modified[hist_bin_vals_gen == 0] = 0.0000001
-            ratio_vals = (hist_bin_vals_rec - hist_bin_vals_gen) / hist_bin_vals_gen_modified
-
-            ax_ratio.errorbar(x_val_arr[:-1]+0.5*x_bin_width, ratio_vals, xerr=x_bin_width/2, ecolor='black', ms=0, capsize=0, mew=0, drawstyle='steps-mid', alpha=1)
-
-            ax_ratio.grid(which='major',axis='x')
-            ax_ratio.grid(which='major',axis='y', ls='-')
-            ax_ratio.grid(which='minor',axis='y')
-
-            # Hide first tick label on y-axis, since it overlaps with ratio plot's tick label.
-            a=ax.get_yticks().tolist()
-            a[0]=''
-            ax.set_yticklabels(a)
-            
-            # Hide main plot's x tick labels.
-            plt.setp(ax.get_xticklabels(), visible=False)
-    
-            # Only show a few of the tick labels on ratio plot.
-            n_tick_labels = 5
-            ax_ratio.yaxis.set_major_locator(plt.MaxNLocator(n_tick_labels))
-            ax_ratio.axhline(c='r', lw=2, ls='-')
-            
-            # Find x error bars, which may be asymmetrical.
-            ax.grid(which='major',color='k', ls=':')
-            ax.tick_params(axis='both', which='major', direction='in', length=9,   top=True, right=True)
-            ax.tick_params(axis='both', which='minor', direction='in', length=4.5, top=True, right=True)
-            plt.minorticks_on()
-            ax.set_ylabel(f"Events / [{x_bin_width:.1E}]", fontsize=textsize_axislabels)
-            ax.set_title(cuts, fontsize=textsize_title)
-            
-            plt.minorticks_on()
-            
-            ax.set_xlim([x_min, x_max])
-            ax_ratio.set_xlim([x_min, x_max])
-            ax_ratio.set_ylim([-0.12, 0.12])
-            ax_ratio.tick_params(axis='both', which='major', direction='in', length=6, top=True, right=True)
-            ax_ratio.tick_params(axis='both', which='minor', direction='in', length=3, top=True, right=True)
-            plt.minorticks_on()
-            x_axis_label = f'{kinem_gen}, {kinem_rec}'
-            if kinem_gen in kinem_pT_list:
-                x_axis_label += ' [GeV]'
-            ax_ratio.set_xlabel(x_axis_label)
-            ax_ratio.set_ylabel(r'$\frac{ (\mathrm{reco} - \mathrm{gen}) }{ \mathrm{gen} }$', fontsize=textsize_axislabels*1.5)
-            
-            # Add a x10^ scale factor to the x-axis.
-            # formatter = ticker.ScalarFormatter(useMathText=True)
-            # formatter.set_powerlimits((-1,1))
-            # ax.xaxis.set_major_formatter(formatter)
-
-            y_max = max(max(hist_bin_vals_gen), max(hist_bin_vals_rec))
-            ax.set_ylim([0, y_max*1.4])
-        
-            ax.legend(loc='upper right', framealpha=1, fontsize=textsize_legend)#, horizontalalignment='right')
-            if (save_plots): 
-                pdf.savefig()  # saves the current figure into a pdf page
-
-            plt.close()
-
-        print(f"PDF saved at:\n{outfile}\n")
-
-        return graph_info_gen_ls, graph_info_rec_ls
-
 def make_kinem_subplot(lep, ax, data, x_limits, x_bins, x_label, y_label, y_max=-1, log_scale=False):
     """
     MAY BE DEPRECATED.
@@ -716,7 +566,7 @@ def make_kinem_subplot(lep, ax, data, x_limits, x_bins, x_label, y_label, y_max=
     ax.legend(loc='upper right', fontsize=7)
     return
   
-#def make_1D_dist(ax, data, x_limits, x_bins, x_label, y_label, title, y_max=-1, log_scale=False):
+# def make_1D_dist(ax, data, x_limits, x_bins, x_label, y_label, title, y_max=-1, log_scale=False):
 #    """
 #    Draw a kinematic distribution (e.g. eta1, gen_phi2, etc.) to an axes object in a figure.
 #    
@@ -808,198 +658,6 @@ def shift_binning_array(bin_arr):
     bin_width = bin_arr[1] - bin_arr[0]
     
     return bin_arr[:-1] + 0.5 * bin_width
-
-
-#-----------------------------#
-#----- Histogram Helpers -----#
-#-----------------------------#
-def add_underoverflow_entries(data, xmin, xmax):
-    """
-    Add the entries in the underflow and overflow bins, which would normally not be plotted on a histogram.
-    NB: Run all statistics on data BEFORE binning and before adding under-overflow entries.
-    
-    Parameters
-    ----------
-    data : array-like
-        The data, usually a numpy array or DataFrame series, which will get binned in a histogram. 
-    xmin : float
-        The left edge of the first bin. Any values in data that are less than xmin
-        (which usually would not be plotted) are now put into the xmin bin. 
-    xmax : float
-        The right edge of the last bin. Overflow values fit into this final bin. 
-        
-    Returns
-    -------
-    mod_data : array-like
-        The modified data with fake underflow and overflow entries appended. 
-        This way the binned mod_data will show under-overflow entries.
-    n_underflow : int
-        The number of entries in the underflow bin.
-    n_overflow : int
-        The number of entries in the overflow bin.
-    """
-    n_underflow = len(data[data < xmin])
-    n_overflow = len(data[data > xmax])
-    
-    # Create new data array where entries that would fall outside x-range
-    # now sit at underflow/overflow bins.
-    fake_under = n_underflow * [xmin]
-    fake_over = n_overflow * [xmax]
-
-    mod_data = data[ (xmin <= data) & (data <= xmax) ]
-    mod_data = np.append(mod_data, fake_under + fake_over)
-
-    n_data_init = len(data)
-    n_data_final = len(mod_data)
-
-    # Make sure that things make sense:
-    if n_data_init != n_data_final:
-        err_msg = (f"The initial number of entries in data ({n_data_init}) is different from "
-                   f"the final number ({n_data_final}), after accounting for underflow/overflow bins.\n"
-                   "Stopping now.")
-        raise RuntimeError(err_msg)
-    return mod_data, n_underflow, n_overflow
-
-def get_stats_1Dhist(data):
-    """
-    Return the statistics of array-like data.
-    Particularly good for displaying the statistics on binned data in a histogram legend. 
-
-    Parameters
-    ----------
-    data : array-like
-        Your data (in the form of a list, numpy array, series, etc.) 
-
-    Returns
-    -------
-    stats : list
-        A 5-element list of the statistics of data.
-        stats[0] -> n : int
-            Number of entries in data.
-        stats[1] -> mean : float
-            Unweighted average of data. 
-        stats[2] -> mean_err : float
-            Standard error on the mean. 
-        stats[3] -> stdev : float
-            Standard deviation of data.
-        stats[4] -> stdev : float 
-            Standard error on the stdev. 
-    """
-    n = len(data)
-    mean = np.mean(data)
-    mean_err = abs(mean) / np.sqrt(n)
-    stdev = np.std(data)
-    stdev_err = stdev / np.sqrt(2*n)
-    
-    stats = [n, mean, mean_err, stdev, stdev_err]
-
-    return stats
-
-def get_stats_2Dhist(x_data, y_data):
-    """
-    Return the statistics of 2D histogrammed, array-like data.
-    Particularly good for displaying the statistics on binned data in a histogram legend. 
-
-    FIXME: does not do any mean or stdev calculation yet.
-    
-    Parameters
-    ----------
-    data : array-like
-        Your data (in the form of a list, numpy array, series, etc.) 
-
-    Returns
-    -------
-    stats : list
-        A 5-element list of the statistics of data.
-        stats[0] -> n : int
-            Number of entries in 2D hist. Note that this is not 
-        stats[1] -> mean : float
-            Unweighted average of data. 
-        stats[2] -> mean_err : float
-            Standard error on the mean. 
-        stats[3] -> stdev : float
-            Standard deviation of data.
-        stats[4] -> stdev : float 
-            Standard error on the stdev. 
-    """
-    if len(x_data) != len(y_data):
-        raise ValueError("The len(x_data) != len(y_data). Check your data going into this 2D histogram.")
-    n = len(x_data)
-#     mean = np.mean(data)
-#     mean_err = abs(mean) / np.sqrt(n)
-#     stdev = np.std(data)
-#     stdev_err = stdev / np.sqrt(2*n)
-    
-#     stats = [n, mean, mean_err, stdev, stdev_err]
-    stats = [n]
-
-    return stats
-
-def make_stats_legend_for_1dhist(stats_ls):
-    """
-    Create a legend label that displays the statistics of a 1D histogram. 
-    
-    Parameters
-    ----------
-    stats_ls : list
-        A 5-element list of statistics from the 1D data used to make the histogram. 
-        
-        stats_ls[0] -> number of entries in data
-        stats_ls[1] -> mean of data
-        stats_ls[2] -> standard error on the mean of data
-        stats_ls[3] -> standard deviation of data
-        stats_ls[4] -> standard error on the stdev of data
-    
-    Returns
-    -------
-    leg_label : str
-        A string of the data statistics, useful for making a legend label. 
-    """
-    n = stats_ls[0]
-    mean = stats_ls[1]
-    mean_err = stats_ls[2]
-    stdev = stats_ls[3]
-    stdev_err = stats_ls[4]
-
-    leg_label = (f"Total entries = {n}" + "\n"
-                 f'Mean = {mean:.2E}' + r' $\pm$ ' + f'{mean_err:.2E}' + "\n"
-                 f'Std Dev = {stdev:.2E}' + r' $\pm$ ' + f'{stdev_err:.2E}')
-
-    return leg_label
-
-def make_stats_legend_for_2dhist(stats_ls):
-    """
-    Create a legend label that displays the statistics of a 2D histogram. 
-    
-    FIXME: does not show any mean or stdev values yet.
-    
-    Parameters
-    ----------
-    stats_ls : list
-        A 5-element list of statistics from the 1D data used to make the histogram. 
-        
-        stats_ls[0] -> number of entries in data
-        stats_ls[1] -> mean of data
-        stats_ls[2] -> standard error on the mean of data
-        stats_ls[3] -> standard deviation of data
-        stats_ls[4] -> standard error on the stdev of data
-    
-    Returns
-    -------
-    leg_label : str
-        A string of the data statistics, useful for making a legend label. 
-    """
-    n = stats_ls[0]
-#     mean = stats_ls[1]
-#     mean_err = stats_ls[2]
-#     stdev = stats_ls[3]
-#     stdev_err = stats_ls[4]
-
-    leg_label = (f"Total entries = {n}")# + "\n"
-#                  f'Mean = {mean:.2E}' + r' $\pm$ ' + f'{mean_err:.2E}' + "\n"
-#                  f'Std Dev = {stdev:.2E}' + r' $\pm$ ' + f'{stdev_err:.2E}')
-
-    return leg_label
 
 def event_counter(start, stop, step, df, branch):
     """
