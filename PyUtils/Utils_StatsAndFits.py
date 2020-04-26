@@ -146,7 +146,7 @@ def iterative_fit_gaus(iterations, bin_edges, bin_vals, first_mean=0, first_stde
             gaus_y_vals = gaussian(new_bin_centers, *popt)
 
             leg_label_fit = make_stats_legend_for_gaus_fit(popt, popt_err)
-            leg_label_fit = leg_label_fit.replace("Fit", "Fit {}:".format(count))
+            leg_label_fit = leg_label_fit.replace("Fit", "Gaus Fit {}:".format(count))
     
             if ax is None:
                 f, ax = plt.subplots(figsize=(10,8))

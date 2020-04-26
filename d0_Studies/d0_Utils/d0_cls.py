@@ -20,9 +20,6 @@ class HistInfo:
     def __init__(self):
         pass
     
-
-    
-    
 class HistProxy:
     """
     This class needs serious salvaging. Has not been touched in a long time. 
@@ -213,7 +210,9 @@ class HistProxy:
         
 class KinemBinnedEtaPt():
 
-    def __init__(self, df_original, n_evts, eta_cut_ls, pT_cut_ls, use_ptotal_instead=False, dR_cut=0.02, verbose=False):
+    def __init__(self, df_original, n_evts, 
+                 massZ_cut_ls, eta_cut_ls, pT_cut_ls, d0q_cut_ls, d0_type="BS", dR_cut=0.02, 
+                 use_ptotal_instead=False, verbose=False):
         """
         Pass in a DataFrame (DF) and specify the eta and pT cuts to create a subset of DF.
         
@@ -228,6 +227,10 @@ class KinemBinnedEtaPt():
             A list of [eta_min, eta_max]. Example: [0.9, 1.8]
         pT_cut_ls : list or array-like of floats
             A list of [pT_min, pT_max]. Example: [5, 20]
+        d0q_cut_ls : list or array-like of floats
+            A list of values of d0*charge to cut on: [d0q_min, d0q_max]. E.g. [-0.01, 0.01]
+        d0_type : str
+            Which d0 to cut on: "BS" or "PV"
         use_ptotal_instead : bool
             Cut on total momentum instead of pT. 
             In most places, pT could stand for either p or pT (depending on 'use_ptotal_instead').
@@ -248,33 +251,44 @@ class KinemBinnedEtaPt():
         self.n_evts_asked_for = n_evts
         self.n_evts_found = -999
         self.kinem_vals_after_selection = {}
+        self.stats_dict = {}
+        self.binned_df = None  # Will become the collection of events in which mu1 or mu2 passes all cuts.
         
+        self.cuts = ""
         self.use_ptotal_instead = use_ptotal_instead
         self.p_str = "p" if (self.use_ptotal_instead) else "pT"
         self.p_str_latex = r"$p^{\mathrm{REC}}$" if (self.use_ptotal_instead) else r"$p_{T}^{\mathrm{REC}}$"
-        
+
+        self.massZ_min = massZ_cut_ls[0]
+        self.massZ_max = massZ_cut_ls[1]        
         self.eta_min   = eta_cut_ls[0]
         self.eta_max   = eta_cut_ls[1]
         self.pT_min    = pT_cut_ls[0] 
         self.pT_max    = pT_cut_ls[1]         
+        self.d0q_min   = d0q_cut_ls[0]
+        self.d0q_max   = d0q_cut_ls[1]
+        self.d0_type   = d0_type
         self.dR_cut    = dR_cut    
-        self.massZ_min = 60
-        self.massZ_max = 120    
         
-        self.apply_pT_eta_cuts(df, verbose)
-        self.save_exclusive_masks()
+        self.apply_initial_cuts(df, verbose)
         
-    def apply_pT_eta_cuts(self, df, verbose=False):
+    def apply_initial_cuts(self, df, verbose=False):
         """
-        Creates a subset of the original DataFrame.
-        The subset contains only the events in which either muon1 passes 
-        all eta and pT cuts, or muon2 does, or both muons do. 
+        Creates a subset of the original DataFrame in which initial cuts are applied.
+        Cuts:
+            pT
+            eta
+            d0
+            massZ
+            dR
         """
         # Cuts:
         eta_min   = self.eta_min  
         eta_max   = self.eta_max  
         pT_min    = self.pT_min   
         pT_max    = self.pT_max   
+        d0q_min    = self.d0q_min
+        d0q_max    = self.d0q_max
         dR_cut    = self.dR_cut   
         massZ_min = self.massZ_min
         massZ_max = self.massZ_max
@@ -333,72 +347,152 @@ class KinemBinnedEtaPt():
         df.loc[:,'delta_pToverRecpT1'] = dpT1 / pT1_rec_ser
         df.loc[:,'delta_pToverRecpT2'] = dpT2 / pT2_rec_ser     
         
-        df.loc[:,'d0BSxq1'] = df['d0BS1'] * df['Id1'].replace(13,-1).replace(-13,1)
-        df.loc[:,'d0BSxq2'] = df['d0BS2'] * df['Id2'].replace(13,-1).replace(-13,1)
-        df.loc[:,'d0PVxq1'] = df['d0PV1'] * df['Id1'].replace(13,-1).replace(-13,1)
-        df.loc[:,'d0PVxq2'] = df['d0PV2'] * df['Id2'].replace(13,-1).replace(-13,1)
+        df.loc[:,'d0BSq1'] = df['d0BS1'] * df['Id1'].replace(13,-1).replace(-13,1)
+        df.loc[:,'d0BSq2'] = df['d0BS2'] * df['Id2'].replace(13,-1).replace(-13,1)
+        df.loc[:,'d0PVq1'] = df['d0PV1'] * df['Id1'].replace(13,-1).replace(-13,1)
+        df.loc[:,'d0PVq2'] = df['d0PV2'] * df['Id2'].replace(13,-1).replace(-13,1)
         
         # Create masks.
-        mask_dR = (dR1_ser < self.dR_cut) & (dR2_ser < self.dR_cut)
-
-        mask_massZ = (massZ_min < df['massZ']) & (df['massZ'] < massZ_max)
+        self.mask_massZ = mask_massZ = self.get_mask_massZ(df)
         
-        if (self.use_ptotal_instead):
-            mask_pT1 = (pT_min < df['p1']) & (df['p1'] < pT_max) 
-            mask_pT2 = (pT_min < df['p2']) & (df['p2'] < pT_max)
-        else:
-            mask_pT1 = (pT_min < df['pT1']) & (df['pT1'] < pT_max) 
-            mask_pT2 = (pT_min < df['pT2']) & (df['pT2'] < pT_max)
+        self.mask_eta1, self.mask_eta2 = mask_eta1, mask_eta2 = self.get_mask_eta(df)
+        self.mask_pT1,  self.mask_pT2  = mask_pT1,  mask_pT2  = self.get_mask_pT(df)
+        self.mask_d0q1, self.mask_d0q2 = mask_d0q1, mask_d0q2 = self.get_mask_d0q(df)    
+        self.mask_dR1,  self.mask_dR2  = mask_dR1,  mask_dR2  = self.get_mask_dR(df) 
         
-        mask_eta1 = (eta_min < abs(df['eta1'])) & (abs(df['eta1']) < eta_max)
-        mask_eta2 = (eta_min < abs(df['eta2'])) & (abs(df['eta2']) < eta_max)        
-
         # Combine masks.
-        mask_kinembin_lep1 = mask_eta1 & mask_pT1
-        mask_kinembin_lep2 = mask_eta2 & mask_pT2
+        self.mask_kinembin_lep1 = mask_massZ & mask_dR1 & mask_eta1 & mask_pT1 & mask_d0q1
+        self.mask_kinembin_lep2 = mask_massZ & mask_dR2 & mask_eta2 & mask_pT2 & mask_d0q2
 
-        all_masks = mask_dR & mask_massZ & (mask_kinembin_lep1 | mask_kinembin_lep2)
+        # Keep all events in which either muon1 passed all selections or muon2 passed all. 
+        self.all_masks = self.mask_kinembin_lep1 | self.mask_kinembin_lep2
         
         # Apply masks and update DataFrame.
-        self.binned_df = df[all_masks]
+        self.binned_df = df[self.all_masks]
         
-        self.cuts =  r"$%.1f < m_{\mu\mu} < %.1f$ GeV" % (self.massZ_min, self.massZ_max)
-        self.cuts += r",   $%.2f < \left| \eta \right| < %.2f$" % (self.eta_min, self.eta_max)
-        self.cuts += r",   $%d <$ %s $< %d$ GeV" % (self.pT_min, self.p_str_latex, self.pT_max)  # The string brings in its own '$'.
-        self.cuts += r",   $\Delta R < %.3f$" % (self.dR_cut)
         self.n_evts_found = len(self.binned_df)
         
         if (verbose): 
             perc = self.n_evts_found / float(self.n_evts_asked_for) * 100.
             print(r"Events found: {} ({:.2f}% of total events), using cuts: {}".format(self.n_evts_found, perc, self.cuts))
-            
-    def save_exclusive_masks(self):
-        """
-        Save two boolean masks:
-            mask 1 -> shows which events muon1 passes
-            mask 2 -> shows which events muon2 passes
-        Keeping the masks separate like this is what is "exlusive" about the masks. 
-        """
-        df = self.binned_df
-    
-        # Create Masks
+      
+    def get_mask_d0q(self, df):
+        if self.d0_type == "PV":
+            mask_d0q1 = (self.d0q_min < df['d0PVq1']) & (df['d0PVq1'] < self.d0q_max)
+            mask_d0q2 = (self.d0q_min < df['d0PVq2']) & (df['d0PVq2'] < self.d0q_max)
+        elif self.d0_type == "BS":
+            mask_d0q1 = (self.d0q_min < df['d0BSq1']) & (df['d0BSq1'] < self.d0q_max)
+            mask_d0q2 = (self.d0q_min < df['d0BSq2']) & (df['d0BSq2'] < self.d0q_max)
+        self.cuts += "\n" + r"$%.3f < d_{0}^{\mathrm{%s}}*q(\mu) < %.3f$" % (self.d0q_min, self.d0_type, self.d0q_max)
+        return mask_d0q1, mask_d0q2
+        
+    def get_mask_pT(self, df):
         if (self.use_ptotal_instead):
             mask_pT1 = (self.pT_min < df['p1']) & (df['p1'] < self.pT_max) 
             mask_pT2 = (self.pT_min < df['p2']) & (df['p2'] < self.pT_max)
         else:
             mask_pT1 = (self.pT_min < df['pT1']) & (df['pT1'] < self.pT_max) 
             mask_pT2 = (self.pT_min < df['pT2']) & (df['pT2'] < self.pT_max)
-        
-        mask_eta1 = (self.eta_min < abs(df['eta1'])) & (abs(df['eta1']) < self.eta_max)
-        mask_eta2 = (self.eta_min < abs(df['eta2'])) & (abs(df['eta2']) < self.eta_max)        
+        self.cuts += "\n" + r"$%d <$ %s $< %d$ GeV" % (self.pT_min, self.p_str_latex, self.pT_max)  # The string brings in its own '$'.
+        return mask_pT1, mask_pT2
 
-        # Combine masks and save them.
-        self.mask_kinembin_lep1 = mask_eta1 & mask_pT1
-        self.mask_kinembin_lep2 = mask_eta2 & mask_pT2
+    def get_mask_eta(self, df):
+        mask_eta1 = (self.eta_min < abs(df['eta1'])) & (abs(df['eta1']) < self.eta_max)
+        mask_eta2 = (self.eta_min < abs(df['eta2'])) & (abs(df['eta2']) < self.eta_max)   
+        self.cuts += "\n" + r"$%.2f < \left| \eta^{\mathrm{REC}} \right| < %.2f$" % (self.eta_min, self.eta_max)
+        return mask_eta1, mask_eta2
+
+    def get_mask_dR(self, df):
+        mask_dR1 = (df['delta_R1'] < self.dR_cut)
+        mask_dR2 = (df['delta_R2'] < self.dR_cut)
+        self.cuts += "\n" + r"$\Delta R < %.3f$" % (self.dR_cut)
+        return mask_dR1, mask_dR2
+    
+    def get_mask_massZ(self, df):
+        mask_massZ = (self.massZ_min < df['massZ']) & (df['massZ'] < self.massZ_max)
+        self.cuts += r"$%.1f < m_{\mu\mu} < %.1f$ GeV" % (self.massZ_min, self.massZ_max)
+        return mask_massZ    
+    
+    def apply_mask_get_data(self, kinem, lep_selection_type="", weave=False):
+        """
+        Return the kinematic lepton data which pass selections in this kinematic bin.
+        E.g. Apply a boolean mask for event selection and retrieve all "delta_R1" values.
+
+        Parameters
+        ----------
+        kinem : str
+            A complete branch name in the DataFrame or root file. 
+                E.g. "pT1", "genLep_pt2", "massZ"
+        lep_selection_type : int
+            The lepton's mask you want to apply.
+            
+            lep_selection_type = "1" -- get kinem values in which muon1 passes all selection criteria 
+                                       (muon 2 may or may not pass selections).
+            lep_selection_type = "2" -- get kinem values in which muon2 passes all selection criteria.
+            lep_selection_type = "both" -- BOTH muons must pass selections to get data from event.
+            lep_selection_type = "either" -- Either muon1, or muon2, or both must pass selections to get data from event.
+            lep_selection_type = "independent" -- Get kinematic values for muon1 and muon2, with no restriction on which event they came from.
+                Note: If kinem ends in "1" or "2", then the kinematic values of the other lepton are automatically grabbed.
+        weave : bool
+            Weave lep1 kinematic values and lep2 kinematic values together, so that slicing doesn't just give lep1. 
+            Only relevant for "independent" selection.
         
+        Returns
+        -------
+        kinem_vals : array 
+            Kinematic values with chosen mask applied. 
+            All values satisfy selection criteria for this kinematic bin.
+        """
+        df = self.binned_df
+        mask1 = self.mask_kinembin_lep1
+        mask2 = self.mask_kinembin_lep2
+        
+        if lep_selection_type == "1":
+            # Only select events in which muon1 passes selections.
+            mask = mask1
+        elif lep_selection_type == "2":
+            # Only select events in which muon2 passes selections.
+            mask = mask2
+        elif lep_selection_type == "both":
+            # Only select events in which BOTH muon1 and muon2 pass selections.
+            mask = mask1 & mask2
+        elif lep_selection_type == "either":
+            # Only select events in which BOTH muon1 and muon2 pass selections.
+            mask = mask1 | mask2
+        elif lep_selection_type == "independent":
+            # Go through all muons in all events, without regard for other muon. 
+            if kinem[-1] in ["1", "2"]:
+                # Lep1 (or lep2) kinematic detected. Go find the other lepton's kinematic values.
+                # FIXME: the variable massZ_vtxChi2 will be wrongly caught by this 'if' statement!
+                kinem1 = kinem[:-1] + "1"
+                kinem2 = kinem[:-1] + "2"
+                kinem_vals1 = df[kinem1][mask1].values
+                kinem_vals2 = df[kinem2][mask2].values
+            else:
+                # The kinematic doesn't depend on lep1 or lep2, like: massZ, GENmass2l, etc.
+                kinem_vals1 = df[kinem][mask1].values
+                kinem_vals2 = df[kinem][mask2].values
+            
+            if (weave):
+                # Weave values together so that when slicing (like [:5]), you don't just grab kinem_vals1. 
+                kinem_vals = np.array( weave_lists(kinem_vals1, kinem_vals2) )
+            else: 
+                kinem_vals = np.append(kinem_vals1, kinem_vals2)
+        
+            return kinem_vals
+        
+        else: 
+            raise RuntimeError("[ERROR] `lep_selection_type` was not specified properly. Stopping now.")
+        
+        # A selection, other than "independent" was chosen.
+        kinem_vals = df[kinem][mask].values
+        
+        return kinem_vals
+    
     def make_2D_plot(self, 
                      x_kinem, y_kinem, 
                      x_bin_limits=[0, 1, 0.1], y_bin_limits=[0, 1, 0.1],
+                     lep_selection_type="",
                      run_over_only_n_evts=-1, 
                      title="",
                      exclusive=True,
@@ -415,11 +509,11 @@ class KinemBinnedEtaPt():
         Parameters
         ----------
         x_kinem : str
-            The kinematical variable to be plotted along x-axis. 
+            The PARTIAL name of the kinematical variable to be plotted along x-axis. 
             Only works for kinematics which end with '1' or '2'.
             - Example: x_kinem="delta_theta" (for which there are two branches: "delta_theta1", "delta_theta2")
         y_kinem : str
-            The kinematical variable to be plotted along y-axis. 
+            The PARTIAL name of the kinematical variable to be plotted along y-axis. 
             Only works for kinematics which end with '1' or '2'.
             - Example: y_kinem="delta_eta" (for which there are two branches: "delta_eta1", "delta_eta2")
         x_bin_limits : list or array-like of floats
@@ -428,6 +522,9 @@ class KinemBinnedEtaPt():
         y_bin_limits : list or array-like of floats
             The bin limits on the vertical axis. [bin_min_left_edge, bin_max_right_edge, bin_width]
             - Example: [-2.5, 2.5, 0.1]
+        lep_selection_type : str
+            What kind of selection to perform on the leptons. Choices:
+            #UPDATE
         run_over_only_n_evts : int
             Number of events to plot. Use '-1' to use all events in this kinembin.
         title : str
@@ -443,23 +540,18 @@ class KinemBinnedEtaPt():
             Get debug and code progress info.
         outpath : str
             Path to save plot.
-            
-        FIXME:
-        - Maybe generalize this into a method to make any 2D plot.
         """           
-        if run_over_only_n_evts == -1:
-            run_over_only_n_evts = self.n_evts_found       
-
-        n = run_over_only_n_evts
-        
         x_kinem1 = x_kinem + "1"
         x_kinem2 = x_kinem + "2"
         y_kinem1 = y_kinem + "1"
         y_kinem2 = y_kinem + "2"
         
-        x_vals = self.apply_mask_get_data(x_kinem1, x_kinem2, run_over_only_n_evts=n, exclusive=exclusive)    
-        y_vals = self.apply_mask_get_data(y_kinem1, y_kinem2, run_over_only_n_evts=n, exclusive=exclusive)    
-        
+        x_vals = self.apply_mask_get_data(x_kinem1, lep_selection_type=lep_selection_type, weave=True)
+        y_vals = self.apply_mask_get_data(y_kinem2, lep_selection_type=lep_selection_type, weave=True)
+        if run_over_only_n_evts != -1:
+            x_vals = x_vals[:run_over_only_n_evts]
+            y_vals = y_vals[:run_over_only_n_evts]
+
         # A special case to make comparison of (delta_phi vs. delta_theta) easy with (delta_phi vs. delta_eta).
         if (x_kinem1[:-1] == "delta_theta") and (y_kinem1[:-1] == "delta_phi"):
             x_vals *= -1
@@ -472,122 +564,56 @@ class KinemBinnedEtaPt():
         y_2D_bins, y_2D_bin_width = make_binning_array(y_bin_limits) 
         
         # Plot 1: dphi vs. deta
-        x_label_1 = label_LaTeX_dict[x_kinem1]["label"]
-        x_label_2 = label_LaTeX_dict[x_kinem2]["label"]
-        y_label_1 = label_LaTeX_dict[y_kinem1]["label"]
-        y_label_2 = label_LaTeX_dict[y_kinem2]["label"]
-        
-        x_unit = label_LaTeX_dict[x_kinem2]["units"]
-        y_unit = label_LaTeX_dict[y_kinem2]["units"]
-        
-        def prep_2D_label(label_1, label_2, unit, bin_width):
-            label = "{},   {}".format(label_1, label_2)
-            label += "\n" + "(bin width: {:.2E})".format(bin_width)
-            if len(unit) > 0:
-                label =label.rstrip(")")
-                label += " {})".format(unit)  
-            return label
-        
-        x_label = prep_2D_label(x_label_1, x_label_2, x_unit, x_2D_bin_width)
-        y_label = prep_2D_label(y_label_1, y_label_2, y_unit, y_2D_bin_width)
+        if lep_selection_type not in ["1","2"]:
+            x_label = label_LaTeX_dict[x_kinem1]["independent_label"]
+            y_label = label_LaTeX_dict[y_kinem1]["independent_label"]
+        else:
+            x_label_1 = label_LaTeX_dict[x_kinem1]["label"]
+            x_label_2 = label_LaTeX_dict[x_kinem2]["label"]
+            y_label_1 = label_LaTeX_dict[y_kinem1]["label"]
+            y_label_2 = label_LaTeX_dict[y_kinem2]["label"]
+
+            x_unit = label_LaTeX_dict[x_kinem2]["units"]
+            y_unit = label_LaTeX_dict[y_kinem2]["units"]
+
+            def prep_2D_label(label_1, label_2, unit, bin_width):
+                label = "{},   {}".format(label_1, label_2)
+                label += "\n" + "(bin width: {:.2E})".format(bin_width)
+                if len(unit) > 0:
+                    label =label.rstrip(")")
+                    label += " {})".format(unit)  
+                return label
+
+            x_label = prep_2D_label(x_label_1, x_label_2, x_unit, x_2D_bin_width)
+            y_label = prep_2D_label(y_label_1, y_label_2, y_unit, y_2D_bin_width)
 
         ax.set_xlabel(x_label)#, fontsize=label_size)
         ax.set_ylabel(y_label)#, fontsize=label_size)
         
         if len(title) > 0:
             title += "\n"
-        cuts = "Selection:\n" + r"{}".format(self.cuts)
-        ax.set_title(title + cuts)#, fontsize=label_size)
+        cuts = "Selection type = {}:\n".format(lep_selection_type) 
+        cuts += r"{}".format(self.cuts)
+#         ax.set_title(title + cuts)#, fontsize=label_size)
     
         # Stats: 
-        stat_text_x = 0.82
-        stat_text_y = 0.9
+        stat_text_x = 0.1
+        stat_text_y = 0.83
         
         stats_ls = get_stats_2Dhist(x_vals, y_vals)
-        leg_label = make_stats_legend_for_2dhist(stats_ls)
+        leg_label = cuts + "\n" + make_stats_legend_for_2dhist(stats_ls)
         ax.text(stat_text_x, stat_text_y, leg_label, horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
         
         newcmp = change_cmap_bkg_to_white('rainbow')
         bin_vals, x_bin_edges, y_bin_edges, im = ax.hist2d(x_vals, y_vals, bins=[x_2D_bins, y_2D_bins], cmap=newcmp)
         plt.colorbar(im, ax=ax)
-        
-        # Save plots, if you want. 
-        file_name  = "2Dplot_dphi_vs_detaANDdtheta"
-        file_name += "__%.2f_eta_%.2f" % (self.eta_min, self.eta_max)
-        file_name += "__%d_%s_%d" % (self.pT_min, self.p_str, self.pT_max)
-        
-        save_plots_to_outpath(save_plot, outpath, file_name, save_as_png, verbose)
-
-
-    def apply_mask_get_data(self, kinem1, kinem2, run_over_only_n_evts=-1, exclusive=True):
-        """
-        Return the kinematic muon data which pass selections of this kinematic bin.
-        Example: Retrieve all "delta_R1" and "delta_R2" values after masks have been applied.
-
-        Parameters
-        ----------
-        kinem1 : str
-            A branch in the DataFrame or root file. Should correspond to muon1. 
-                Examples: "pT1", "genLep_pt1"
-        kinem2 : str
-            A branch in the DataFrame or root file. Should correspond to muon2. 
-                Examples: "pT2", "genLep_pt2"
-        run_over_only_n_evts : int
-            Number of events to run over. Use '-1' to specify all available events.
-        exclusive : bool
-            Means "only put muons which passed all selections in this plot".
-            FIXME: It must be set to True for now...
-        
-        Returns
-        -------
-        kinem_vals : array 
-            kinem1 values (muon1) woven together with kinem2 values (muon2).
-            All values satisfy selection criteria for this kinematic bin.
-        """
-        # Quick check.
-        if kinem1[:-1] != kinem2[:-1]:
-            raise ValueError("Problem! `kinem1` and `kinem2` are not the same kind of kinematical variable (e.g. `pT1` and `pT2`).\nStopping now.")
-        
-        df = self.binned_df
-        #--- Get data ---#
-        if (exclusive):   
-            # Keep only the muons which pass the kinem bin selection. 
-            vals_muon1 = df[kinem1][self.mask_kinembin_lep1].values  # Muon 1 passes kinem bin selection.
-            vals_muon2 = df[kinem2][self.mask_kinembin_lep2].values  # Muon 2 passes kinem bin selection.
-                        
-            if run_over_only_n_evts == -1:
-                # Running over all events. No need to slice.
-                kinem_vals = np.append(vals_muon1, vals_muon2)
-            else:
-                n = run_over_only_n_evts
-                # Weave muon1 and muon2 values together in systematic way.
-                # Otherwise muon1 values would mostly be selected when doing a slice, like [:n].
-                weave_ls = weave_lists(vals_muon1, vals_muon2)
-                kinem_vals = np.array(weave_ls)[:n]
-
-        else:
-            #--------# DEPRECATED FOR NOW.
-            # Keep both muons from each event in which AT LEAST ONE muon passed the kinem bin selection. 
-            raise RuntimeError("Stopping now. This section hasn't been fully developed.\nSet exclusive=True.")
-            
-            kinem_vals = np.append(self.binned_df['delta_eta1'][:n].values, self.binned_df['delta_eta2'][:n].values)
-            y_vals = np.append(self.binned_df['delta_phi1'][:n].values, self.binned_df['delta_phi2'][:n].values)
-
-            x2_vals = np.append(self.binned_df['delta_theta1'][:n].values, self.binned_df['delta_theta2'][:n].values)
-            x2_vals = x2_vals * -1
-            y_vals = np.append(self.binned_df['delta_phi1'][:n].values, self.binned_df['delta_phi2'][:n].values)
-            #--------#
-        
-        combined_key = "{} and {}".format(kinem1, kinem2)
-        self.kinem_vals_after_selection[combined_key] = kinem_vals
-        
-        return kinem_vals
-    
 
     def plot_kinem_genrec_comparison(self,
                               kinem_gen, kinem_rec, 
-                              x_range_ls=[-1, 1],
+                              lep_selection_type="independent", 
+                              x_limits=[-1, 1],
                               bin_limits=[-0.5,0.5,0.5], 
+                              run_over_only_n_evts=-1,
                               ax=None, ax_ratio=None, log_scale=False
                               ):
             """
@@ -603,7 +629,7 @@ class KinemBinnedEtaPt():
             kinem_rec : str
                 The reconsructed-level kinematical variable from the column of DF.
                 E.g. "pT1" or "eta2", etc.
-            x_range_ls : 2-element list
+            x_limits : 2-element list
                 The x_min and x_max to show along x_axis, for viewing purposes: [x_min, x_max]
             bin_limits : 3-element list
                 [first_bin_left_edge, last_bin_right_edge, bin_width]
@@ -622,19 +648,22 @@ class KinemBinnedEtaPt():
             x_bin_arr, x_bin_width = make_binning_array(bin_limits)
             x_bin_centers_arr = shift_binning_array(x_bin_arr)
 
-            lep = kinem_gen[-1]  # Get last character of kinematic. Example: pT1 --> 1. Should be a string!
-            
             #--- Get data ---#
-            if ("1" in kinem_gen) and ("1" in kinem_rec): 
-                data_rec = df[kinem_rec][self.mask_kinembin_lep1].values  # Muon 1 passes kinem bin selection.
-                data_gen = df[kinem_gen][self.mask_kinembin_lep1].values  # Muon 1 passes kinem bin selection.
-            elif ("2" in kinem_gen) and ("2" in kinem_rec):
-                data_rec = df[kinem_rec][self.mask_kinembin_lep2].values  # Muon 1 passes kinem bin selection.
-                data_gen = df[kinem_gen][self.mask_kinembin_lep2].values  # Muon 1 passes kinem bin selection.
-            else:
-                err_msg = "\n    Either kinem_gen or kinem_rec does not end with a '1' or '2', or they are not the same as each other.\nStopping now."
+            # Make sure you're plotting gen and rec of same lepton.
+            if kinem_gen[-1] != kinem_rec[-1]:
+                print("[WARNING] It seems you are plotting lepton 1 kinematics vs. lepton 2's!")
+            if kinem_gen[-1] != lep_selection_type:
+                err_msg = "[ERROR] You want to plot lep{} kinematics but you specified lep{} selection type.".format(kinem_gen[-1], lep_selection_type)
                 raise ValueError(err_msg)
 
+            # Chooses either lep1 or lep2. 
+            data_rec = self.apply_mask_get_data(kinem_rec, lep_selection_type)
+            data_gen = self.apply_mask_get_data(kinem_gen, lep_selection_type)
+
+            if run_over_only_n_evts != -1:
+                data_rec = data_rec[:run_over_only_n_evts]
+                data_gen = data_gen[:run_over_only_n_evts]
+                
             # Gen and Reco stats:
             stats_ls_gen = get_stats_1Dhist(data_gen)
             stats_ls_rec = get_stats_1Dhist(data_rec)
@@ -691,12 +720,15 @@ class KinemBinnedEtaPt():
             
             # Remember that ax shouldn't have an x-label; it's covered by the ax_ratio. 
             ax.set_ylabel(y_label, fontsize=textsize_axislabels)
-            ax.set_title(r"Selection: {}".format(self.cuts), fontsize=textsize_title)
+#             ax.set_title(r"Selection: {}".format(self.cuts), fontsize=textsize_title)
             
+            textbox_text = "Selection type = {}:\n".format(lep_selection_type) + self.cuts
+            ax.text(0.025, 0.83, textbox_text, horizontalalignment='left', verticalalignment='center', transform=ax.transAxes)
+        
             plt.minorticks_on()
 
-            x_min = x_range_ls[0]
-            x_max = x_range_ls[1]
+            x_min = x_limits[0]
+            x_max = x_limits[1]
             ax.set_xlim([x_min, x_max])
             ax_ratio.set_xlim([x_min, x_max])
             ax_ratio.set_ylim([-0.12, 0.12])
@@ -717,7 +749,8 @@ class KinemBinnedEtaPt():
             
             return ax, ax_ratio
 
-    def plot_1D_kinematics(self, lep, kinem, x_limits=[0,0], bin_limits=[0,0,0], ax=None, x_label="", y_label="", title="", y_max=-1, log_scale=False, iter_gaus=(False, 0)):
+    def plot_1D_kinematics(self, kinem="", lep_selection_type="independent", x_limits=[0,0], bin_limits=[0,0,0], run_over_only_n_evts=-1,
+                           ax=None, x_label="", y_label="", title="", y_max=-1, log_scale=False, iter_gaus=(False, 0)):
         """
         Make a histogram of a kinematical variable in the DF.  
         FIXME: 
@@ -726,15 +759,20 @@ class KinemBinnedEtaPt():
         
         Parameters
         ----------
-        lep : int
-            Either `1` or `2`. Indicates which lepton you are referring to. 
         kinem : str
-            The full name of the kinematical branch/column. 
-            E.g. `delta_eta1` or `delta_R2`
+            The full name of the kinematical branch/column ("delta_eta1", "delta_R2", "massZ", etc.)
+        lep_selection_type : int
+            Indicates the kind of selection to apply on leptons:
+                lep_selection_type = "1"    -- Plot kinem values in which only lepton1 passed selections.
+                lep_selection_type = "2"    -- Plot kinem values in which only lepton2 passed selections.
+                lep_selection_type = "both" -- Plot kinem values in which lepton1 AND lepton2 passed selections.
+                lep_selection_type = "either" -- Plot kinem values in which lepton1 OR lepton2 passed selections.
         x_limits : 2-element list
             The x_min and x_max to show along x_axis, for viewing purposes: [x_min, x_max]
         bin_limits : 3-element list
             [first_bin_left_edge, last_bin_right_edge, bin_width]   
+        run_over_only_n_evts : int
+            Number of events to put into histogram. 
         ax : axes object
             An external axes object to pass in, on which the main plot will be plotted.
             If None, a default one will get created.
@@ -753,11 +791,23 @@ class KinemBinnedEtaPt():
             If True, perform an iterative gaussian fit on the core N times.
             Syntax: (switch, N)
         """
+        #--- Consistency checks ---#
+        if ("BS" in kinem) or ("PV" in kinem):
+            if self.d0_type not in kinem:
+                err_msg = "[ERROR] The kinematic '{}' was specified but d0_type is '{}'.\nStopping now".format(kinem, self.d0_type)
+                raise ValueError(err_msg)
+                
         df = self.binned_df
         
+        #--- Get data ---#
+        data = self.apply_mask_get_data(kinem=kinem, lep_selection_type=lep_selection_type, weave=True)  # kinem must be a full name
+            
+        if run_over_only_n_evts != -1:
+            data = data[:run_over_only_n_evts]
+            
         if ax is None:
             # Axes doesn't exist yet. Make it.
-            fig, ax = plt.subplots(figsize=(18,13.5))
+            fig, ax = plt.subplots(figsize=(12.8,9.6))
             
         if bin_limits == [0,0,0]:
             # No bin limits specified, so use default binning for this kinematical variable.
@@ -768,20 +818,13 @@ class KinemBinnedEtaPt():
             x_limits = label_LaTeX_dict[kinem]["default_x_limits"]
             
         unit = label_LaTeX_dict[kinem]["units"]
-        
-        #--- Get data ---#
-        if lep == 1: 
-            data = df[kinem][self.mask_kinembin_lep1].values  # Muon 1 passes kinem bin selection.
-        elif lep == 2:
-            data = df[kinem][self.mask_kinembin_lep2].values  # Muon 1 passes kinem bin selection.
-        else:
-            err_msg = "\n    You  must specify lep = 1 or 2.\nStopping now."
-            raise ValueError(err_msg)
             
         x_bins, binw = make_binning_array(bin_limits)
 
         if len(x_label) == 0:
-            x_label = label_LaTeX_dict[kinem]["label"]
+                # Both muons are being chosen. Change the labels.
+            key = "label" if lep_selection_type in ["1","2"] else "independent_label"
+            x_label = label_LaTeX_dict[kinem][key]
             if len(unit) > 0:
                 x_label += " [{}]".format(unit)
             
@@ -789,58 +832,28 @@ class KinemBinnedEtaPt():
             # User didn't specify label, so make it.
             y_label = hist_y_label(binw, unit)
             
-        if len(title) == 0:
-#             title = "Selection: " + self.cuts
-            title = r"Selection: {}".format(self.cuts)
+#         if len(title) == 0:
+#             title = "Selections:\n" + self.cuts
         
-        ax, bin_vals, bin_edges, stats = make_1D_dist(ax, data, x_limits, x_bins, x_label, y_label, title, y_max=-1, log_scale=False)    
+        ax, bin_vals, bin_edges, stats = make_1D_dist(ax, data, x_limits, x_bins, x_label, y_label, title, y_max=-1, log_scale=False)
+        
+        # Nested dictionaries.
+        # Initializing this particular kinematic bin's dictionary of stats.
+        self.stats_dict[kinem] = {}
+        self.stats_dict[kinem]['hist_stats'] = stats
+
+        textbox_text = r"Selection type = {}:".format(lep_selection_type) + "\n"
+        if lep_selection_type in ["1","2"]:
+            textbox_text = textbox_text.replace("= ", r"$\mu$")
+        textbox_text += self.cuts
+        ax.text(0.03, 0.83, textbox_text, horizontalalignment='left', verticalalignment='center', transform=ax.transAxes)
         
         if (iter_gaus[0]):
             # Do iterative fitting procedure.
+            # Produce a dictionary of stats for these fits.
             stats_dict, ax = iterative_fit_gaus(iter_gaus[1], bin_edges, bin_vals, first_mean=stats[1], first_stdev=stats[3], ax=ax)
-            self.stats_dict = stats_dict
-         
-#             iterations = iter_gaus[1]
-#             msg = "Performing {} iterative Gaussian fits".format(iterations)
-#             if (iterations == 1):
-#                 msg = msg.replace("fits", "fit") 
-#             print(msg)
-
-#             bin_centers = shift_binning_array(bin_edges)
-            
-#             count = 0
-#             popt = np.zeros(3)
-#             while count < iterations:
-#                 count += 1
-                
-# #                 fit_ls = iterative_fit_gaus(bin_centers, bin_vals, fit_range_start=[0,0], iterations=1)
-#                 if count == 1:
-#                     # First fit: use original histogram's mean and stdev to choose a fit range.
-#                     this_mean  = stats[1]
-#                     this_stdev = stats[3]
-#                 else:
-#                     # Otherwise use the last fit's optimized parameters.
-#                     this_mean  = popt[1]
-#                     this_stdev = popt[2]
-#                 this_x_min = this_mean - 2*this_stdev
-#                 this_x_max = this_mean + 2*this_stdev
-                
-#                 mask = get_subset_mask(bin_centers, x_min=this_x_min, x_max=this_x_max)
-                
-#                 new_bin_centers = bin_centers[mask]
-#                 new_bin_vals = bin_vals[mask]
-                
-#                 popt, popt_err, pcov = fit_with_gaussian(new_bin_centers, new_bin_vals, guess_params=[1,this_mean,this_stdev])
-                
-#                 # Get the y-vals of the Gaussian fit for plotting
-#                 gaus_y_vals = gaussian(new_bin_centers, *popt)
-
-#                 leg_label_fit = make_stats_legend_for_gaus_fit(popt, popt_err)
-#                 leg_label_fit = leg_label_fit.replace("Fit", "Fit {}:".format(count))
-
-#                 ax.plot(new_bin_centers, gaus_y_vals, color=color_dict[count+1], label=leg_label_fit, linestyle='-', marker="")
-#                 ax.legend()
-            
+            # Use plotted kinem as the key for this dict of stats. 
+            self.stats_dict[kinem]['fit_stats'] = stats_dict         
             
     def count_in_pT_eta_region_exclusive(self):
         """
@@ -849,4 +862,3 @@ class KinemBinnedEtaPt():
         (as opposed to counting both muons from event just because one pass the cuts).
         """
         pass
-#         return n_passed = 

@@ -47,6 +47,7 @@ def save_plots_to_outpath(save_plot=False, outpath="", file_name="DEFAULT_NAME",
 def make_1D_dist(ax, data, x_limits, x_bins, x_label, y_label, title, y_max=-1, log_scale=False):
     """
     Draw a kinematic distribution (e.g. eta1, gen_phi2, etc.) to an axes object in a figure.
+    This function does plot under/overflow bins.
     
     Parameters
     ----------
@@ -69,6 +70,19 @@ def make_1D_dist(ax, data, x_limits, x_bins, x_label, y_label, title, y_max=-1, 
         Max on y-axis. If y_max <= 0, then matplotlib will choose y_max.
     log_scale : bool
         If True, sets the y-axis to log scale. 
+        
+    Returns
+    -------
+    ax : axes object
+        The axes on which the histogram will be drawn.
+    bin_vals : list
+        Values (entries) in each bin.
+        Returns the values of the modified data (i.e. already put into under/overflow bins).
+    bin_edges : list
+        Edges of bins.
+    stats : list
+        A 5-element list of the statistics of the ORIGINAL data 
+        (i.e. data NOT put into under/overflow bins).
     """
     textsize_legend = 9
     textsize_axislabels = 12
@@ -168,9 +182,9 @@ def get_stats_1Dhist(data):
     """
     n = len(data)
     mean = np.mean(data)
-    mean_err = np.abs(mean) / np.sqrt(n)
     stdev = np.std(data)
-    stdev_err = stdev / np.sqrt(2*n)
+    mean_err = np.abs(stdev) / np.sqrt(n)
+    stdev_err = np.abs(stdev) / np.sqrt(2*n)
     
     stats = [n, mean, mean_err, stdev, stdev_err]
 
