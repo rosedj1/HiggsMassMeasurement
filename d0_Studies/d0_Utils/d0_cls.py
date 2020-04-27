@@ -208,7 +208,7 @@ class HistProxy:
         
         
         
-class KinemBinnedEtaPt():
+class KinematicBin():
 
     def __init__(self, df_original, n_evts, 
                  massZ_cut_ls, eta_cut_ls, pT_cut_ls, d0q_cut_ls, d0_type="BS", dR_cut=0.02, 
@@ -597,7 +597,8 @@ class KinemBinnedEtaPt():
 #         ax.set_title(title + cuts)#, fontsize=label_size)
     
         # Stats: 
-        stat_text_x = 0.1
+#         stat_text_x = 0.1
+        stat_text_x = 0.2
         stat_text_y = 0.83
         
         stats_ls = get_stats_2Dhist(x_vals, y_vals)
