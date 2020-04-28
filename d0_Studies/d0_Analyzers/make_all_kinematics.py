@@ -1,3 +1,7 @@
+#----------------------------------------------------------------#
+#--- Make all kinematic plots into 1 PDF with iterative fits. ---#
+#----------------------------------------------------------------#
+
 import sys
 import os
 
@@ -10,38 +14,15 @@ sys.path.append('/Users/Jake/HiggsMassMeasurement/')
 sys.path.append('/Users/Jake/HiggsMassMeasurement/d0_Studies/')
 
 # Neat tricks.
-#from itertools import chain
 from matplotlib.backends.backend_pdf import PdfPages
-#from matplotlib.patches import Rectangle
-#from IPython.display import display
-#from IPython.core.display import display, HTML
-#display(HTML("<style>.container { width:100% !important; }</style>"))
 
 # Local imports. 
 from PyUtils.Utils_Files import makeDirs, make_str_title_friendly, check_overwrite
-#from PyUtils.Utils_Plotting import (change_cmap_bkg_to_white, save_plots_to_outpath, make_1D_dist, get_stats_1Dhist, 
-#                                    get_stats_2Dhist, hist_y_label, make_2by2_subplots_for_ratioplots,
-#                                    add_underoverflow_entries, make_stats_legend_for_1dhist, make_stats_legend_for_2dhist, 
-#                                    make_stats_legend_for_gaus_fit)
 from PyUtils.Utils_Plotting import make_2by2_subplots_for_ratioplots
-#from PyUtils.Utils_Physics import theta2pseudorap, pseudorap2theta, calc_dR, calc_dphi
-#from PyUtils.Utils_StatsAndFits import gaussian, fit_with_gaussian, iterative_fit_gaus
-#from PyUtils.Utils_Collection_Helpers import weave_lists
 from d0_Utils.d0_cls import KinematicBin
-#from d0_Utils.d0_fns import (make_binning_array, shift_binning_array, get_subset_mask, make_kinem_subplot)
-#from d0_Utils.d0_dicts import color_dict, label_LaTeX_dict
 
 plt.rcParams.update({'figure.max_open_warning': 10})    # Related to saving memory and opening plots.
-
 plt.style.use('cmsstyle_plot')
-# plt.style.use("grid_multiple_plots")
-
-
-
-### Make all kinematic plots into 1 PDF with iterative fits.
-
-# def make_all_kinem_plots(kbin, iterations):
-#     with PdfPages("/Users/Jake/Desktop/20200415/kinematics_and_fits/practice1.pdf") as pdf:
 
 outpath = "/Users/Jake/Desktop/20200426/test8.pdf"
 
@@ -67,6 +48,7 @@ kbin = KinematicBin(df_MC_2016,
                         verbose=True)
 
 
+# def make_all_kinem_plots(kbin, iterations, outfile):
 with PdfPages(outpath) as pdf:
 
     # Rec vs. Gen plots require special fig and ax. 

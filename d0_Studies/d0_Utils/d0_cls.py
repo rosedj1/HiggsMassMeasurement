@@ -10,7 +10,7 @@ from PyUtils.Utils_Plotting import (change_cmap_bkg_to_white, save_plots_to_outp
 from PyUtils.Utils_Physics import theta2pseudorap, pseudorap2theta, calc_dR, calc_dphi
 from PyUtils.Utils_StatsAndFits import gaussian, fit_with_gaussian, iterative_fit_gaus
 from PyUtils.Utils_Collection_Helpers import weave_lists
-from d0_Utils.d0_fns import (make_binning_array, shift_binning_array, get_subset_mask, make_kinem_subplot)
+from d0_Utils.d0_fns import (make_binning_array, shift_binning_array, get_subset_mask, make_kinem_subplot, combine_cut_list)
 from d0_Utils.d0_dicts import color_dict, label_LaTeX_dict
 
 class HistInfo:
@@ -255,6 +255,8 @@ class KinematicBin():
         self.binned_df = None  # Will become the collection of events in which mu1 or mu2 passes all cuts.
         
         self.cuts = ""
+        self.sorted_cut_ls = []
+        self.cut_dict = {}
         self.use_ptotal_instead = use_ptotal_instead
         self.p_str = "p" if (self.use_ptotal_instead) else "pT"
         self.p_str_latex = r"$p^{\mathrm{REC}}$" if (self.use_ptotal_instead) else r"$p_{T}^{\mathrm{REC}}$"
@@ -372,18 +374,26 @@ class KinematicBin():
         
         self.n_evts_found = len(self.binned_df)
         
+        # The cut_dict has been filled. Now convert it to an ordered list (alphabetically).
+        self.sorted_cut_ls = sorted_cut_ls = [value for (key, value) in sorted(self.cut_dict.items())]
+        self.cuts = combine_cut_list(sorted_cut_ls)
+        
         if (verbose): 
             perc = self.n_evts_found / float(self.n_evts_asked_for) * 100.
             print(r"Events found: {} ({:.2f}% of total events), using cuts: {}".format(self.n_evts_found, perc, self.cuts))
       
     def get_mask_d0q(self, df):
-        if self.d0_type == "PV":
+        d0_type = self.d0_type
+        if d0_type == "PV":
             mask_d0q1 = (self.d0q_min < df['d0PVq1']) & (df['d0PVq1'] < self.d0q_max)
             mask_d0q2 = (self.d0q_min < df['d0PVq2']) & (df['d0PVq2'] < self.d0q_max)
-        elif self.d0_type == "BS":
+        elif d0_type == "BS":
             mask_d0q1 = (self.d0q_min < df['d0BSq1']) & (df['d0BSq1'] < self.d0q_max)
             mask_d0q2 = (self.d0q_min < df['d0BSq2']) & (df['d0BSq2'] < self.d0q_max)
-        self.cuts += "\n" + r"$%.3f < d_{0}^{\mathrm{%s}}*q(\mu) < %.3f$" % (self.d0q_min, self.d0_type, self.d0q_max)
+            
+        cuts_d0q = r"$%.3f < d_{0}^{\mathrm{%s}}*q(\mu) < %.3f$" % (self.d0q_min, self.d0_type, self.d0q_max)
+        key = "d0{}q".format(self.d0_type)
+        self.cut_dict[key] = cuts_d0q
         return mask_d0q1, mask_d0q2
         
     def get_mask_pT(self, df):
@@ -393,24 +403,32 @@ class KinematicBin():
         else:
             mask_pT1 = (self.pT_min < df['pT1']) & (df['pT1'] < self.pT_max) 
             mask_pT2 = (self.pT_min < df['pT2']) & (df['pT2'] < self.pT_max)
-        self.cuts += "\n" + r"$%d <$ %s $< %d$ GeV" % (self.pT_min, self.p_str_latex, self.pT_max)  # The string brings in its own '$'.
+        
+        cuts_p = r"$%d <$ %s $< %d$ GeV" % (self.pT_min, self.p_str_latex, self.pT_max)  # The string brings in its own '$'.
+        self.cut_dict[self.p_str] = cuts_p
         return mask_pT1, mask_pT2
 
     def get_mask_eta(self, df):
         mask_eta1 = (self.eta_min < abs(df['eta1'])) & (abs(df['eta1']) < self.eta_max)
         mask_eta2 = (self.eta_min < abs(df['eta2'])) & (abs(df['eta2']) < self.eta_max)   
-        self.cuts += "\n" + r"$%.2f < \left| \eta^{\mathrm{REC}} \right| < %.2f$" % (self.eta_min, self.eta_max)
+        
+        cuts_eta = r"$%.2f < \left| \eta^{\mathrm{REC}} \right| < %.2f$" % (self.eta_min, self.eta_max)
+        self.cut_dict["eta"] = cuts_eta
         return mask_eta1, mask_eta2
 
     def get_mask_dR(self, df):
         mask_dR1 = (df['delta_R1'] < self.dR_cut)
         mask_dR2 = (df['delta_R2'] < self.dR_cut)
-        self.cuts += "\n" + r"$\Delta R < %.3f$" % (self.dR_cut)
+        
+        cuts_dR = r"$\Delta R < %.3f$" % (self.dR_cut)
+        self.cut_dict["delta_R"] = cuts_dR
         return mask_dR1, mask_dR2
     
     def get_mask_massZ(self, df):
         mask_massZ = (self.massZ_min < df['massZ']) & (df['massZ'] < self.massZ_max)
-        self.cuts += r"$%.1f < m_{\mu\mu} < %.1f$ GeV" % (self.massZ_min, self.massZ_max)
+        
+        cuts_massZ = r"$%.1f < m_{\mu\mu} < %.1f$ GeV" % (self.massZ_min, self.massZ_max)
+        self.cut_dict["massZ"] = cuts_massZ
         return mask_massZ    
     
     def apply_mask_get_data(self, kinem, lep_selection_type="", weave=False):
@@ -750,8 +768,7 @@ class KinematicBin():
             
             return ax, ax_ratio
 
-    def plot_1D_kinematics(self, kinem="", lep_selection_type="independent", x_limits=[0,0], bin_limits=[0,0,0], run_over_only_n_evts=-1,
-                           ax=None, x_label="", y_label="", title="", y_max=-1, log_scale=False, iter_gaus=(False, 0)):
+    def plot_1D_kinematics(self, kinem="", lep_selection_type="independent", x_limits=[0,0], bin_limits=[0,0,0], run_over_only_n_evts=-1, ax=None, x_label="", y_label="", title="", y_max=-1, log_scale=False, iter_gaus=(False, 0)):
         """
         Make a histogram of a kinematical variable in the DF.  
         FIXME: 
@@ -847,7 +864,7 @@ class KinematicBin():
         if lep_selection_type in ["1","2"]:
             textbox_text = textbox_text.replace("= ", r"$\mu$")
         textbox_text += self.cuts
-        ax.text(0.03, 0.83, textbox_text, horizontalalignment='left', verticalalignment='center', transform=ax.transAxes)
+        ax.text(0.03, 0.87, textbox_text, horizontalalignment='left', verticalalignment='center', transform=ax.transAxes)
         
         if (iter_gaus[0]):
             # Do iterative fitting procedure.
