@@ -68,7 +68,7 @@ def fit_with_gaussian(x_vals, y_vals, guess_params=[1,0,1]):
 
     return popt, popt_err, pcov
 
-def iterative_fit_gaus(iterations, bin_edges, bin_vals, first_mean=0, first_stdev=1, ax=None, draw_on_axes=True):
+def iterative_fit_gaus(iterations, bin_edges, bin_vals, first_mean=0, first_stdev=1, ax=None, draw_on_axes=True, verbose=True):
     """
     Fit a Gaussian function to the core of a distribution. 
     Do this iteratively to improve the fit of the core. 
@@ -93,10 +93,11 @@ def iterative_fit_gaus(iterations, bin_edges, bin_vals, first_mean=0, first_stde
     ax : axes object
         The original axes object, but now may have Gaussian fits drawn to it.
     """
-    msg = "Performing {} iterative Gaussian fits".format(iterations)
-    if (iterations == 1):
-        msg = msg.replace("fits", "fit") 
-    print(msg)
+    if (verbose):
+        msg = "Performing {} iterative Gaussian fits".format(iterations)
+        if (iterations == 1):
+            msg = msg.replace("fits", "fit") 
+        print(msg)
 
     bin_centers = shift_binning_array(bin_edges)
 

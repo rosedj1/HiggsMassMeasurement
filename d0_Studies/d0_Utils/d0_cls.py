@@ -10,7 +10,8 @@ from PyUtils.Utils_Plotting import (change_cmap_bkg_to_white, save_plots_to_outp
 from PyUtils.Utils_Physics import theta2pseudorap, pseudorap2theta, calc_dR, calc_dphi
 from PyUtils.Utils_StatsAndFits import gaussian, fit_with_gaussian, iterative_fit_gaus
 from PyUtils.Utils_Collection_Helpers import weave_lists
-from d0_Utils.d0_fns import (make_binning_array, shift_binning_array, get_subset_mask, make_kinem_subplot, combine_cut_list)
+from d0_Utils.d0_fns import (make_binning_array, shift_binning_array, get_subset_mask, 
+                             make_kinem_subplot, combine_cut_list, calc_x_err_bins)
 from d0_Utils.d0_dicts import color_dict, label_LaTeX_dict
 
 class HistInfo:
@@ -253,6 +254,7 @@ class KinematicBin():
         self.kinem_vals_after_selection = {}
         self.stats_dict = {}
         self.binned_df = None  # Will become the collection of events in which mu1 or mu2 passes all cuts.
+        self.verbose = verbose
         
         self.cuts = ""
         self.sorted_cut_ls = []
@@ -270,11 +272,11 @@ class KinematicBin():
         self.d0q_min   = d0q_cut_ls[0]
         self.d0q_max   = d0q_cut_ls[1]
         self.d0_type   = d0_type
-        self.dR_cut    = dR_cut    
-        
+        self.dR_cut    = dR_cut   
+                
         self.apply_initial_cuts(df, verbose)
         
-    def apply_initial_cuts(self, df, verbose=False):
+    def apply_initial_cuts(self, df, verbose):
         """
         Creates a subset of the original DataFrame in which initial cuts are applied.
         Cuts:
@@ -295,9 +297,9 @@ class KinematicBin():
         massZ_min = self.massZ_min
         massZ_max = self.massZ_max
 
-        #----------------#
-        #--- Analysis ---#
-        #----------------#
+        #--------------------------------------#
+        #--- Save and manipulate variables. ---#
+        #--------------------------------------#
         # GEN info. 
         eta1_gen_ser = df['genLep_eta1']
         eta2_gen_ser = df['genLep_eta2']
@@ -378,9 +380,10 @@ class KinematicBin():
         self.sorted_cut_ls = sorted_cut_ls = [value for (key, value) in sorted(self.cut_dict.items())]
         self.cuts = combine_cut_list(sorted_cut_ls)
         
-        if (verbose): 
+        if (self.verbose): 
             perc = self.n_evts_found / float(self.n_evts_asked_for) * 100.
             print(r"Events found: {} ({:.2f}% of total events), using cuts: {}".format(self.n_evts_found, perc, self.cuts))
+            print("\n")
       
     def get_mask_d0q(self, df):
         d0_type = self.d0_type
@@ -514,7 +517,7 @@ class KinematicBin():
                      run_over_only_n_evts=-1, 
                      title="",
                      exclusive=True,
-                     save_plot=False, save_as_png=False, verbose=False, outpath="",
+                     save_plot=False, save_as_png=False, outpath="",
                      ax=None):
         """
         Make a 2D plot. Two examples:
@@ -554,8 +557,6 @@ class KinematicBin():
             If True, save the plot as a pdf and possibly a png.
         save_as_png : bool
             If True, save the plot as a png.
-        verbose : bool
-            Get debug and code progress info.
         outpath : str
             Path to save plot.
         """           
@@ -880,3 +881,99 @@ class KinematicBin():
         (as opposed to counting both muons from event just because one pass the cuts).
         """
         pass
+    
+    
+#--------------------------------#
+
+
+class GraphLine():
+    """
+    One of the lines drawn on a graph. Contains all the info that went into building this line. 
+    """
+    def __init__(self, x_vals, y_vals, y_err_vals=np.zeros(0)):
+        self.x_vals = x_vals
+        self.y_vals = y_vals
+#         self.x_err_vals = x_err_vals
+        self.y_err_vals = y_err_vals
+        
+    def draw_graph(self, kinem_x, kinem_y, x_label="", y_label="", binning_type="", kbin_example=None, ax=None, count=1):
+        """
+        kinem_x : str
+            The full name of the kinematic variable plotted on the x-axis.
+            Should be a key in the label_LaTeX_dict.
+        kinem_y : str
+            The full name of the kinematic variable plotted on the y-axis.
+            Should be a key in the label_LaTeX_dict.
+        color : int
+            A key to a dictionary of colors. 
+            Values are color strings, like: 'black', 'red', etc. 
+        """
+        if binning_type not in ["eta", "pT"]:
+            raise ValueError("[ERROR] Wrong `binning_type` specified. Must be either 'pT' or 'eta'. Stopping now.")
+            
+        if ax is None:
+            f, ax = plt.subplots(figsize=(12.8, 9.6))
+            
+#         #--- Check that things make sense: ---#
+#         # Example: If binning in eta, make sure each HistInfo object has identical pT_cuts as every other.
+#         wrong_eta_binning = (binning_type in 'eta') and len(set([(hist.pT_range[0], hist.pT_range[1]) for hist in entire_HistInfo_list])) != 1
+#         # Do same thing for binning in pT.
+#         wrong_pT_binning = (binning_type in 'pT') and len(set([(hist.eta_range[0], hist.eta_range[1]) for hist in entire_HistInfo_list])) != 1
+#         if (wrong_eta_binning or wrong_pT_binning):
+#             err_msg = f"\n\nBinning type ({binning_type}) specified, "
+#             err_msg += f"but not all graphs share same {binning_type}_range. Stopping now."
+#             raise RuntimeError(err_msg)
+        al=1  # alpha=0 is transparent
+        elw=1  # error bar line width
+        ms=4  # marker size
+        ecolor=color_dict[count]
+        mec=color_dict[count]  # Marker edge color.
+        mfc=color_dict[count]  # Marker face color.
+        cs=1  # cap size
+        mew=0.7  # marker edge width
+
+        if len(x_label) == 0:
+            x_label = label_LaTeX_dict[kinem_x]["independent_label"]
+            unit_x = label_LaTeX_dict[kinem_x]["units"]
+            if len(unit_x) > 0:
+                x_label += " [{}]".format(unit_x)
+        if len(y_label) == 0:
+            y_label  = label_LaTeX_dict[kinem_y]["independent_label"]
+            y_label += " (iterated Gaus fit mean)"
+        title = label_LaTeX_dict[binning_type + "1"]["independent_label"] + " Binning"
+#         if binning_type == "eta":
+#             title = r"$\left| $" + title + r"$\right| $"
+        ax.set_title(title)
+        ax.set_xlabel(x_label)
+        ax.set_ylabel(y_label)
+        
+        # The "x-errors" are calculated automatically to be 1/2 the distance to the next data point. 
+        low_x_err, high_x_err = calc_x_err_bins(self.x_vals)
+        
+        label_text = kbin_example.cut_dict[binning_type]
+        ax.errorbar(self.x_vals, self.y_vals, xerr=[low_x_err, high_x_err], yerr=self.y_err_vals, fmt='s', label=label_text,
+                #color=color_dict[count], 
+                    elinewidth=elw, ms=ms, mec=mec, capsize=cs, mew=mew, mfc=mfc, ecolor=ecolor)
+        ax.legend(loc="lower right", framealpha=al)#, fontsize=text_size_legend)
+        
+        # Don't show d0 cuts and the cuts of whatever binning type (like "eta") is being used.
+        tmp_dict = kbin_example.cut_dict.copy()
+        for key in list(kbin_example.cut_dict.keys()):
+            if (binning_type in key) or ("d0" in key):
+                del tmp_dict[key]
+                    
+        sorted_cut_ls = [value for (key, value) in sorted(tmp_dict.items())]
+        cut_str = combine_cut_list(sorted_cut_ls)
+        textbox_text = "Selections:\n" + cut_str  # Don't show the d0 cut text. Luckily it is the first by alphabetical sorting. 
+        
+        if count == 1:
+            ax.text(0.025, 0.915, textbox_text, horizontalalignment='left', verticalalignment='center', transform=ax.transAxes)
+        
+    def do_linear_fit(self, ax=None):
+        if ax is None:
+            f, ax = plt.subplots(figsize=(12.8,9.6)) 
+        
+        # Do fit. 
+        # Draw fit on axes.
+        # return optimized parameters
+        self.popt_linear = None
