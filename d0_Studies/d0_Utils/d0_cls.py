@@ -382,8 +382,8 @@ class KinematicBin():
         
         if (self.verbose): 
             perc = self.n_evts_found / float(self.n_evts_asked_for) * 100.
-            print(r"Events found: {} ({:.2f}% of total events), using cuts: {}".format(self.n_evts_found, perc, self.cuts))
-            print("\n")
+            print("Events found: {} ({:.3f}% of total events)".format(self.n_evts_found, perc))
+            print(r"    using cuts: {}".format(self.cuts) + "\n")
       
     def get_mask_d0q(self, df):
         d0_type = self.d0_type
@@ -885,7 +885,105 @@ class KinematicBin():
     
 #--------------------------------#
 
+class KinBinOrganizer():
+    """
+    Creates and organizes KinematicBin objects which all have exactly the same cuts, except for d0 cuts. 
+    """
+    def __init__(self, 
+                 df, 
+                 n_evts_scan=1000, 
+                 massZ_cut_ls=[60,120],
+                 eta_cut_ls=[0.0, 0.3], 
+                 pT_cut_ls=[20, 60], 
+                 d0_type='BS', 
+                 dR_cut=0.05, 
+                 use_ptotal_instead=False, 
+                 verbose=True):
+        """
+        These cuts will apply to all KinematicBin objects within this KinBinOrganizer container.
+        """
+        self.df = df 
+        self.n_evts_scan = n_evts_scan
+        self.massZ_cut_ls = massZ_cut_ls
+        self.eta_cut_ls = eta_cut_ls
+        self.pT_cut_ls = pT_cut_ls
+        self.d0_type = d0_type
+        self.dR_cut = dR_cut
+        self.use_ptotal_instead = use_ptotal_instead
+        self.verbose = verbose
+        
+    def make_kbin_ls_over_d0_range(self, d0_bin_limits):
+        """
+        Make a list of KinematicBin objects, all with identical cuts EXCEPT d0q cuts. 
+        """
+        d0_bin_arr, d0_bin_width = make_binning_array(d0_bin_limits)
+        
+        if d0_bin_width < 0.0005:
+            err_msg = f"WARNING: d0_bin_width ({d0_bin_width}) is too small (d0_bin_width < 0.0005).\nStopping now."
+            raise ValueError(err_msg)    
+            
+        self.d0_bin_arr = d0_bin_arr
+        self.d0_bin_arr_shifted = shift_binning_array(self.d0_bin_arr)
+        
+        kbin_ls = []
+        for elem in range(len(d0_bin_arr)-1):
+            # Make a kbin for each d0 bin.
+            d0_this = d0_bin_arr[elem]
+            d0_next = d0_bin_arr[elem+1]
 
+            kb = KinematicBin(df_original=self.df, 
+                              n_evts=self.n_evts_scan, 
+                              massZ_cut_ls=self.massZ_cut_ls,
+                              eta_cut_ls=self.eta_cut_ls, 
+                              pT_cut_ls=self.pT_cut_ls, 
+                              d0q_cut_ls=[d0_this, d0_next],
+                              d0_type=self.d0_type,
+                              dR_cut=self.dR_cut,
+                              use_ptotal_instead=self.use_ptotal_instead, 
+                              verbose=self.verbose)
+            kbin_ls.append(kb)
+            
+        self.kbin_ls = kbin_ls
+
+    def plot_dpToverpT_for_kbin_ls(self, kinem="delta_pToverpT1", lep_selection_type='independent', 
+                                   x_limits=[-0.3, 0.3], bin_limits=[-0.3, 0.3, 0.004], 
+                                   run_over_only_n_evts=-1, 
+                                   ax=None, y_max=-1, log_scale=False, 
+                                   iter_gaus=(False, 3),
+                                   make_pdf=False, pdf_obj=None ):
+        """
+        The main purpose of making these plots is to fill the stats_dict for each kbin.
+        
+        Parameters
+        ----------
+        make_pdf : 
+        
+        """
+        for kb in self.kbin_ls:
+            kb.plot_1D_kinematics(kinem=kinem, lep_selection_type=lep_selection_type, 
+                                  x_limits=x_limits, bin_limits=bin_limits, run_over_only_n_evts=run_over_only_n_evts, 
+                                  ax=ax, x_label="", y_label="", title="", y_max=y_max, log_scale=log_scale, 
+                                  iter_gaus=iter_gaus)
+            if (make_pdf):
+                pdf_obj.savefig()
+            plt.close()
+        # All kbins have filled their stats_dict.
+            
+    def get_dpToverpT_iter_gaus_fit_means(self):
+        """"""
+        # Get graph values.
+        self.hist_mean_ls     = []
+        self.hist_mean_err_ls = []
+        self.fit_mean_ls      = []
+        self.fit_mean_err_ls  = []
+        
+        for kb in self.kbin_ls:
+            self.hist_mean_ls.append(kb.stats_dict['delta_pToverpT1']['hist_stats'][1])
+            self.hist_mean_err_ls.append(kb.stats_dict['delta_pToverpT1']['hist_stats'][2])
+            self.fit_mean_ls.append(kb.stats_dict['delta_pToverpT1']['fit_stats']['mean_ls'][-1])
+            self.fit_mean_err_ls.append(kb.stats_dict['delta_pToverpT1']['fit_stats']['mean_err_ls'][-1])
+            
+            
 class GraphLine():
     """
     One of the lines drawn on a graph. Contains all the info that went into building this line. 
