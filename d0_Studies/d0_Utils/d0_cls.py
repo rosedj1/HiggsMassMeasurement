@@ -1021,6 +1021,7 @@ class GraphLine():
 #             err_msg = f"\n\nBinning type ({binning_type}) specified, "
 #             err_msg += f"but not all graphs share same {binning_type}_range. Stopping now."
 #             raise RuntimeError(err_msg)
+
         al=1  # alpha=0 is transparent
         elw=1  # error bar line width
         ms=4  # marker size
@@ -1065,7 +1066,7 @@ class GraphLine():
         textbox_text = "Selections:\n" + cut_str  # Don't show the d0 cut text. Luckily it is the first by alphabetical sorting. 
         
         if count == 1:
-            ax.text(0.025, 0.915, textbox_text, horizontalalignment='left', verticalalignment='center', transform=ax.transAxes)
+            ax.text(0.05, 0.85, textbox_text, horizontalalignment='left', verticalalignment='center', transform=ax.transAxes)
         
     def do_linear_fit(self, ax=None):
         if ax is None:

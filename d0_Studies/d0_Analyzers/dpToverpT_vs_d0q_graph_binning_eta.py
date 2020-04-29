@@ -14,23 +14,25 @@ from d0_Utils.d0_dicts import color_dict, label_LaTeX_dict
 
 plt.style.use('cmsstyle_plot')
 #--------------------------------------------------------------#
-n_evts_scan = 100000
+n_evts_scan = -1
 n_evts_keep = -1
 
 dataframe = '/Users/Jake/Desktop/MC_2016.h5'
-outpath = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/20200427/run_over_d0_bins_test13.pdf"
+outpath = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/20200427/plot_dpToverpT_vs_d0q__all_eta_bins.pdf"
 
-d0_bin_limits = [-0.008, 0.008, 0.002]
+# d0_bin_limits = [-0.006, 0.006, 0.002]
+d0_bin_limits = [-0.006, 0.006, 0.001]
 massZ_cut_ls=[60,120]
-pT_cut_ls=[20,40]
+pT_cut_ls=[5,100]
 eta_cut_ls=[
     [0.0, 0.4],
-#     [0.4, 0.8],
-#     [0.8, 1.4],
-    [1.4, 2.0],
+    [0.4, 0.8],
+    [0.8, 1.2],
+    [1.2, 1.6],
+    [1.6, 2.0],
     [2.0, 2.4],
 ]
-dR_cut=0.05
+dR_cut=0.02
 
 d0_type='BS'
 fit_iters = 3
