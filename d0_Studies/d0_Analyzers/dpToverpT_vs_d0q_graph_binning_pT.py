@@ -14,28 +14,27 @@ from d0_Utils.d0_dicts import color_dict, label_LaTeX_dict
 
 plt.style.use('cmsstyle_plot')
 #--------------------------------------------------------------#
-n_evts_scan = 1000000
-n_evts_keep = 500000
-# n_evts_scan = 100000
-# n_evts_keep = 50000
+# n_evts_scan = 1000000
+# n_evts_keep = 500000
+n_evts_scan = 100000
+n_evts_keep = 50000
 
 dataframe = '/Users/Jake/Desktop/MC_2016.h5'
-outpath = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/20200427/Fix_fit_error_test04.pdf"
+outpath = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/20200427/plot_dpToverpT_vs_d0q__BA_OL_EC__GOOFfewstats1.pdf"
 
 # d0_bin_limits = [-0.006, 0.006, 0.001]
-d0_bin_limits = [-0.002, 0.002, 0.001]
+d0_bin_limits = [-0.006, 0.006, 0.002]
 massZ_cut_ls=[60,120]
 pT_cut_ls=[5,100]
 eta_cut_ls=[
     [0.0, 0.8],
-#     [0.8, 1.4],
+    [0.8, 1.4],
 #     [1.4, 2.4],
 ]
 dR_cut=0.02
 
-binning_type = "eta"
 d0_type='BS'
-fit_iters = 5
+fit_iters = 3
 use_ptotal_instead=False
 verbose = True
 #---------- Automatons ----------#
@@ -67,7 +66,7 @@ with PdfPages(outpath) as pdf:
     f, ax = plt.subplots()
     for count,org_kb in enumerate(org_kbin_ls, 1):
         graph = GraphLine(org_kb.d0_bin_arr_shifted, org_kb.fit_mean_ls, org_kb.fit_mean_err_ls)
-        graph.draw_graph("d0BSq1", "delta_pToverpT1", binning_type=binning_type, kbin_example=org_kb.kbin_ls[0], ax=ax, count=count)
+        graph.draw_graph("d0BSq1", "delta_pToverpT1", binning_type="eta", kbin_example=org_kb.kbin_ls[0], ax=ax, count=count)
         # Note: if you want stats to show up on plot when doing draw_graph, then make sure count=1 at some point.
         graph_ls.append(graph)
     # Done looping over KinBinOrganizers.

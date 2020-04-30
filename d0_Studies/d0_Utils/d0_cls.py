@@ -382,8 +382,8 @@ class KinematicBin():
         
         if (self.verbose): 
             perc = self.n_evts_found / float(self.n_evts_asked_for) * 100.
-            print("Events found: {} ({:.3f}% of total events)".format(self.n_evts_found, perc))
-            print(r"    using cuts: {}".format(self.cuts) + "\n")
+            print("[INFO] Events found: {} ({:.3f}% of total events)".format(self.n_evts_found, perc))
+            print(r"using cuts: {}".format(self.cuts) + "\n")
       
     def get_mask_d0q(self, df):
         d0_type = self.d0_type
@@ -870,7 +870,13 @@ class KinematicBin():
         if (iter_gaus[0]):
             # Do iterative fitting procedure.
             # Produce a dictionary of stats for these fits.
-            stats_dict, ax = iterative_fit_gaus(iter_gaus[1], bin_edges, bin_vals, first_mean=stats[1], first_stdev=stats[3], ax=ax)
+            best_guess_coeff = max(bin_vals)  # The Gaus coeff is usually around the max height of Gaus curve.
+            best_guess_mean = stats[1]
+            best_guess_stdev = stats[3]
+            stats_dict, ax = iterative_fit_gaus(iter_gaus[1], bin_edges, bin_vals, 
+                                                param_guess=[best_guess_coeff, best_guess_mean, best_guess_stdev],
+                                                param_bounds=([0,-1000,-100], [999999999,1000,100]),
+                                                ax=ax, draw_on_axes=True, verbose=self.verbose)
             # Use plotted kinem as the key for this dict of stats. 
             self.stats_dict[kinem]['fit_stats'] = stats_dict         
             
@@ -996,15 +1002,34 @@ class GraphLine():
         
     def draw_graph(self, kinem_x, kinem_y, x_label="", y_label="", binning_type="", kbin_example=None, ax=None, count=1):
         """
+        Draws data points (values of: kinem_x, kinem_y) to an axes object. 
+        In particular, used for making dpT/pT vs. d0q plots, but could probably be generalized.
+        
+        Parameters
+        ----------
         kinem_x : str
             The full name of the kinematic variable plotted on the x-axis.
             Should be a key in the label_LaTeX_dict.
         kinem_y : str
             The full name of the kinematic variable plotted on the y-axis.
             Should be a key in the label_LaTeX_dict.
-        color : int
+        x_label : str
+            The x-axis label. If no x_label is given, then an automatic one 
+            is generated based on kinem_x.
+        y_label : str
+            The y-axis label. If no y_label is given, then an automatic one 
+            is generated based on kinem_y.
+        binning_type : str
+            Must be either 'eta' or 'pT'. Used for proper labeling of title and legend.
+        kbin_example : KinematicBin object
+            This KinematicBin contains all the cut information necessary for proper
+            legend and axes labeling.
+        ax : axes object
+            The axes on which to draw the graph. 
+            If an axes is not provided, a default one is made.
+        count : int
             A key to a dictionary of colors. 
-            Values are color strings, like: 'black', 'red', etc. 
+            Values of the dict are color strings, like: 'black', 'red', etc. 
         """
         if binning_type not in ["eta", "pT"]:
             raise ValueError("[ERROR] Wrong `binning_type` specified. Must be either 'pT' or 'eta'. Stopping now.")
@@ -1050,6 +1075,9 @@ class GraphLine():
         low_x_err, high_x_err = calc_x_err_bins(self.x_vals)
         
         label_text = kbin_example.cut_dict[binning_type]
+        if (kbin_example.verbose):
+            print("Drawing graph, binning in {}:".format(binning_type))
+            print(kbin_example.cut_dict[binning_type] + "\n")
         ax.errorbar(self.x_vals, self.y_vals, xerr=[low_x_err, high_x_err], yerr=self.y_err_vals, fmt='s', label=label_text,
                 #color=color_dict[count], 
                     elinewidth=elw, ms=ms, mec=mec, capsize=cs, mew=mew, mfc=mfc, ecolor=ecolor)

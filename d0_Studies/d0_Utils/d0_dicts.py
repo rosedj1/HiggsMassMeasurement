@@ -155,7 +155,7 @@ label_LaTeX_dict = {
               "independent_label":r"$d_{0}^{ \mathrm{PV} } * q(\mu^{\pm, \mathrm{REC} })$", 
                  "units":"cm", "default_bin_limits":[-0.01, 0.01, 0.0002], "default_x_limits":[-0.012, 0.012]},
     
-    "massZ"    : {"label":r"$m_{\mu^{+}\mu^{-}}$",        "independent_label":r"$m_{\mu^{+}\mu^{-}}", "units":"GeV", "default_bin_limits":[60,120,0.4], "default_x_limits":[50, 130]},
+    "massZ"    : {"label":r"$m_{\mu^{+}\mu^{-}}$",        "independent_label":r"$m_{\mu^{+}\mu^{-}}$", "units":"GeV", "default_bin_limits":[60,120,0.4], "default_x_limits":[50, 130]},
     "massZErr" : {"label":r"$\delta m_{\mu^{+}\mu^{-}}$", "independent_label":r"$\delta m_{\mu^{+}\mu^{-}}$", "units":"GeV", "default_bin_limits":[0,2,0.01],   "default_x_limits":[-0.1, 2.1]},
 
     
