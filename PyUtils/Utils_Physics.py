@@ -53,3 +53,17 @@ def calc_dphi(phi2, phi1):
 
 def calc_dR(deta, dphi):
     return np.sqrt( deta**2 + dphi**2 )
+
+def perc_diff(num, ref):
+    """
+    Return the signed percent difference between two numbers, relative to one of them.
+    
+    Parameters
+    ----------
+    num : float or array
+        New number to which you want to compare to the reference number (ref).
+        If num < ref, then will return a negative percent difference.
+    ref : float or array
+        Reference number. Goes in the denominator.
+    """
+    return (num - ref) / ref * 100.
