@@ -35,11 +35,11 @@ def makeDirs(dir_):
 #            pass
 #        else: raise
 
-def check_overwrite(outfile, isOverwrite=False):
+def check_overwrite(outfile, overwrite=False):
     if os.path.exists(outfile) and not (overwrite):
         err_msg = "Not allowed to overwrite file:\n{}\n(since it already exists!)".format(outfile)
-        err_msg += "To write over the file, set isOverwrite=True.\n"
-        raise RunTimeError(err_msg)
+        err_msg += "To write over the file, set overwrite=True.\n"
+        raise RuntimeError(err_msg)
     
 def make_str_title_friendly(cut_str, keep_whitespace=False):
     title = cut_str.replace('&&','_')

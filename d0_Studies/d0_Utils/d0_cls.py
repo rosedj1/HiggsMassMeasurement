@@ -382,7 +382,7 @@ class KinematicBin():
         
         if (self.verbose): 
             perc = self.n_evts_found / float(self.n_evts_asked_for) * 100.
-            print("[INFO] Events found: {} ({:.3f}% of total events)".format(self.n_evts_found, perc))
+            print("[INFO] Events found: {} ({:.3f}% of total events scanned)".format(self.n_evts_found, perc))
             print(r"using cuts: {}".format(self.cuts) + "\n")
       
     def get_mask_d0q(self, df):
