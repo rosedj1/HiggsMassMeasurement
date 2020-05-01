@@ -860,6 +860,8 @@ class KinematicBin():
         # Initializing this particular kinematic bin's dictionary of stats.
         self.stats_dict[kinem] = {}
         self.stats_dict[kinem]['hist_stats'] = stats
+        self.stats_dict[kinem]['bin_vals'] = bin_vals
+        self.stats_dict[kinem]['bin_edges'] = bin_edges
 
         textbox_text = r"Selection type = {}:".format(lep_selection_type) + "\n"
         if lep_selection_type in ["1","2"]:
