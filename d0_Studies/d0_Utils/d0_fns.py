@@ -61,9 +61,34 @@ def calc_num_bins(bin_min, bin_max, bin_width):
     """
     return int(round( (bin_max-bin_min)/bin_width ))
 
+def calc_bin_widths(bin_edges):
+    """
+    Return an array which contains the bin widths of each bin. 
+    Bins can be of unequal widths. 
+    
+    Parameters
+    ----------
+    bin_edges : array
+        The boundaries of all the bins. They can be variable bin widths.
+        E.g., np.array([first_bin_left_edge, first_bin_right_edge, ..., last_bin_left_edge, last_bin_right_edge])
+    
+    Returns
+    -------
+    bin_width_arr : array
+        The width of each bin. len(bin_width_arr) = len(bin_edges) - 1
+    """
+    # Create left and right edges of bins and stagger them. Then take the difference.
+    left_edges = bin_edges[:-1]
+    right_edges = bin_edges[1:]
+    bin_width_arr = right_edges - left_edges
+    return bin_width_arr
+
 def calc_x_err_bins(x_val_center_list):
     """
-    Returns lists of the x-errors, which may be symmetrical or asymmetrical. 
+    Returns lists of the "x-errors", i.e. the half-distances between neighboring bins.
+    These may be symmetrical or asymmetrical. 
+    
+    FIXME?: Possibly incorporate calc_bin_widths() in here?
     """
     high_err_list = []
     for x_center in range(len(x_val_center_list)-1):
