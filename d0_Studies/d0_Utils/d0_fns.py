@@ -283,3 +283,178 @@ def event_counter(start, stop, step, df, branch):
     #     print(f"n_evts with {v:.1f} < eta < {v+step : .1f}:", sum((v < df[branch]) & (df[branch] < v+step) ) )
     vals, bin_edges = np.histogram(df[branch], bins=np.arange(start, stop * step/2, step))
     return vals
+
+def integrate_hist_over_region(bin_edges, bin_vals):
+    """
+    Calculate the total area of a histogram over the specified bin_edges.
+    Performs a simple width * height calculation for each bin area, then sums up all areas. 
+    
+    Parameters
+    ----------
+    bin_edges : array
+        The boundaries of all the bins. They can be variable bin widths.
+        E.g., np.array([first_bin_left_edge, first_bin_right_edge, ..., last_bin_left_edge, last_bin_right_edge])
+    bin_vals : array
+        An array which contains the entries in each bin.
+        len(bin_vals) = len(bin_edges) - 1
+        
+    Returns
+    -------
+    total_area : float
+        Usually the total entries of all bins being summed.
+    first_bin_left_edge : float
+        Where the summing started along the x-axis, in x-axis units.
+    last_bin_right_edge : float
+        Where the summing ended along the x-axis, in x-axis units.
+    """
+    first_bin_left_edge = bin_edges[0]
+    last_bin_right_edge = bin_edges[-1]
+    
+    # Area calculation
+    bin_width_arr = calc_bin_widths(bin_edges)
+    total_area = np.sum(bin_width_arr * bin_vals)
+    
+    return total_area, first_bin_left_edge, last_bin_right_edge
+
+def find_equal_hist_divisions(bin_edges, bin_vals, K, verbose=False):
+    """
+    Return the bin edges which divide the histogram into divisions with equal entries per division. 
+    
+    Algorithm example:
+        Want to split histogram of 100 entries up into 3 divisions. 
+        Calculate hypothetical entries_per_division: 100/3 = 33.333.
+        Start from first bin and keep adding entries in each bin until you exceed entries_per_division. 
+        Record the right_end_bin_edge where this happens.
+        Check to see if maybe stopping at the previous bin would have been a better decision
+        (this is done by a percent difference calculation).
+        Do only 2 scans over the first two divisions.
+        Third division is found by deduction.
+    Remember that entries is defined as bin_width * bin_height!
+
+    Parameters
+    ----------
+    bin_edges : array
+        Edges of each bin, starting from the left-most edge to the right-most edge. 
+            bin_edges[0] = left edge of first bin
+            bin_edges[-1] = right edge of last bin
+    bin_vals : array
+        "Height" of each bin (NOT necessarily the entries in each bin). 
+        Again: bin_width * bin_height = bin_entries
+        
+    K : int
+        Number of divisions to split histogram.
+        Each division will contain approximately the same number of entries. 
+        
+    Returns
+    -------
+    bin_div_ls : list
+        A list of the edges of each division along the x-axis. 
+        The number of entries between divisions should have ~same number of entries.
+    bin_stats_dict : dict
+        Contains the better percent difference of the number of entries found in each division
+        compared to the ideal number of entries.
+    Notes:
+    Should be the case that: len(bin_edges) == len(bin_vals) + 1
+    """
+    # TOTAL ENTRIES IS SUM(bin_width * bin_height)
+    entries_total, first_bin, last_bin = integrate_hist_over_region(bin_edges, bin_vals)
+    entries_per_div = entries_total / float(K)
+    bin_div_ls = [first_bin]  # This is what we are after ultimately. 
+    bin_stats_dict = {}
+    
+    if (verbose): 
+        print("[INFO] Performing {} divisions on {} total entries.".format(K, entries_total))
+    
+    start_elem = 0
+    # Always do K - 1 loops, except when K = 1. 
+    div_ls = [1] if K == 1 else list(range(1,K))
+    
+    tmp_division_entries = 0
+    for count in div_ls:
+        if (verbose): print("[INFO]  Beginning division {}...".format(count))
+        
+        end_elem = start_elem + 1
+        while True:
+            # Start at the beginning of this division.
+            # Go bin by bin until you reach or surpass entries_per_div.
+            division_bin_edges = bin_edges[start_elem:end_elem+1]  # Extra 1 because of Python's exclusion.
+            division_bin_vals = bin_vals[start_elem:end_elem]
+            division_entries, first_bin_left_edge, last_bin_right_edge = integrate_hist_over_region(division_bin_edges, division_bin_vals)
+            if division_entries >= entries_per_div: 
+                break
+            else:
+                end_elem += 1
+                
+        # Check if previous bin would have been a better choice. 
+        prev_division_bin_edges = bin_edges[start_elem:end_elem]
+        prev_division_bin_vals = bin_vals[start_elem:end_elem-1]
+        prev_division_entries, prev_first_bin_left_edge, prev_last_bin_right_edge = integrate_hist_over_region(prev_division_bin_edges, prev_division_bin_vals)
+        if (verbose):
+            print("[INFO]    Integration complete:")
+            print("[INFO]      division_bin_edges:",division_bin_edges)
+            print("[INFO]      division_bin_vals:",division_bin_vals)
+            print("[INFO]    Found {:.2f} entries when looking for {:.2f}. Checking previous bin...".format(division_entries, entries_per_div))
+            print("[INFO]    Found {:.2f} entries when looking for {:.2f}.".format(prev_division_entries, entries_per_div))
+
+        div_perc_diff = perc_diff(division_entries, entries_per_div)
+        prev_div_perc_diff = perc_diff(prev_division_entries, entries_per_div)
+        if abs(div_perc_diff) <= abs(prev_div_perc_diff):
+            best_div_entries = division_entries
+            best_perc_diff = div_perc_diff
+            best_bin_edge = last_bin_right_edge
+            best_div_bin_edges = division_bin_edges
+            best_div_bin_vals = division_bin_vals
+            # Keep end_elem where it is.
+        else:
+            best_div_entries = prev_division_entries
+            best_perc_diff = prev_div_perc_diff
+            best_bin_edge = prev_last_bin_right_edge
+            best_div_bin_edges = prev_division_bin_edges
+            best_div_bin_vals = prev_division_bin_vals
+            # Need to decrement end_elem. 
+            end_elem -= 1
+                
+        if (verbose): 
+            print("[INFO]    best_div_entries:   {:.2f}".format(best_div_entries)) 
+            print("[INFO]    best_perc_diff:     {:.4f}%".format( best_perc_diff))
+            print("[INFO]    best_bin_edge:      {}".format( best_bin_edge))
+            print("[INFO]    best_div_bin_edges: {}".format( best_div_bin_edges))
+            print("[INFO]    best_div_bin_vals:  {}".format( best_div_bin_vals), "\n")
+                
+        # Found the best element, sum, and perc diff which correspond to this division bin. 
+        bin_stats_dict["Division{} perc diff".format(count)] = best_perc_diff
+        bin_div = bin_edges[end_elem]  # Looks right.
+        bin_div_ls.append(bin_div)
+        # Start the next division at the element that we stopped at last. 
+        # So don't change the counting of elem.
+        start_elem = end_elem
+        
+        tmp_division_entries += best_div_entries
+    # All divisions, except last, performed successfully.
+    # Since last division isn't performed, append final bin.
+    if K != 1:
+        bin_div_ls.append(bin_edges[-1])
+    
+    if len(set(bin_div_ls)) != len(bin_div_ls):
+        err_msg = "[ERROR] The same bin edge was found multiple times for some reason.\n"
+        err_msg += "Most likely the value of K ({}) was too large. Try fewer divisions.".format(K)
+        raise RuntimeError(err_msg)
+
+    if K != 1: 
+    # Deduce last division. 
+        final_bin_edges = bin_edges[end_elem:]
+        excess_entries, first_bin_here, last_bin_here = integrate_hist_over_region(final_bin_edges, bin_vals[end_elem:])
+        perc_diff_excess = perc_diff(excess_entries, entries_per_div)
+        tmp_division_entries += excess_entries
+        bin_stats_dict["Division{}".format(K)] = perc_diff_excess
+        if (verbose):
+            print("[INFO]  Division {} was analyzed by deduction...".format(K)) 
+            print("[INFO]    first_bin_last_division={}, last_bin_last_division={}".format(first_bin_here,last_bin_here))
+            print("[INFO]    final bin edges: {}".format(final_bin_edges))
+            print("[INFO]    Excess entries in this division: {} ({:.4f}% different from number searched for)".format(excess_entries, perc_diff_excess))
+            
+    if (verbose):
+        print("[INFO]    Total entries found after full analysis: {}".format(tmp_division_entries))
+        print("[INFO]    Final bin division list is:\n{}".format(bin_div_ls))
+
+    return bin_div_ls, bin_stats_dict
