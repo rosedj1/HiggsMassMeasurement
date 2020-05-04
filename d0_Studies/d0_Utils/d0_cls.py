@@ -854,7 +854,8 @@ class KinematicBin():
 #         if len(title) == 0:
 #             title = "Selections:\n" + self.cuts
         
-        ax, bin_vals, bin_edges, stats = make_1D_dist(ax, data, x_limits, x_bins, x_label, y_label, title, y_max=-1, log_scale=False)
+        ax, bin_vals, bin_edges, stats = make_1D_dist(ax, data, x_limits, x_bins, 
+                                                      x_label, y_label, title, y_max=-1, log_scale=False)
         
         # Nested dictionaries.
         # Initializing this particular kinematic bin's dictionary of stats.

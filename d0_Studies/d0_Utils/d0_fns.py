@@ -6,8 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 
 from matplotlib.backends.backend_pdf import PdfPages
-
-#from d0_Utils.d0_cls import HistInfo    # Not sure why I can't import this...
+from PyUtils.Utils_Physics import perc_diff
 
 def get_subset_mask(x_vals, x_min, x_max):
     """
@@ -422,7 +421,7 @@ def find_equal_hist_divisions(bin_edges, bin_vals, K, verbose=False):
             print("[INFO]    best_div_bin_vals:  {}".format( best_div_bin_vals), "\n")
                 
         # Found the best element, sum, and perc diff which correspond to this division bin. 
-        bin_stats_dict["Division{} perc diff".format(count)] = best_perc_diff
+        bin_stats_dict["Division{}".format(count)] = best_perc_diff
         bin_div = bin_edges[end_elem]  # Looks right.
         bin_div_ls.append(bin_div)
         # Start the next division at the element that we stopped at last. 
