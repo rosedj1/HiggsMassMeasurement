@@ -33,7 +33,7 @@ from PyUtils.Utils_Files import makeDirs, check_overwrite
 
 dataframe = '/Users/Jake/Desktop/MC_2016.h5'
 
-outpath = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/find_best_binning__eta_pT_qd0/barrel_3Mevents.pdf"
+outpath = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/find_best_binning__eta_pT_qd0/overlap_3Mevents_5to200GeV_RMS_zoom.pdf"
 
 n_events_scan = 3000000
 
@@ -43,7 +43,7 @@ n_divisions_end = 16
 d0q_cut_ls = [-1, 1]
 massZ_cut_ls=[60,120]
 pT_cut_ls=[5,1000]
-eta_cut_ls=[0.0, 0.2]
+eta_cut_ls=[0.8, 1.0]
 
 d0_type='BS'
 dR_cut=0.008
@@ -51,19 +51,20 @@ use_ptotal_instead = False
 verbose = True
 overwrite = False
 
-bin_limits = [0,300,1]
-x_limits=[-100,320]
+bin_limits = [5,200,1]
+x_limits=[-50,250]
+y_max = 70
 
 #--------------------------------#
 #---------- Automatons ----------#
 #--------------------------------#
-plt.style.use("cmsstyle_plot")
-
-df = pd.read_hdf(dataframe)
-
 dir_ = os.path.dirname(outpath)
 check_overwrite(outpath,overwrite)
 makeDirs(dir_) 
+
+plt.style.use("cmsstyle_plot")
+
+df = pd.read_hdf(dataframe)
 
 kb = KinematicBin(df_original=df,
                   n_evts=n_events_scan,
@@ -100,20 +101,23 @@ with PdfPages(outpath) as pdf:
         pT_bins, this_dict = find_equal_hist_divisions(bin_edges, bin_vals, divisions, verbose=verbose)
 
         abs_perc_diff_ls = [abs(perc) for perc in this_dict.values()] 
-        mean_perc_diff = np.mean(abs_perc_diff_ls)
+#        mean_perc_diff = np.mean(abs_perc_diff_ls)
+        mean_perc_diff = np.sqrt(np.mean(np.power(abs_perc_diff_ls, 2)))
         mean_perc_diff_ls.append(mean_perc_diff)
 
         x_vals = np.ones(len(pT_bins)) * divisions
         abs_perc_diff_ls.insert(0,0)
 
         ax1.errorbar(x=x_vals, y=pT_bins, yerr=abs_perc_diff_ls, linestyle="", markersize=2)
+        if y_max != -1:
+            ax1.set_ylim([0,y_max])
 
     ax2.plot(division_ls, mean_perc_diff_ls)
 
     ax1.set_title(r"%s" % eta_cuts)
     ax1.set_ylabel(r"$p_T$ bins [GeV]")
     ax2.set_xlabel(r"Equal-entry divisions in $p_T$ distribution")
-    ax2.set_ylabel(r"mean(abs(% diff.)")
+    ax2.set_ylabel(r"RMS(% diff.)")
 
     pdf.savefig()
     plt.close("all")
