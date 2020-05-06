@@ -503,7 +503,7 @@ class KinematicBin():
             return kinem_vals
         
         else: 
-            raise RuntimeError("[ERROR] `lep_selection_type` was not specified properly. Stopping now.")
+            raise ValueError("[ERROR] `lep_selection_type` was not specified properly. Stopping now.")
         
         # A selection, other than "independent" was chosen.
         kinem_vals = df[kinem][mask].values

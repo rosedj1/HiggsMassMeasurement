@@ -1,4 +1,5 @@
 import os
+import math
 
 import numpy as np
 import pandas as pd
@@ -457,3 +458,123 @@ def find_equal_hist_divisions(bin_edges, bin_vals, K, verbose=False):
         print("[INFO]    Final bin division list is:\n{}".format(bin_div_ls))
 
     return bin_div_ls, bin_stats_dict
+
+def find_equal_hist_regions_unbinned(vals_arr, r, verbose=False):
+    """
+    Return the "bin edges" (really just values) which divide the 
+    "histogram" (really just an array) into regions with equal number 
+    of values per region. 
+    
+    Algorithm example:
+        Want to split values of 100 entries up into 3 regions. 
+        Calculate hypothetical entries_per_region: 100/3 = 33.333.
+        Start from first val and simply count until you exceed entries_per_region. 
+        Record the right_end_bin_edge where this happens.
+        It's actually a little more complicated than that, 
+        but you get the gist.
+
+    Parameters
+    ----------
+    vals_arr : array
+        Array of values which will be sorted and then split into `r` regions.
+    r : int
+        Number of regions to split histogram into.
+        Each region will contain approximately the same number of entries. 
+        
+    Returns
+    -------
+    bin_reg_ls : list
+        A list of the edges of each region along the x-axis. 
+        The number of entries between regions should have ~same number of entries.
+        
+    Notes:
+        - I used to call them "divisions" but now I call them "regions"
+    """
+    entries_total = len(vals_arr)
+    sorted_vals_arr = np.sort(vals_arr)
+    first_bin = round(sorted_vals_arr[0], 2)
+    last_bin = round(sorted_vals_arr[-1], 2)
+    bin_reg_ls = [first_bin]  # This is what we are after ultimately. 
+
+    # Prepare the expectation of each region, based on sorted_vals_arr.
+    entries_per_reg = float(entries_total) / float(r)
+    entries_per_reg_roundup = math.ceil(entries_per_reg)
+    entries_per_reg_rounddown = math.floor(entries_per_reg)
+    
+    num_regions_with_more = entries_total % r
+    num_regions_with_fewer = r - num_regions_with_more
+    # Example: 
+    #--- sorted_vals_arr = [1,1,2,2,3]
+    #--- N=5, say r=3 
+    #--- entries_per_reg=1.667, entries_per_reg_roundup=2, entries_per_reg_rounddown=1
+    #--- num_regions_with_more=2, num_regions_with_fewer=1
+    #--- make 3 regions: [1,1 | 2,2 | 3]  
+    #--- two regions have 2 entries and 1 region has 1 entry
+    
+    if (verbose):
+        print("entries_total:             {}".format(entries_total))
+        print("num_regions_with_more:     {}".format(num_regions_with_more))
+        print("num_regions_with_fewer:    {}".format(num_regions_with_fewer))
+        print("first_bin_edge:            {:.2f}".format(first_bin))
+        print("last_bin_edge:             {:.2f}".format(last_bin))
+        print("entries_per_reg:           {:.2f}".format(entries_per_reg))
+        print("entries_per_reg_roundup:   {:.2f}".format(entries_per_reg_roundup))
+        print("entries_per_reg_rounddown: {:.2f}".format(entries_per_reg_rounddown))
+        print("[INFO] Making {} regions on {} total entries.".format(r, entries_total))
+        print("[INFO] Looking for {:.2f} entries per region.".format(entries_per_reg))
+        
+    def scan_arr_get_index(arr, start_elem, entries_to_scan):
+        """
+        Scan an array over a specified number of sequential elements
+        and return the "bin edge" corresponding to the final element. 
+        
+        Parameters
+        ----------
+        arr : list or array-like
+            Array to scan over. 
+        start_elem : int
+            The element in the array at which to start scanning. 
+        entries_to_scan : int
+            Number of sequential entries in array to begin scanning.
+        
+        Returns
+        -------
+        end_elem : int
+            The final element in arr on which scanning has ended. 
+            This is the element corresponding to bin_edge.
+        bin_edge : anything
+            The value corresponding to arr[end_elem].
+        """
+        end_elem = start_elem + entries_to_scan-1
+        bin_edge = arr[end_elem]
+        bin_edge = round(bin_edge, 2)
+        return end_elem, bin_edge
+
+    # Did brief testing and concluded that it doesn't matter 
+    # whether you loop over the regions with more entries
+    # or fewer entries first. There are so many statistics generally that 
+    # it doesn't matter. 
+    elem = 0
+    for _ in range(num_regions_with_fewer):
+        elem, bin_edge = scan_arr_get_index(sorted_vals_arr, elem, entries_per_reg_rounddown)
+        bin_reg_ls.append(bin_edge)
+        elem += 1  # Must not include this element again. 
+    for _ in range(num_regions_with_more):
+        elem, bin_edge = scan_arr_get_index(sorted_vals_arr, elem, entries_per_reg_roundup)
+        bin_reg_ls.append(bin_edge)
+        elem += 1  # Must not include this element again. 
+              
+    # I think this will only trigger if r == entries_total, which is absurd.
+    if len(set(bin_reg_ls)) != len(bin_reg_ls):
+        from collections import Counter
+        c = Counter(bin_reg_ls)
+        print(c)
+        multiple = c.most_common(1)[0][0]
+        err_msg = "[ERROR] The same bin edge ({}) was found multiple times.\n".format(multiple)
+        err_msg += "Most likely the value of r ({}) was too large. Try fewer regions.".format(r)
+        raise RuntimeError(err_msg)
+
+    if (verbose):
+        print("[INFO]    Final bin region list is:\n{}".format(bin_reg_ls))
+
+    return bin_reg_ls
