@@ -206,12 +206,12 @@ class HistProxy:
         if (make_plots_deltapT_vs_d0):
             return mean, mean_err
         
-        
-        
-        
 class KinematicBin():
 
-    def __init__(self, df_original, n_evts, 
+    def __init__(self, 
+                df_original, 
+#                  inpath_dataframe, 
+                 n_evts, 
                  massZ_cut_ls, eta_cut_ls, pT_cut_ls, d0q_cut_ls, d0_type="BS", dR_cut=0.02, 
                  use_ptotal_instead=False, verbose=False):
         """
@@ -249,6 +249,15 @@ class KinematicBin():
             n_evts = len(df_original)
         df = df_original.loc[:n_evts].copy()    # Original DF. 
         
+#         if n_evts > 0:
+#             df = pd.read_hdf(inpath_dataframe, stop=n_evts)
+#         elif n_evts == -1:
+#             # Read in entire DF.
+#             df = pd.read_hdf(inpath_dataframe)
+#         else: 
+#             raise ValueError("[ERROR] self.n_evts={} specified incorrectly.".format(self.n_evts))
+        # Apparently this way is even slower than just copying the DF...
+    
         self.n_evts_asked_for = n_evts
         self.n_evts_found = -999
         self.kinem_vals_after_selection = {}
@@ -372,8 +381,9 @@ class KinematicBin():
         self.all_masks = self.mask_kinembin_lep1 | self.mask_kinembin_lep2
         
         # Apply masks and update DataFrame.
+#        self.binned_df = df[self.all_masks].copy()
         self.binned_df = df[self.all_masks]
-        
+#        del df
         self.n_evts_found = len(self.binned_df)
         
         # The cut_dict has been filled. Now convert it to an ordered list (alphabetically).
@@ -932,7 +942,7 @@ class KinBinOrganizer():
             raise ValueError(err_msg)    
             
         self.d0_bin_arr = d0_bin_arr
-        self.d0_bin_arr_shifted = shift_binning_array(self.d0_bin_arr)
+        self.d0_bin_arr_shifted = shift_binning_array(d0_bin_arr)
         
         kbin_ls = []
         for elem in range(len(d0_bin_arr)-1):
@@ -978,7 +988,8 @@ class KinBinOrganizer():
             plt.close()
         # All kbins have filled their stats_dict.
             
-    def get_dpToverpT_iter_gaus_fit_means(self):
+#     def get_dpToverpT_iter_gaus_fit_means(self, kinem):
+    def get_iter_gaus_fit_stats(self, kinem):
         """"""
         # Get graph values.
         self.hist_mean_ls     = []
@@ -987,11 +998,14 @@ class KinBinOrganizer():
         self.fit_mean_err_ls  = []
         
         for kb in self.kbin_ls:
-            self.hist_mean_ls.append(kb.stats_dict['delta_pToverpT1']['hist_stats'][1])
-            self.hist_mean_err_ls.append(kb.stats_dict['delta_pToverpT1']['hist_stats'][2])
-            self.fit_mean_ls.append(kb.stats_dict['delta_pToverpT1']['fit_stats']['mean_ls'][-1])
-            self.fit_mean_err_ls.append(kb.stats_dict['delta_pToverpT1']['fit_stats']['mean_err_ls'][-1])
-            
+#             self.hist_mean_ls.append(kb.stats_dict['delta_pToverpT1']['hist_stats'][1])
+#             self.hist_mean_err_ls.append(kb.stats_dict['delta_pToverpT1']['hist_stats'][2])
+#             self.fit_mean_ls.append(kb.stats_dict['delta_pToverpT1']['fit_stats']['mean_ls'][-1])
+#             self.fit_mean_err_ls.append(kb.stats_dict['delta_pToverpT1']['fit_stats']['mean_err_ls'][-1])
+            self.hist_mean_ls.append(kb.stats_dict[kinem]['hist_stats'][1])
+            self.hist_mean_err_ls.append(kb.stats_dict[kinem]['hist_stats'][2])
+            self.fit_mean_ls.append(kb.stats_dict[kinem]['fit_stats']['mean_ls'][-1])
+            self.fit_mean_err_ls.append(kb.stats_dict[kinem]['fit_stats']['mean_err_ls'][-1])
             
 class GraphLine():
     """

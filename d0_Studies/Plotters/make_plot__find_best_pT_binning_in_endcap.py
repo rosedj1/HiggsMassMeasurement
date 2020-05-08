@@ -33,12 +33,12 @@ from PyUtils.Utils_Files import makeDirs, check_overwrite
 
 dataframe = '/Users/Jake/Desktop/MC_2016.h5'
 
-outpath = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/find_best_binning__eta_pT_qd0/endcap_3Mevents_5to200GeV_RMS_zoom.pdf"
+outpath = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/find_best_binning__eta_pT_qd0/endcap_1Mevents_breakinto5to20GeV.pdf"
 
-n_events_scan = 3000000
+n_events_scan = 1000000
 
-n_divisions_start = 1
-n_divisions_end = 16
+n_divisions_start = 15
+n_divisions_end = 50
 
 d0q_cut_ls = [-1, 1]
 massZ_cut_ls=[60,120]
@@ -53,7 +53,7 @@ overwrite = False
 
 bin_limits = [5,200,1]
 x_limits=[-50,250]
-y_max = 70
+y_max = 25
 
 #--------------------------------#
 #---------- Automatons ----------#
@@ -107,8 +107,9 @@ with PdfPages(outpath) as pdf:
 
         x_vals = np.ones(len(pT_bins)) * divisions
         abs_perc_diff_ls.insert(0,0)
-
-        ax1.errorbar(x=x_vals, y=pT_bins, yerr=abs_perc_diff_ls, linestyle="", markersize=2)
+        
+        # mfc = markerface color
+        ax1.errorbar(x=x_vals, y=pT_bins, yerr=abs_perc_diff_ls, linestyle="", markersize=2, mfc='k')
         if y_max != -1:
             ax1.set_ylim([0,y_max])
 
@@ -120,6 +121,6 @@ with PdfPages(outpath) as pdf:
     ax2.set_ylabel(r"RMS(% diff.)")
 
     pdf.savefig()
-    plt.close("all")
+    #plt.close("all")
 
 #with 

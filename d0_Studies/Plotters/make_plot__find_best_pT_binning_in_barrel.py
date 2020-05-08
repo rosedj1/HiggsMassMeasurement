@@ -108,7 +108,8 @@ with PdfPages(outpath) as pdf:
         x_vals = np.ones(len(pT_bins)) * divisions
         abs_perc_diff_ls.insert(0,0)
 
-        ax1.errorbar(x=x_vals, y=pT_bins, yerr=abs_perc_diff_ls, linestyle="", markersize=2)
+        # mfc = markerface color
+        ax1.errorbar(x=x_vals, y=pT_bins, yerr=abs_perc_diff_ls, linestyle="", markersize=2, mfc='k')
         if y_max != -1:
             ax1.set_ylim([0,y_max])
 

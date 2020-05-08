@@ -459,7 +459,7 @@ def find_equal_hist_divisions(bin_edges, bin_vals, K, verbose=False):
 
     return bin_div_ls, bin_stats_dict
 
-def find_equal_hist_regions_unbinned(vals_arr, r, verbose=False):
+def find_equal_hist_regions_unbinned(vals_arr, r, verbose=False, round_to_n_decimals=2):
     """
     Return the "bin edges" (really just values) which divide the 
     "histogram" (really just an array) into regions with equal number 
@@ -480,6 +480,8 @@ def find_equal_hist_regions_unbinned(vals_arr, r, verbose=False):
     r : int
         Number of regions to split histogram into.
         Each region will contain approximately the same number of entries. 
+    round_to_n_decimals : int
+        Number of decimals to round bin edge values to. 
         
     Returns
     -------
@@ -492,8 +494,8 @@ def find_equal_hist_regions_unbinned(vals_arr, r, verbose=False):
     """
     entries_total = len(vals_arr)
     sorted_vals_arr = np.sort(vals_arr)
-    first_bin = round(sorted_vals_arr[0], 2)
-    last_bin = round(sorted_vals_arr[-1], 2)
+    first_bin = round(sorted_vals_arr[0], round_to_n_decimals)
+    last_bin = round(sorted_vals_arr[-1], round_to_n_decimals)
     bin_reg_ls = [first_bin]  # This is what we are after ultimately. 
 
     # Prepare the expectation of each region, based on sorted_vals_arr.
@@ -547,7 +549,7 @@ def find_equal_hist_regions_unbinned(vals_arr, r, verbose=False):
         """
         end_elem = start_elem + entries_to_scan-1
         bin_edge = arr[end_elem]
-        bin_edge = round(bin_edge, 2)
+        bin_edge = round(bin_edge, round_to_n_decimals)
         return end_elem, bin_edge
 
     # Did brief testing and concluded that it doesn't matter 
@@ -578,3 +580,52 @@ def find_equal_hist_regions_unbinned(vals_arr, r, verbose=False):
         print("[INFO]    Final bin region list is:\n{}".format(bin_reg_ls))
 
     return bin_reg_ls
+
+def collapse_eta_bin_edges(bin_ls, round_to_n_decimals=2):
+    """
+    Return a list of bin edges that where symmetric elements are averaged.  
+    
+    Concept:
+        Originally, an eta bin edge list looks something like:
+            bin_ls = [-2.4, -0.89, 0.001, 0.91, 2.4]
+        But since eta is binned using abs(eta) we need to collapse
+        this list to become:
+            new_bin_ls = [0.00, 0.90, 2.4]
+    
+    Notes:
+        len(new_arr) == len(orig_arr) / 2, rounded up.
+
+    Parameters
+    ----------
+    bin_ls : list or array-like
+        The bin edges to be combined.
+    round_to_n_decimals : int
+        Number of decimals to round bin edge values to. 
+        
+    Returns
+    -------
+    rev_ls : list
+        A sorted list (ascending order) of the averaged, symmetric bin edges.
+    """
+    n = len(bin_ls)
+    mid_elem = math.floor(n / 2)
+    if (n % 2) == 0:
+        # Stop when passing the midpoint of an even-length list.
+        # We would go too far, so decrement. 
+        mid_elem -= 1
+    
+    new_ls = []
+    elem = 0
+    while elem <= mid_elem:
+        elem_mirror = -1*elem - 1
+        this_num = bin_ls[elem]
+        mirror_num = bin_ls[elem_mirror]
+
+        tmp_arr = np.array([this_num, mirror_num])
+
+        avg = np.mean(np.abs(tmp_arr))
+        new_ls.append(round(avg, round_to_n_decimals))
+        elem += 1
+    rev_ls = list(reversed(new_ls))
+        
+    return rev_ls
