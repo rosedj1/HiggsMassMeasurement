@@ -355,6 +355,15 @@ def make_2by2_subplots_for_ratioplots(fig_width=28, fig_height=16):
     The returned tuples can be intuitively sliced to get the axes you want:
         E.g. ax_ratio_tup[0][1] -> ax12_ratio
         
+    NOTES: 
+        Can probably be hugely simplified by implementing 
+        this from Suzanne:
+        
+        fig, ax = plt.subplots(nrows=2, ncols=1, 
+                               sharex=True, gridspec_kw={'height_ratios': [3, 1]}
+                               )
+       
+        
     Parameters
     ----------
     fig_width : float
