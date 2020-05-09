@@ -150,7 +150,7 @@ def make_kinem_subplot(lep, ax, data, x_limits, x_bins, x_label, y_label, y_max=
     ax.set_xlim(x_limits)
     ax.grid(False)
     
-    mod_data, n_underflow, n_overflow = add_underoverflow_entries(data, x_limits[0], x_limits[1])
+    mod_data = account_for_underoverflow_entries(data, x_limits[0], x_limits[1], x_bins)
     
     if y_max > 0: ax.set_ylim([0,y_max])
     if (log_scale): ax.set_yscale('log')
@@ -161,55 +161,54 @@ def make_kinem_subplot(lep, ax, data, x_limits, x_bins, x_label, y_label, y_max=
     ax.legend(loc='upper right', fontsize=7)
     return
   
-# def make_1D_dist(ax, data, x_limits, x_bins, x_label, y_label, title, y_max=-1, log_scale=False):
-#    """
-#    Draw a kinematic distribution (e.g. eta1, gen_phi2, etc.) to an axes object in a figure.
-#    
-#    Parameters
-#    ----------
-#    ax : axes object
-#        The axes to which plot will be drawn.
-#    data : array-like
-#        Data to be histogrammed. 
-#    x_limits : 2-element list
-#        A list of the x-axis range to be plotted: 
-#        x_limits=[x-min, x-max]
-#    x_bins : array-like 
-#        Array of bin edges. Should be of length = len(n_bins)+1.
-#    x_label : str
-#        Label for x-axis.
-#    y_label : str
-#        Label for y-axis.
-#    title : str
-#        Label for title.
-#    y_max : float
-#        Max on y-axis. If y_max <= 0, then matplotlib will choose y_max.
-#    log_scale : bool
-#        If True, sets the y-axis to log scale. 
-#    """
-#    textsize_legend = 9
-#    textsize_axislabels = 12
-#    textsize_title = 12
-#            
-#    ax.set_xlabel(x_label, fontsize=textsize_axislabels)
-#    ax.set_ylabel(y_label, fontsize=textsize_axislabels)
-#    ax.set_title(title, fontsize=textsize_title)
-#    
-#    ax.set_xlim(x_limits)
-#    ax.grid(False)
-#    
-#    mod_data, n_underflow, n_overflow = add_underoverflow_entries(data, x_limits[0], x_limits[1])
-#    
-#    if y_max > 0: ax.set_ylim([0,y_max])
-#    if (log_scale): ax.set_yscale('log')
-#        
-#    stats = get_stats_1Dhist(data)
-#    label_legend = make_stats_legend_for_1dhist(stats)
-#    bin_vals, bin_edges, _ = ax.hist(mod_data, bins=x_bins, label=label_legend, histtype='step', color='b')
-#    ax.legend(loc='upper right', framealpha=0.9, fontsize=textsize_legend)
-#    
-#    return ax, stats
-    
+def account_for_underoverflow_entries(data, x_min, x_max, bin_edges):
+    """
+    Add the entries in the underflow and overflow bins, 
+    which would normally not be plotted on a histogram.
+    Underflow entries will be added to first bin and 
+    overflow entries are added to last bin, within the x_limits. 
+
+    NOTES: 
+        - It is not a good idea to run statistics on mod_data
+          since it has been modified.
+        - Under-overflow entries are only accounted for when
+          'zooming' in on the x-axis, within the given bin_edges.
+
+    Parameters
+    ----------
+    data : array-like
+        The data to be binned in a histogram. 
+    x_min : int or float
+        The minimum value to be shown on the x-axis. 
+    x_max : int or float
+        The maximum value to be shown on the x-axis. 
+    bin_edges : list or array-like
+        [left_edge_first_bin, ..., right_edge_last_bin]
+
+    Returns
+    -------
+    mod_data : array-like
+        The modified data in which data values < x_min are converted to x_min and
+        data_values > x_max are converted to x_max.
+    """
+    last_bin_width = bin_edges[-1] - bin_edges[-2]
+    mod_data = data
+
+    if x_min > x_bins[0]:
+        # Convert any value < x_min to x_min (underflow entries).
+        mod_data = np.clip(mod_data, x_min, max(mod_data))
+    if x_max < x_bins[-1]:
+        # Convert any value > x_max to x_max (overflow entries).
+
+        # Overflow entries will not be seen on plot,
+        # since x_max ends the last bin shown on plot.
+        # However, clipped values are in the next bin (shown off screen).
+        # So put overflow entries into last bin shown on plot by going
+        # back 1 bin.
+        mod_data = np.clip(mod_data, min(mod_data), x_max - last_bin_width)
+
+    return mod_data
+
 def print_header_message(msg):
     n = len(msg)
     octothorpes = (n+12)*'#'  # Who names their variable 'octothorpes'? Honestly?

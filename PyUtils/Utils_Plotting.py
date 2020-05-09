@@ -47,7 +47,15 @@ def save_plots_to_outpath(save_plot=False, outpath="", file_name="DEFAULT_NAME",
 def make_1D_dist(ax, data, x_limits, x_bins, x_label, y_label, title, y_max=-1, log_scale=False):
     """
     Draw a kinematic distribution (e.g. eta1, gen_phi2, etc.) to an axes object in a figure.
-    This function does plot under/overflow bins.
+    This function plots under/overflow bins depending on if there are hist values
+    outside min/max of x_limits.
+    
+    NOTE: matplotlib makes a default bin starting at the bottom-left edge.
+        This is similar to excluding the right end of ranges(), etc.
+        Example: values = [4,5,6,7]
+                 x_limits = [4,7]
+             Then only the first THREE bins will show, since value=6 starts
+             at x=6 and goes to x=7.  Therefore value=7 will not show. 
     
     Parameters
     ----------
@@ -92,11 +100,10 @@ def make_1D_dist(ax, data, x_limits, x_bins, x_label, y_label, title, y_max=-1, 
     ax.set_ylabel(y_label, fontsize=textsize_axislabels)
     ax.set_title(title, fontsize=textsize_title)
     
-    ax.set_xlim(x_limits)
     ax.grid(False)
-    
-    mod_data, n_underflow, n_overflow = add_underoverflow_entries(data, x_limits[0], x_limits[1])
-    
+                                
+    mod_data = account_for_underoverflow_entries(data, x_limits[0], x_limits[1], x_bins)
+                                
     if y_max > 0: ax.set_ylim([0,y_max])
     if (log_scale): ax.set_yscale('log')
         
@@ -104,57 +111,10 @@ def make_1D_dist(ax, data, x_limits, x_bins, x_label, y_label, title, y_max=-1, 
     label_legend = make_stats_legend_for_1dhist(stats)
     bin_vals, bin_edges, _ = ax.hist(mod_data, bins=x_bins, label=label_legend, histtype='step', color='b')
     ax.legend(loc='upper right', framealpha=0.9, fontsize=textsize_legend)
+    ax.set_xlim(x_limits)
     
     return ax, bin_vals, bin_edges, stats
                                 
-def add_underoverflow_entries(data, xmin, xmax):
-    """
-    Add the entries in the underflow and overflow bins, which would normally not be plotted on a histogram.
-    NB: Run all statistics on data BEFORE binning and before adding under-overflow entries.
-    
-    Parameters
-    ----------
-    data : array-like
-        The data, usually a numpy array or DataFrame series, which will get binned in a histogram. 
-    xmin : float
-        The left edge of the first bin. Any values in data that are less than xmin
-        (which usually would not be plotted) are now put into the xmin bin. 
-    xmax : float
-        The right edge of the last bin. Overflow values fit into this final bin. 
-        
-    Returns
-    -------
-    mod_data : array-like
-        The modified data with fake underflow and overflow entries appended. 
-        This way the binned mod_data will show under-overflow entries.
-    n_underflow : int
-        The number of entries in the underflow bin.
-    n_overflow : int
-        The number of entries in the overflow bin.
-    """
-    n_underflow = len(data[data < xmin])
-    n_overflow = len(data[data > xmax])
-    
-    # Create new data array where entries that would fall outside x-range
-    # now sit at underflow/overflow bins.
-    fake_under = n_underflow * [xmin]
-    fake_over = n_overflow * [xmax]
-
-    mod_data = data[ (xmin <= data) & (data <= xmax) ]
-    mod_data = np.append(mod_data, fake_under + fake_over)
-
-    n_data_init = len(data)
-    n_data_final = len(mod_data)
-
-    # Make sure that things make sense:
-    if n_data_init != n_data_final:
-        err_msg = (f"The initial number of entries in data ({n_data_init}) is different from "
-                   f"the final number ({n_data_final}), after accounting for underflow/overflow bins.\n"
-                   "Stopping now.")
-        raise RuntimeError(err_msg)
-                                
-    return mod_data, n_underflow, n_overflow
-
 def get_stats_1Dhist(data):
     """
     Return the statistics of array-like data.

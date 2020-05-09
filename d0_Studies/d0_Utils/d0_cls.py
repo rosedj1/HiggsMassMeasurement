@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from PyUtils.Utils_Files import makeDirs, make_str_title_friendly, check_overwrite
 from PyUtils.Utils_Plotting import (change_cmap_bkg_to_white, save_plots_to_outpath, make_1D_dist, get_stats_1Dhist, 
                                     get_stats_2Dhist, hist_y_label, make_2by2_subplots_for_ratioplots,
-                                    add_underoverflow_entries, make_stats_legend_for_1dhist, make_stats_legend_for_2dhist, 
+                                    make_stats_legend_for_1dhist, make_stats_legend_for_2dhist, 
                                     make_stats_legend_for_gaus_fit)
 from PyUtils.Utils_Physics import theta2pseudorap, pseudorap2theta, calc_dR, calc_dphi
 from PyUtils.Utils_StatsAndFits import gaussian, fit_with_gaussian, iterative_fit_gaus
@@ -868,7 +868,8 @@ class KinematicBin():
                                                       x_label, y_label, title, y_max=-1, log_scale=False)
         
         # Nested dictionaries.
-        # Initializing this particular kinematic bin's dictionary of stats.
+        # Initializing this particular kinematic bin's dictionary of stats
+        # for this plotted kinematic. 
         self.stats_dict[kinem] = {}
         self.stats_dict[kinem]['hist_stats'] = stats
         self.stats_dict[kinem]['bin_vals'] = bin_vals
