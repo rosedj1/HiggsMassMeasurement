@@ -44,11 +44,11 @@ def calc_dphi(phi2, phi1):
         dphi = dphi.mask(dphi < -np.pi, dphi + 2*np.pi)
         return dphi
     
-    # Using floats.
+    # Using floats or vaex expressions.
     else:
         dphi = phi2 - phi1
         while (dphi >= np.pi): dphi -= 2*np.pi  
-        while (dphi < np.pi): dphi += 2*np.pi
+        while (dphi < -np.pi): dphi += 2*np.pi
         return dphi
 
 def calc_dR(deta, dphi):
