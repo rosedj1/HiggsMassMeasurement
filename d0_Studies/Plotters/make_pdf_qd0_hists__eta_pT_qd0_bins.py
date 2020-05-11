@@ -105,8 +105,6 @@ for k in range(len(eta_ls)-1):
                 cuts += r"$\Delta R < %.3f$, " % (dR_cut) + "\n"
                 cuts += r"$%.1f < m_{\mu\mu} < %.1f$ GeV" % (massZ_min, massZ_max)
 
-#                 plt.style.use('grid_multiple_plots')
-
                 ax, bin_vals, bin_edges, stats = make_1D_dist(ax=ax, 
                                                               data=vdf_concat.evaluate("qd0BS", selection=all_masks), 
                                                               x_limits=x_range,

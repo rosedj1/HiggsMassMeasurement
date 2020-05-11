@@ -62,3 +62,4 @@ vdf_concat['qd0BS'] = vdf_concat['d0BS'] * vdf_concat['Id'] / -13.  # Good!
 vdf_concat['qd0PV'] = vdf_concat['d0PV'] * vdf_concat['Id'] / -13.  # Good!
 
 print("[INFO] Successfully retrieved vdf_concat!")
+print("[INFO]   ...Analyzing MC 2016 DY...")

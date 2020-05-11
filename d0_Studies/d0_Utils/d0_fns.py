@@ -239,19 +239,37 @@ def make_binning_array(lim_ls):
     
     return bin_edges, binw
 
-def shift_binning_array(bin_arr):
+def centers_of_binning_array(bin_arr, decimals=0):
     """
-    Returns an array of the centers of the bins of bin_arr, excluding the very last bin.
+    Returns an array of the centers between adjacent bin edges.
+    Also works with bin_arr that has unequal bin widths. 
     
     Example: 
-        bin_arr = np.array([1, 2, 3, 4])
-        bin_arr_shifted = np.array([1.5, 2.5, 3.5])
+        bin_arr = np.array([1, 2, 4, 8])
+        bin_arr_shifted = np.array([1.5, 3, 6])
         
-    FIXME: Somewhere in my DarkZ code is this function which can accommodate an asymmetrical bin_arr.
-    """
-    bin_width = bin_arr[1] - bin_arr[0]
+    NOTE: Was formerly called shift_binning_array().
     
-    return bin_arr[:-1] + 0.5 * bin_width
+    Parameters
+    ----------
+    bin_arr : array
+        Edges of bins: [left_edge_first_bin, ..., right_edge_last_bin]
+    decimals : int, optional
+        Number of decimal places to round bin centers.
+        
+    Returns
+    -------
+    bin_centers_arr : array
+        Centers between adjacent bin edges.
+    """
+    bin_edges_low = bin_arr[:-1]
+    bin_edges_high = bin_arr[1:]
+    
+    bin_centers_arr = (bin_edges_high + bin_edges_low) / 2.
+    if decimals != 0:
+        bin_centers_arr = np.round(bin_centers_arr, decimals=decimals)
+    
+    return bin_centers_arr
 
 def event_counter(start, stop, step, df, branch):
     """

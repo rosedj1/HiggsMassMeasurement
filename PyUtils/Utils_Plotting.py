@@ -1,4 +1,5 @@
 import os
+import math
 import vaex
 import numpy as np
 import matplotlib.pyplot as plt
@@ -389,3 +390,50 @@ def make_2by2_subplots_for_ratioplots(fig_width=28, fig_height=16):
     ax_ratio_tup = ((ax11_ratio, ax12_ratio), (ax21_ratio, ax22_ratio))
     
     return fig, ax_tup, ax_ratio_tup
+                                
+def ncolsrows_from_nplots(n_plots, force_ncols=0):
+    """
+    Return the number of rows and columns to be shown on a 
+    PDF page, based on the number of plots on that page.
+    
+    When n_plots <= 8, make a n_plots x 2 grid
+    (except when n_plots == 1, then make 1 x 1).
+    When 9 <= n_plots <= 15, make 3 x 3 grid.
+    When 16 <= n_plots <= 20, make 4 x 4 grid.
+    
+    Parameters
+    ----------
+    n_plots : int
+        The number of plots to be shown on a page.
+    force_ncols : int, optional
+        Force a certain number of columns of plots per page.
+        If not specified, it will be determined automatically 
+        as described 
+        
+    Returns
+    -------
+    rows : int
+        Number of rows of plots on grid.
+    cols : int
+        Number of columns of plots on grid.
+    """
+    if force_ncols > 0:
+        rows = math.ceil(n_plots / float(force_ncols))
+        cols = force_ncols
+    elif n_plots <= 8:
+        # Make n x 2 grid (or just 1 x 1 if n_plots == 1): 
+        rows = math.ceil(n_plots / 2.)
+        cols = min(n_plots, 2)
+    elif (n_plots <= 15): 
+        # Make n x 3 grid (or just 1 x 1, or 1 x 2): 
+        rows = math.ceil(n_plots / 3.)
+        cols = min(n_plots, 3)
+    elif (n_plots <= 20): 
+        # Make n x 3 grid (or just 1 x 1, or 1 x 2): 
+        rows = math.ceil(n_plots / 4.)
+        cols = min(n_plots, 4)
+    else: 
+        msg = "[ERROR] This function isn't built yet to handle"
+        msg += "n_plots > 20. Specified n_plots = {}".format(n_plots)
+        raise ValueError(msg)
+    return rows, cols
