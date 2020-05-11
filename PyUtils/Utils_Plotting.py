@@ -1,4 +1,5 @@
 import os
+import vaex
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
@@ -8,6 +9,7 @@ sys.path.append('/Users/Jake/')
 sys.path.append('/Users/Jake/HiggsMassMeasurement/')
 sys.path.append('/Users/Jake/HiggsMassMeasurement/d0_Studies/')
 from PyUtils.Utils_Files import makeDirs, make_str_title_friendly
+from d0_Utils.d0_fns import account_for_underoverflow_entries
 
 def change_cmap_bkg_to_white(colormap, n=256):
     """
@@ -92,26 +94,29 @@ def make_1D_dist(ax, data, x_limits, x_bins, x_label, y_label, title, y_max=-1, 
         A 5-element list of the statistics of the ORIGINAL data 
         (i.e. data NOT put into under/overflow bins).
     """
-    textsize_legend = 9
-    textsize_axislabels = 12
-    textsize_title = 12
+#    textsize_legend = 9
+#    textsize_axislabels = 12
+#    textsize_title = 12
             
-    ax.set_xlabel(x_label, fontsize=textsize_axislabels)
-    ax.set_ylabel(y_label, fontsize=textsize_axislabels)
-    ax.set_title(title, fontsize=textsize_title)
+    ax.set_xlabel(x_label)#, fontsize=textsize_axislabels)
+    ax.set_ylabel(y_label)#, fontsize=textsize_axislabels)
+    ax.set_title(title)#, fontsize=textsize_title)
     
     ax.grid(False)
                                 
     mod_data = account_for_underoverflow_entries(data, x_limits[0], x_limits[1], x_bins)
                                 
-    if y_max > 0: ax.set_ylim([0,y_max])
     if (log_scale): ax.set_yscale('log')
         
     stats = get_stats_1Dhist(data)
     label_legend = make_stats_legend_for_1dhist(stats)
     bin_vals, bin_edges, _ = ax.hist(mod_data, bins=x_bins, label=label_legend, histtype='step', color='b')
-    ax.legend(loc='upper right', framealpha=0.9, fontsize=textsize_legend)
+    ax.legend(loc='upper right', framealpha=0.9)#, fontsize=textsize_legend)
     ax.set_xlim(x_limits)
+    if y_max == -1:
+        # Default y_max.
+        y_max = bin_vals.max() * 1.2 
+    ax.set_ylim([0,y_max])
     
     return ax, bin_vals, bin_edges, stats
                                 
@@ -140,9 +145,14 @@ def get_stats_1Dhist(data):
         stats[4] -> stdev : float 
             Standard error on the stdev. 
     """
-    n = len(data)
-    mean = np.mean(data)
-    stdev = np.std(data)
+    if isinstance(data, vaex.expression.Expression):
+        n = data.count()
+        mean = data.mean()
+        stdev = data.std()
+    else:
+        n = len(data)
+        mean = np.mean(data)
+        stdev = np.std(data)
     mean_err = np.abs(stdev) / np.sqrt(n)
     stdev_err = np.abs(stdev) / np.sqrt(2*n)
     

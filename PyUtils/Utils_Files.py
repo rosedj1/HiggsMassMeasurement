@@ -36,6 +36,9 @@ def makeDirs(dir_):
 #        else: raise
 
 def check_overwrite(outfile, overwrite=False):
+    """
+    Raises an error if outfile exists and overwrite == False. 
+    """
     if os.path.exists(outfile) and not (overwrite):
         err_msg = "Not allowed to overwrite file:\n{}\n(since it already exists!)".format(outfile)
         err_msg += "To write over the file, set overwrite=True.\n"

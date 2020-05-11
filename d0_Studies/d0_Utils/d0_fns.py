@@ -194,10 +194,10 @@ def account_for_underoverflow_entries(data, x_min, x_max, bin_edges):
     last_bin_width = bin_edges[-1] - bin_edges[-2]
     mod_data = data
 
-    if x_min > x_bins[0]:
+    if x_min > bin_edges[0]:
         # Convert any value < x_min to x_min (underflow entries).
         mod_data = np.clip(mod_data, x_min, max(mod_data))
-    if x_max < x_bins[-1]:
+    if x_max < bin_edges[-1]:
         # Convert any value > x_max to x_max (overflow entries).
 
         # Overflow entries will not be seen on plot,
