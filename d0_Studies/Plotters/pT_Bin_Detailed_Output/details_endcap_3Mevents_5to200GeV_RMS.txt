@@ -1,0 +1,1852 @@
+[INFO] Events found: 307830 (10.261% of total events scanned)
+using cuts: $-1.000 < d_{0}^{\mathrm{BS}}*q(\mu) < 1.000$
+$\Delta R < 0.008$
+$2.20 < \left| \eta^{\mathrm{REC}} \right| < 2.40$
+$60.0 < m_{\mu\mu} < 120.0$ GeV
+$5 <$ $p_{T}^{\mathrm{REC}}$ $< 1000$ GeV
+
+[INFO] Performing 1 divisions on 319115.0 total entries.
+[INFO]  Beginning division 1...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [  5.   6.   7.   8.   9.  10.  11.  12.  13.  14.  15.  16.  17.  18.
+  19.  20.  21.  22.  23.  24.  25.  26.  27.  28.  29.  30.  31.  32.
+  33.  34.  35.  36.  37.  38.  39.  40.  41.  42.  43.  44.  45.  46.
+  47.  48.  49.  50.  51.  52.  53.  54.  55.  56.  57.  58.  59.  60.
+  61.  62.  63.  64.  65.  66.  67.  68.  69.  70.  71.  72.  73.  74.
+  75.  76.  77.  78.  79.  80.  81.  82.  83.  84.  85.  86.  87.  88.
+  89.  90.  91.  92.  93.  94.  95.  96.  97.  98.  99. 100. 101. 102.
+ 103. 104. 105. 106. 107. 108. 109. 110. 111. 112. 113. 114. 115. 116.
+ 117. 118. 119. 120. 121. 122. 123. 124. 125. 126. 127. 128. 129. 130.
+ 131. 132. 133. 134. 135. 136. 137. 138. 139. 140. 141. 142. 143. 144.
+ 145. 146. 147. 148. 149. 150. 151. 152. 153. 154. 155. 156. 157. 158.
+ 159. 160. 161. 162. 163. 164. 165. 166. 167. 168. 169. 170. 171. 172.
+ 173. 174. 175. 176. 177. 178. 179. 180. 181. 182. 183. 184. 185. 186.
+ 187. 188. 189. 190. 191. 192. 193. 194. 195. 196. 197. 198. 199. 200.]
+[INFO]      division_bin_vals: [7.810e+02 9.960e+02 1.228e+03 1.545e+03 1.737e+03 2.161e+03 2.414e+03
+ 2.723e+03 2.987e+03 3.080e+03 3.473e+03 3.692e+03 3.962e+03 4.187e+03
+ 4.513e+03 4.865e+03 4.960e+03 5.302e+03 5.356e+03 5.811e+03 5.996e+03
+ 6.252e+03 6.574e+03 6.728e+03 7.168e+03 7.257e+03 7.381e+03 7.931e+03
+ 8.032e+03 8.360e+03 8.623e+03 8.699e+03 8.991e+03 9.263e+03 9.378e+03
+ 9.547e+03 9.589e+03 9.441e+03 9.223e+03 9.039e+03 8.153e+03 7.663e+03
+ 6.821e+03 5.778e+03 5.202e+03 4.547e+03 3.983e+03 3.609e+03 3.225e+03
+ 2.990e+03 2.525e+03 2.249e+03 2.065e+03 1.978e+03 1.826e+03 1.694e+03
+ 1.475e+03 1.358e+03 1.297e+03 1.272e+03 1.166e+03 1.068e+03 9.650e+02
+ 9.800e+02 8.930e+02 7.340e+02 7.700e+02 7.350e+02 6.300e+02 6.020e+02
+ 5.910e+02 5.130e+02 5.150e+02 5.140e+02 4.280e+02 4.400e+02 3.950e+02
+ 4.130e+02 3.450e+02 3.550e+02 2.900e+02 3.190e+02 3.040e+02 2.510e+02
+ 2.650e+02 2.510e+02 2.570e+02 2.140e+02 2.030e+02 2.020e+02 1.920e+02
+ 1.940e+02 1.440e+02 1.650e+02 1.490e+02 1.520e+02 1.390e+02 1.390e+02
+ 1.150e+02 1.320e+02 8.700e+01 1.130e+02 1.020e+02 9.600e+01 9.900e+01
+ 9.500e+01 9.800e+01 8.900e+01 9.700e+01 8.200e+01 6.500e+01 8.000e+01
+ 6.400e+01 6.800e+01 6.700e+01 6.800e+01 7.200e+01 6.000e+01 6.000e+01
+ 5.700e+01 5.200e+01 4.000e+01 5.100e+01 5.800e+01 5.000e+01 3.900e+01
+ 5.500e+01 3.300e+01 4.600e+01 2.800e+01 4.200e+01 2.800e+01 3.800e+01
+ 2.500e+01 3.600e+01 2.700e+01 3.300e+01 3.200e+01 2.800e+01 2.400e+01
+ 1.800e+01 1.700e+01 3.500e+01 2.300e+01 2.800e+01 2.200e+01 2.900e+01
+ 2.000e+01 1.500e+01 1.700e+01 1.900e+01 1.600e+01 1.900e+01 1.800e+01
+ 1.700e+01 1.600e+01 8.000e+00 1.700e+01 9.000e+00 9.000e+00 1.100e+01
+ 1.000e+01 7.000e+00 1.000e+01 1.200e+01 1.200e+01 1.200e+01 9.000e+00
+ 9.000e+00 1.100e+01 1.600e+01 1.100e+01 8.000e+00 8.000e+00 4.000e+00
+ 6.000e+00 4.000e+00 4.000e+00 8.000e+00 1.000e+01 8.000e+00 6.000e+00
+ 9.000e+00 3.000e+00 5.000e+00 3.000e+00 7.000e+00 8.000e+00 6.000e+00
+ 1.000e+01 5.000e+00 5.000e+00 8.000e+00 5.000e+00 5.000e+00]
+[INFO]    Found 319115.00 entries when looking for 319115.00. Checking previous bin...
+[INFO]    Found 319110.00 entries when looking for 319115.00.
+[INFO]    best_div_entries:   319115.00
+[INFO]    best_perc_diff:     0.0000%
+[INFO]    best_bin_edge:      200.0
+[INFO]    best_div_bin_edges: [  5.   6.   7.   8.   9.  10.  11.  12.  13.  14.  15.  16.  17.  18.
+  19.  20.  21.  22.  23.  24.  25.  26.  27.  28.  29.  30.  31.  32.
+  33.  34.  35.  36.  37.  38.  39.  40.  41.  42.  43.  44.  45.  46.
+  47.  48.  49.  50.  51.  52.  53.  54.  55.  56.  57.  58.  59.  60.
+  61.  62.  63.  64.  65.  66.  67.  68.  69.  70.  71.  72.  73.  74.
+  75.  76.  77.  78.  79.  80.  81.  82.  83.  84.  85.  86.  87.  88.
+  89.  90.  91.  92.  93.  94.  95.  96.  97.  98.  99. 100. 101. 102.
+ 103. 104. 105. 106. 107. 108. 109. 110. 111. 112. 113. 114. 115. 116.
+ 117. 118. 119. 120. 121. 122. 123. 124. 125. 126. 127. 128. 129. 130.
+ 131. 132. 133. 134. 135. 136. 137. 138. 139. 140. 141. 142. 143. 144.
+ 145. 146. 147. 148. 149. 150. 151. 152. 153. 154. 155. 156. 157. 158.
+ 159. 160. 161. 162. 163. 164. 165. 166. 167. 168. 169. 170. 171. 172.
+ 173. 174. 175. 176. 177. 178. 179. 180. 181. 182. 183. 184. 185. 186.
+ 187. 188. 189. 190. 191. 192. 193. 194. 195. 196. 197. 198. 199. 200.]
+[INFO]    best_div_bin_vals:  [7.810e+02 9.960e+02 1.228e+03 1.545e+03 1.737e+03 2.161e+03 2.414e+03
+ 2.723e+03 2.987e+03 3.080e+03 3.473e+03 3.692e+03 3.962e+03 4.187e+03
+ 4.513e+03 4.865e+03 4.960e+03 5.302e+03 5.356e+03 5.811e+03 5.996e+03
+ 6.252e+03 6.574e+03 6.728e+03 7.168e+03 7.257e+03 7.381e+03 7.931e+03
+ 8.032e+03 8.360e+03 8.623e+03 8.699e+03 8.991e+03 9.263e+03 9.378e+03
+ 9.547e+03 9.589e+03 9.441e+03 9.223e+03 9.039e+03 8.153e+03 7.663e+03
+ 6.821e+03 5.778e+03 5.202e+03 4.547e+03 3.983e+03 3.609e+03 3.225e+03
+ 2.990e+03 2.525e+03 2.249e+03 2.065e+03 1.978e+03 1.826e+03 1.694e+03
+ 1.475e+03 1.358e+03 1.297e+03 1.272e+03 1.166e+03 1.068e+03 9.650e+02
+ 9.800e+02 8.930e+02 7.340e+02 7.700e+02 7.350e+02 6.300e+02 6.020e+02
+ 5.910e+02 5.130e+02 5.150e+02 5.140e+02 4.280e+02 4.400e+02 3.950e+02
+ 4.130e+02 3.450e+02 3.550e+02 2.900e+02 3.190e+02 3.040e+02 2.510e+02
+ 2.650e+02 2.510e+02 2.570e+02 2.140e+02 2.030e+02 2.020e+02 1.920e+02
+ 1.940e+02 1.440e+02 1.650e+02 1.490e+02 1.520e+02 1.390e+02 1.390e+02
+ 1.150e+02 1.320e+02 8.700e+01 1.130e+02 1.020e+02 9.600e+01 9.900e+01
+ 9.500e+01 9.800e+01 8.900e+01 9.700e+01 8.200e+01 6.500e+01 8.000e+01
+ 6.400e+01 6.800e+01 6.700e+01 6.800e+01 7.200e+01 6.000e+01 6.000e+01
+ 5.700e+01 5.200e+01 4.000e+01 5.100e+01 5.800e+01 5.000e+01 3.900e+01
+ 5.500e+01 3.300e+01 4.600e+01 2.800e+01 4.200e+01 2.800e+01 3.800e+01
+ 2.500e+01 3.600e+01 2.700e+01 3.300e+01 3.200e+01 2.800e+01 2.400e+01
+ 1.800e+01 1.700e+01 3.500e+01 2.300e+01 2.800e+01 2.200e+01 2.900e+01
+ 2.000e+01 1.500e+01 1.700e+01 1.900e+01 1.600e+01 1.900e+01 1.800e+01
+ 1.700e+01 1.600e+01 8.000e+00 1.700e+01 9.000e+00 9.000e+00 1.100e+01
+ 1.000e+01 7.000e+00 1.000e+01 1.200e+01 1.200e+01 1.200e+01 9.000e+00
+ 9.000e+00 1.100e+01 1.600e+01 1.100e+01 8.000e+00 8.000e+00 4.000e+00
+ 6.000e+00 4.000e+00 4.000e+00 8.000e+00 1.000e+01 8.000e+00 6.000e+00
+ 9.000e+00 3.000e+00 5.000e+00 3.000e+00 7.000e+00 8.000e+00 6.000e+00
+ 1.000e+01 5.000e+00 5.000e+00 8.000e+00 5.000e+00 5.000e+00] 
+
+[INFO]    Total entries found after full analysis: 319115.0
+[INFO]    Final bin division list is:
+[5.0, 200.0]
+[INFO] Performing 2 divisions on 319115.0 total entries.
+[INFO]  Beginning division 1...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [ 5.  6.  7.  8.  9. 10. 11. 12. 13. 14. 15. 16. 17. 18. 19. 20. 21. 22.
+ 23. 24. 25. 26. 27. 28. 29. 30. 31. 32. 33. 34. 35. 36. 37. 38.]
+[INFO]      division_bin_vals: [ 781.  996. 1228. 1545. 1737. 2161. 2414. 2723. 2987. 3080. 3473. 3692.
+ 3962. 4187. 4513. 4865. 4960. 5302. 5356. 5811. 5996. 6252. 6574. 6728.
+ 7168. 7257. 7381. 7931. 8032. 8360. 8623. 8699. 8991.]
+[INFO]    Found 163765.00 entries when looking for 159557.50. Checking previous bin...
+[INFO]    Found 154774.00 entries when looking for 159557.50.
+[INFO]    best_div_entries:   163765.00
+[INFO]    best_perc_diff:     2.6370%
+[INFO]    best_bin_edge:      38.0
+[INFO]    best_div_bin_edges: [ 5.  6.  7.  8.  9. 10. 11. 12. 13. 14. 15. 16. 17. 18. 19. 20. 21. 22.
+ 23. 24. 25. 26. 27. 28. 29. 30. 31. 32. 33. 34. 35. 36. 37. 38.]
+[INFO]    best_div_bin_vals:  [ 781.  996. 1228. 1545. 1737. 2161. 2414. 2723. 2987. 3080. 3473. 3692.
+ 3962. 4187. 4513. 4865. 4960. 5302. 5356. 5811. 5996. 6252. 6574. 6728.
+ 7168. 7257. 7381. 7931. 8032. 8360. 8623. 8699. 8991.] 
+
+[INFO]  Division 2 was analyzed by deduction...
+[INFO]    first_bin_last_division=38.0, last_bin_last_division=200.0
+[INFO]    final bin edges: [ 38.  39.  40.  41.  42.  43.  44.  45.  46.  47.  48.  49.  50.  51.
+  52.  53.  54.  55.  56.  57.  58.  59.  60.  61.  62.  63.  64.  65.
+  66.  67.  68.  69.  70.  71.  72.  73.  74.  75.  76.  77.  78.  79.
+  80.  81.  82.  83.  84.  85.  86.  87.  88.  89.  90.  91.  92.  93.
+  94.  95.  96.  97.  98.  99. 100. 101. 102. 103. 104. 105. 106. 107.
+ 108. 109. 110. 111. 112. 113. 114. 115. 116. 117. 118. 119. 120. 121.
+ 122. 123. 124. 125. 126. 127. 128. 129. 130. 131. 132. 133. 134. 135.
+ 136. 137. 138. 139. 140. 141. 142. 143. 144. 145. 146. 147. 148. 149.
+ 150. 151. 152. 153. 154. 155. 156. 157. 158. 159. 160. 161. 162. 163.
+ 164. 165. 166. 167. 168. 169. 170. 171. 172. 173. 174. 175. 176. 177.
+ 178. 179. 180. 181. 182. 183. 184. 185. 186. 187. 188. 189. 190. 191.
+ 192. 193. 194. 195. 196. 197. 198. 199. 200.]
+[INFO]    Excess entries in this division: 155350.0 (-2.6370% different from number searched for)
+[INFO]    Total entries found after full analysis: 319115.0
+[INFO]    Final bin division list is:
+[5.0, 38.0, 200.0]
+[INFO] Performing 3 divisions on 319115.0 total entries.
+[INFO]  Beginning division 1...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [ 5.  6.  7.  8.  9. 10. 11. 12. 13. 14. 15. 16. 17. 18. 19. 20. 21. 22.
+ 23. 24. 25. 26. 27. 28. 29. 30. 31. 32.]
+[INFO]      division_bin_vals: [ 781.  996. 1228. 1545. 1737. 2161. 2414. 2723. 2987. 3080. 3473. 3692.
+ 3962. 4187. 4513. 4865. 4960. 5302. 5356. 5811. 5996. 6252. 6574. 6728.
+ 7168. 7257. 7381.]
+[INFO]    Found 113129.00 entries when looking for 106371.67. Checking previous bin...
+[INFO]    Found 105748.00 entries when looking for 106371.67.
+[INFO]    best_div_entries:   105748.00
+[INFO]    best_perc_diff:     -0.5863%
+[INFO]    best_bin_edge:      31.0
+[INFO]    best_div_bin_edges: [ 5.  6.  7.  8.  9. 10. 11. 12. 13. 14. 15. 16. 17. 18. 19. 20. 21. 22.
+ 23. 24. 25. 26. 27. 28. 29. 30. 31.]
+[INFO]    best_div_bin_vals:  [ 781.  996. 1228. 1545. 1737. 2161. 2414. 2723. 2987. 3080. 3473. 3692.
+ 3962. 4187. 4513. 4865. 4960. 5302. 5356. 5811. 5996. 6252. 6574. 6728.
+ 7168. 7257.] 
+
+[INFO]  Beginning division 2...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [31. 32. 33. 34. 35. 36. 37. 38. 39. 40. 41. 42. 43. 44.]
+[INFO]      division_bin_vals: [7381. 7931. 8032. 8360. 8623. 8699. 8991. 9263. 9378. 9547. 9589. 9441.
+ 9223.]
+[INFO]    Found 114458.00 entries when looking for 106371.67. Checking previous bin...
+[INFO]    Found 105235.00 entries when looking for 106371.67.
+[INFO]    best_div_entries:   105235.00
+[INFO]    best_perc_diff:     -1.0686%
+[INFO]    best_bin_edge:      43.0
+[INFO]    best_div_bin_edges: [31. 32. 33. 34. 35. 36. 37. 38. 39. 40. 41. 42. 43.]
+[INFO]    best_div_bin_vals:  [7381. 7931. 8032. 8360. 8623. 8699. 8991. 9263. 9378. 9547. 9589. 9441.] 
+
+[INFO]  Division 3 was analyzed by deduction...
+[INFO]    first_bin_last_division=43.0, last_bin_last_division=200.0
+[INFO]    final bin edges: [ 43.  44.  45.  46.  47.  48.  49.  50.  51.  52.  53.  54.  55.  56.
+  57.  58.  59.  60.  61.  62.  63.  64.  65.  66.  67.  68.  69.  70.
+  71.  72.  73.  74.  75.  76.  77.  78.  79.  80.  81.  82.  83.  84.
+  85.  86.  87.  88.  89.  90.  91.  92.  93.  94.  95.  96.  97.  98.
+  99. 100. 101. 102. 103. 104. 105. 106. 107. 108. 109. 110. 111. 112.
+ 113. 114. 115. 116. 117. 118. 119. 120. 121. 122. 123. 124. 125. 126.
+ 127. 128. 129. 130. 131. 132. 133. 134. 135. 136. 137. 138. 139. 140.
+ 141. 142. 143. 144. 145. 146. 147. 148. 149. 150. 151. 152. 153. 154.
+ 155. 156. 157. 158. 159. 160. 161. 162. 163. 164. 165. 166. 167. 168.
+ 169. 170. 171. 172. 173. 174. 175. 176. 177. 178. 179. 180. 181. 182.
+ 183. 184. 185. 186. 187. 188. 189. 190. 191. 192. 193. 194. 195. 196.
+ 197. 198. 199. 200.]
+[INFO]    Excess entries in this division: 108132.0 (1.6549% different from number searched for)
+[INFO]    Total entries found after full analysis: 319115.0
+[INFO]    Final bin division list is:
+[5.0, 31.0, 43.0, 200.0]
+[INFO] Performing 4 divisions on 319115.0 total entries.
+[INFO]  Beginning division 1...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [ 5.  6.  7.  8.  9. 10. 11. 12. 13. 14. 15. 16. 17. 18. 19. 20. 21. 22.
+ 23. 24. 25. 26. 27. 28.]
+[INFO]      division_bin_vals: [ 781.  996. 1228. 1545. 1737. 2161. 2414. 2723. 2987. 3080. 3473. 3692.
+ 3962. 4187. 4513. 4865. 4960. 5302. 5356. 5811. 5996. 6252. 6574.]
+[INFO]    Found 84595.00 entries when looking for 79778.75. Checking previous bin...
+[INFO]    Found 78021.00 entries when looking for 79778.75.
+[INFO]    best_div_entries:   78021.00
+[INFO]    best_perc_diff:     -2.2033%
+[INFO]    best_bin_edge:      27.0
+[INFO]    best_div_bin_edges: [ 5.  6.  7.  8.  9. 10. 11. 12. 13. 14. 15. 16. 17. 18. 19. 20. 21. 22.
+ 23. 24. 25. 26. 27.]
+[INFO]    best_div_bin_vals:  [ 781.  996. 1228. 1545. 1737. 2161. 2414. 2723. 2987. 3080. 3473. 3692.
+ 3962. 4187. 4513. 4865. 4960. 5302. 5356. 5811. 5996. 6252.] 
+
+[INFO]  Beginning division 2...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [27. 28. 29. 30. 31. 32. 33. 34. 35. 36. 37. 38.]
+[INFO]      division_bin_vals: [6574. 6728. 7168. 7257. 7381. 7931. 8032. 8360. 8623. 8699. 8991.]
+[INFO]    Found 85744.00 entries when looking for 79778.75. Checking previous bin...
+[INFO]    Found 76753.00 entries when looking for 79778.75.
+[INFO]    best_div_entries:   76753.00
+[INFO]    best_perc_diff:     -3.7927%
+[INFO]    best_bin_edge:      37.0
+[INFO]    best_div_bin_edges: [27. 28. 29. 30. 31. 32. 33. 34. 35. 36. 37.]
+[INFO]    best_div_bin_vals:  [6574. 6728. 7168. 7257. 7381. 7931. 8032. 8360. 8623. 8699.] 
+
+[INFO]  Beginning division 3...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [37. 38. 39. 40. 41. 42. 43. 44. 45. 46.]
+[INFO]      division_bin_vals: [8991. 9263. 9378. 9547. 9589. 9441. 9223. 9039. 8153.]
+[INFO]    Found 82624.00 entries when looking for 79778.75. Checking previous bin...
+[INFO]    Found 74471.00 entries when looking for 79778.75.
+[INFO]    best_div_entries:   82624.00
+[INFO]    best_perc_diff:     3.5664%
+[INFO]    best_bin_edge:      46.0
+[INFO]    best_div_bin_edges: [37. 38. 39. 40. 41. 42. 43. 44. 45. 46.]
+[INFO]    best_div_bin_vals:  [8991. 9263. 9378. 9547. 9589. 9441. 9223. 9039. 8153.] 
+
+[INFO]  Division 4 was analyzed by deduction...
+[INFO]    first_bin_last_division=46.0, last_bin_last_division=200.0
+[INFO]    final bin edges: [ 46.  47.  48.  49.  50.  51.  52.  53.  54.  55.  56.  57.  58.  59.
+  60.  61.  62.  63.  64.  65.  66.  67.  68.  69.  70.  71.  72.  73.
+  74.  75.  76.  77.  78.  79.  80.  81.  82.  83.  84.  85.  86.  87.
+  88.  89.  90.  91.  92.  93.  94.  95.  96.  97.  98.  99. 100. 101.
+ 102. 103. 104. 105. 106. 107. 108. 109. 110. 111. 112. 113. 114. 115.
+ 116. 117. 118. 119. 120. 121. 122. 123. 124. 125. 126. 127. 128. 129.
+ 130. 131. 132. 133. 134. 135. 136. 137. 138. 139. 140. 141. 142. 143.
+ 144. 145. 146. 147. 148. 149. 150. 151. 152. 153. 154. 155. 156. 157.
+ 158. 159. 160. 161. 162. 163. 164. 165. 166. 167. 168. 169. 170. 171.
+ 172. 173. 174. 175. 176. 177. 178. 179. 180. 181. 182. 183. 184. 185.
+ 186. 187. 188. 189. 190. 191. 192. 193. 194. 195. 196. 197. 198. 199.
+ 200.]
+[INFO]    Excess entries in this division: 81717.0 (2.4295% different from number searched for)
+[INFO]    Total entries found after full analysis: 319115.0
+[INFO]    Final bin division list is:
+[5.0, 27.0, 37.0, 46.0, 200.0]
+[INFO] Performing 5 divisions on 319115.0 total entries.
+[INFO]  Beginning division 1...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [ 5.  6.  7.  8.  9. 10. 11. 12. 13. 14. 15. 16. 17. 18. 19. 20. 21. 22.
+ 23. 24. 25.]
+[INFO]      division_bin_vals: [ 781.  996. 1228. 1545. 1737. 2161. 2414. 2723. 2987. 3080. 3473. 3692.
+ 3962. 4187. 4513. 4865. 4960. 5302. 5356. 5811.]
+[INFO]    Found 65773.00 entries when looking for 63823.00. Checking previous bin...
+[INFO]    Found 59962.00 entries when looking for 63823.00.
+[INFO]    best_div_entries:   65773.00
+[INFO]    best_perc_diff:     3.0553%
+[INFO]    best_bin_edge:      25.0
+[INFO]    best_div_bin_edges: [ 5.  6.  7.  8.  9. 10. 11. 12. 13. 14. 15. 16. 17. 18. 19. 20. 21. 22.
+ 23. 24. 25.]
+[INFO]    best_div_bin_vals:  [ 781.  996. 1228. 1545. 1737. 2161. 2414. 2723. 2987. 3080. 3473. 3692.
+ 3962. 4187. 4513. 4865. 4960. 5302. 5356. 5811.] 
+
+[INFO]  Beginning division 2...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [25. 26. 27. 28. 29. 30. 31. 32. 33. 34. 35.]
+[INFO]      division_bin_vals: [5996. 6252. 6574. 6728. 7168. 7257. 7381. 7931. 8032. 8360.]
+[INFO]    Found 71679.00 entries when looking for 63823.00. Checking previous bin...
+[INFO]    Found 63319.00 entries when looking for 63823.00.
+[INFO]    best_div_entries:   63319.00
+[INFO]    best_perc_diff:     -0.7897%
+[INFO]    best_bin_edge:      34.0
+[INFO]    best_div_bin_edges: [25. 26. 27. 28. 29. 30. 31. 32. 33. 34.]
+[INFO]    best_div_bin_vals:  [5996. 6252. 6574. 6728. 7168. 7257. 7381. 7931. 8032.] 
+
+[INFO]  Beginning division 3...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [34. 35. 36. 37. 38. 39. 40. 41. 42.]
+[INFO]      division_bin_vals: [8360. 8623. 8699. 8991. 9263. 9378. 9547. 9589.]
+[INFO]    Found 72450.00 entries when looking for 63823.00. Checking previous bin...
+[INFO]    Found 62861.00 entries when looking for 63823.00.
+[INFO]    best_div_entries:   62861.00
+[INFO]    best_perc_diff:     -1.5073%
+[INFO]    best_bin_edge:      41.0
+[INFO]    best_div_bin_edges: [34. 35. 36. 37. 38. 39. 40. 41.]
+[INFO]    best_div_bin_vals:  [8360. 8623. 8699. 8991. 9263. 9378. 9547.] 
+
+[INFO]  Beginning division 4...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [41. 42. 43. 44. 45. 46. 47. 48. 49.]
+[INFO]      division_bin_vals: [9589. 9441. 9223. 9039. 8153. 7663. 6821. 5778.]
+[INFO]    Found 65707.00 entries when looking for 63823.00. Checking previous bin...
+[INFO]    Found 59929.00 entries when looking for 63823.00.
+[INFO]    best_div_entries:   65707.00
+[INFO]    best_perc_diff:     2.9519%
+[INFO]    best_bin_edge:      49.0
+[INFO]    best_div_bin_edges: [41. 42. 43. 44. 45. 46. 47. 48. 49.]
+[INFO]    best_div_bin_vals:  [9589. 9441. 9223. 9039. 8153. 7663. 6821. 5778.] 
+
+[INFO]  Division 5 was analyzed by deduction...
+[INFO]    first_bin_last_division=49.0, last_bin_last_division=200.0
+[INFO]    final bin edges: [ 49.  50.  51.  52.  53.  54.  55.  56.  57.  58.  59.  60.  61.  62.
+  63.  64.  65.  66.  67.  68.  69.  70.  71.  72.  73.  74.  75.  76.
+  77.  78.  79.  80.  81.  82.  83.  84.  85.  86.  87.  88.  89.  90.
+  91.  92.  93.  94.  95.  96.  97.  98.  99. 100. 101. 102. 103. 104.
+ 105. 106. 107. 108. 109. 110. 111. 112. 113. 114. 115. 116. 117. 118.
+ 119. 120. 121. 122. 123. 124. 125. 126. 127. 128. 129. 130. 131. 132.
+ 133. 134. 135. 136. 137. 138. 139. 140. 141. 142. 143. 144. 145. 146.
+ 147. 148. 149. 150. 151. 152. 153. 154. 155. 156. 157. 158. 159. 160.
+ 161. 162. 163. 164. 165. 166. 167. 168. 169. 170. 171. 172. 173. 174.
+ 175. 176. 177. 178. 179. 180. 181. 182. 183. 184. 185. 186. 187. 188.
+ 189. 190. 191. 192. 193. 194. 195. 196. 197. 198. 199. 200.]
+[INFO]    Excess entries in this division: 61455.0 (-3.7103% different from number searched for)
+[INFO]    Total entries found after full analysis: 319115.0
+[INFO]    Final bin division list is:
+[5.0, 25.0, 34.0, 41.0, 49.0, 200.0]
+[INFO] Performing 6 divisions on 319115.0 total entries.
+[INFO]  Beginning division 1...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [ 5.  6.  7.  8.  9. 10. 11. 12. 13. 14. 15. 16. 17. 18. 19. 20. 21. 22.
+ 23.]
+[INFO]      division_bin_vals: [ 781.  996. 1228. 1545. 1737. 2161. 2414. 2723. 2987. 3080. 3473. 3692.
+ 3962. 4187. 4513. 4865. 4960. 5302.]
+[INFO]    Found 54606.00 entries when looking for 53185.83. Checking previous bin...
+[INFO]    Found 49304.00 entries when looking for 53185.83.
+[INFO]    best_div_entries:   54606.00
+[INFO]    best_perc_diff:     2.6702%
+[INFO]    best_bin_edge:      23.0
+[INFO]    best_div_bin_edges: [ 5.  6.  7.  8.  9. 10. 11. 12. 13. 14. 15. 16. 17. 18. 19. 20. 21. 22.
+ 23.]
+[INFO]    best_div_bin_vals:  [ 781.  996. 1228. 1545. 1737. 2161. 2414. 2723. 2987. 3080. 3473. 3692.
+ 3962. 4187. 4513. 4865. 4960. 5302.] 
+
+[INFO]  Beginning division 2...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [23. 24. 25. 26. 27. 28. 29. 30. 31. 32.]
+[INFO]      division_bin_vals: [5356. 5811. 5996. 6252. 6574. 6728. 7168. 7257. 7381.]
+[INFO]    Found 58523.00 entries when looking for 53185.83. Checking previous bin...
+[INFO]    Found 51142.00 entries when looking for 53185.83.
+[INFO]    best_div_entries:   51142.00
+[INFO]    best_perc_diff:     -3.8428%
+[INFO]    best_bin_edge:      31.0
+[INFO]    best_div_bin_edges: [23. 24. 25. 26. 27. 28. 29. 30. 31.]
+[INFO]    best_div_bin_vals:  [5356. 5811. 5996. 6252. 6574. 6728. 7168. 7257.] 
+
+[INFO]  Beginning division 3...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [31. 32. 33. 34. 35. 36. 37. 38.]
+[INFO]      division_bin_vals: [7381. 7931. 8032. 8360. 8623. 8699. 8991.]
+[INFO]    Found 58017.00 entries when looking for 53185.83. Checking previous bin...
+[INFO]    Found 49026.00 entries when looking for 53185.83.
+[INFO]    best_div_entries:   49026.00
+[INFO]    best_perc_diff:     -7.8213%
+[INFO]    best_bin_edge:      37.0
+[INFO]    best_div_bin_edges: [31. 32. 33. 34. 35. 36. 37.]
+[INFO]    best_div_bin_vals:  [7381. 7931. 8032. 8360. 8623. 8699.] 
+
+[INFO]  Beginning division 4...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [37. 38. 39. 40. 41. 42. 43.]
+[INFO]      division_bin_vals: [8991. 9263. 9378. 9547. 9589. 9441.]
+[INFO]    Found 56209.00 entries when looking for 53185.83. Checking previous bin...
+[INFO]    Found 46768.00 entries when looking for 53185.83.
+[INFO]    best_div_entries:   56209.00
+[INFO]    best_perc_diff:     5.6842%
+[INFO]    best_bin_edge:      43.0
+[INFO]    best_div_bin_edges: [37. 38. 39. 40. 41. 42. 43.]
+[INFO]    best_div_bin_vals:  [8991. 9263. 9378. 9547. 9589. 9441.] 
+
+[INFO]  Beginning division 5...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [43. 44. 45. 46. 47. 48. 49. 50. 51.]
+[INFO]      division_bin_vals: [9223. 9039. 8153. 7663. 6821. 5778. 5202. 4547.]
+[INFO]    Found 56426.00 entries when looking for 53185.83. Checking previous bin...
+[INFO]    Found 51879.00 entries when looking for 53185.83.
+[INFO]    best_div_entries:   51879.00
+[INFO]    best_perc_diff:     -2.4571%
+[INFO]    best_bin_edge:      50.0
+[INFO]    best_div_bin_edges: [43. 44. 45. 46. 47. 48. 49. 50.]
+[INFO]    best_div_bin_vals:  [9223. 9039. 8153. 7663. 6821. 5778. 5202.] 
+
+[INFO]  Division 6 was analyzed by deduction...
+[INFO]    first_bin_last_division=50.0, last_bin_last_division=200.0
+[INFO]    final bin edges: [ 50.  51.  52.  53.  54.  55.  56.  57.  58.  59.  60.  61.  62.  63.
+  64.  65.  66.  67.  68.  69.  70.  71.  72.  73.  74.  75.  76.  77.
+  78.  79.  80.  81.  82.  83.  84.  85.  86.  87.  88.  89.  90.  91.
+  92.  93.  94.  95.  96.  97.  98.  99. 100. 101. 102. 103. 104. 105.
+ 106. 107. 108. 109. 110. 111. 112. 113. 114. 115. 116. 117. 118. 119.
+ 120. 121. 122. 123. 124. 125. 126. 127. 128. 129. 130. 131. 132. 133.
+ 134. 135. 136. 137. 138. 139. 140. 141. 142. 143. 144. 145. 146. 147.
+ 148. 149. 150. 151. 152. 153. 154. 155. 156. 157. 158. 159. 160. 161.
+ 162. 163. 164. 165. 166. 167. 168. 169. 170. 171. 172. 173. 174. 175.
+ 176. 177. 178. 179. 180. 181. 182. 183. 184. 185. 186. 187. 188. 189.
+ 190. 191. 192. 193. 194. 195. 196. 197. 198. 199. 200.]
+[INFO]    Excess entries in this division: 56253.0 (5.7669% different from number searched for)
+[INFO]    Total entries found after full analysis: 319115.0
+[INFO]    Final bin division list is:
+[5.0, 23.0, 31.0, 37.0, 43.0, 50.0, 200.0]
+[INFO] Performing 7 divisions on 319115.0 total entries.
+[INFO]  Beginning division 1...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [ 5.  6.  7.  8.  9. 10. 11. 12. 13. 14. 15. 16. 17. 18. 19. 20. 21. 22.]
+[INFO]      division_bin_vals: [ 781.  996. 1228. 1545. 1737. 2161. 2414. 2723. 2987. 3080. 3473. 3692.
+ 3962. 4187. 4513. 4865. 4960.]
+[INFO]    Found 49304.00 entries when looking for 45587.86. Checking previous bin...
+[INFO]    Found 44344.00 entries when looking for 45587.86.
+[INFO]    best_div_entries:   44344.00
+[INFO]    best_perc_diff:     -2.7285%
+[INFO]    best_bin_edge:      21.0
+[INFO]    best_div_bin_edges: [ 5.  6.  7.  8.  9. 10. 11. 12. 13. 14. 15. 16. 17. 18. 19. 20. 21.]
+[INFO]    best_div_bin_vals:  [ 781.  996. 1228. 1545. 1737. 2161. 2414. 2723. 2987. 3080. 3473. 3692.
+ 3962. 4187. 4513. 4865.] 
+
+[INFO]  Beginning division 2...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [21. 22. 23. 24. 25. 26. 27. 28. 29.]
+[INFO]      division_bin_vals: [4960. 5302. 5356. 5811. 5996. 6252. 6574. 6728.]
+[INFO]    Found 46979.00 entries when looking for 45587.86. Checking previous bin...
+[INFO]    Found 40251.00 entries when looking for 45587.86.
+[INFO]    best_div_entries:   46979.00
+[INFO]    best_perc_diff:     3.0516%
+[INFO]    best_bin_edge:      29.0
+[INFO]    best_div_bin_edges: [21. 22. 23. 24. 25. 26. 27. 28. 29.]
+[INFO]    best_div_bin_vals:  [4960. 5302. 5356. 5811. 5996. 6252. 6574. 6728.] 
+
+[INFO]  Beginning division 3...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [29. 30. 31. 32. 33. 34. 35.]
+[INFO]      division_bin_vals: [7168. 7257. 7381. 7931. 8032. 8360.]
+[INFO]    Found 46129.00 entries when looking for 45587.86. Checking previous bin...
+[INFO]    Found 37769.00 entries when looking for 45587.86.
+[INFO]    best_div_entries:   46129.00
+[INFO]    best_perc_diff:     1.1870%
+[INFO]    best_bin_edge:      35.0
+[INFO]    best_div_bin_edges: [29. 30. 31. 32. 33. 34. 35.]
+[INFO]    best_div_bin_vals:  [7168. 7257. 7381. 7931. 8032. 8360.] 
+
+[INFO]  Beginning division 4...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [35. 36. 37. 38. 39. 40. 41.]
+[INFO]      division_bin_vals: [8623. 8699. 8991. 9263. 9378. 9547.]
+[INFO]    Found 54501.00 entries when looking for 45587.86. Checking previous bin...
+[INFO]    Found 44954.00 entries when looking for 45587.86.
+[INFO]    best_div_entries:   44954.00
+[INFO]    best_perc_diff:     -1.3904%
+[INFO]    best_bin_edge:      40.0
+[INFO]    best_div_bin_edges: [35. 36. 37. 38. 39. 40.]
+[INFO]    best_div_bin_vals:  [8623. 8699. 8991. 9263. 9378.] 
+
+[INFO]  Beginning division 5...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [40. 41. 42. 43. 44. 45.]
+[INFO]      division_bin_vals: [9547. 9589. 9441. 9223. 9039.]
+[INFO]    Found 46839.00 entries when looking for 45587.86. Checking previous bin...
+[INFO]    Found 37800.00 entries when looking for 45587.86.
+[INFO]    best_div_entries:   46839.00
+[INFO]    best_perc_diff:     2.7445%
+[INFO]    best_bin_edge:      45.0
+[INFO]    best_div_bin_edges: [40. 41. 42. 43. 44. 45.]
+[INFO]    best_div_bin_vals:  [9547. 9589. 9441. 9223. 9039.] 
+
+[INFO]  Beginning division 6...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [45. 46. 47. 48. 49. 50. 51. 52. 53.]
+[INFO]      division_bin_vals: [8153. 7663. 6821. 5778. 5202. 4547. 3983. 3609.]
+[INFO]    Found 45756.00 entries when looking for 45587.86. Checking previous bin...
+[INFO]    Found 42147.00 entries when looking for 45587.86.
+[INFO]    best_div_entries:   45756.00
+[INFO]    best_perc_diff:     0.3688%
+[INFO]    best_bin_edge:      53.0
+[INFO]    best_div_bin_edges: [45. 46. 47. 48. 49. 50. 51. 52. 53.]
+[INFO]    best_div_bin_vals:  [8153. 7663. 6821. 5778. 5202. 4547. 3983. 3609.] 
+
+[INFO]  Division 7 was analyzed by deduction...
+[INFO]    first_bin_last_division=53.0, last_bin_last_division=200.0
+[INFO]    final bin edges: [ 53.  54.  55.  56.  57.  58.  59.  60.  61.  62.  63.  64.  65.  66.
+  67.  68.  69.  70.  71.  72.  73.  74.  75.  76.  77.  78.  79.  80.
+  81.  82.  83.  84.  85.  86.  87.  88.  89.  90.  91.  92.  93.  94.
+  95.  96.  97.  98.  99. 100. 101. 102. 103. 104. 105. 106. 107. 108.
+ 109. 110. 111. 112. 113. 114. 115. 116. 117. 118. 119. 120. 121. 122.
+ 123. 124. 125. 126. 127. 128. 129. 130. 131. 132. 133. 134. 135. 136.
+ 137. 138. 139. 140. 141. 142. 143. 144. 145. 146. 147. 148. 149. 150.
+ 151. 152. 153. 154. 155. 156. 157. 158. 159. 160. 161. 162. 163. 164.
+ 165. 166. 167. 168. 169. 170. 171. 172. 173. 174. 175. 176. 177. 178.
+ 179. 180. 181. 182. 183. 184. 185. 186. 187. 188. 189. 190. 191. 192.
+ 193. 194. 195. 196. 197. 198. 199. 200.]
+[INFO]    Excess entries in this division: 44114.0 (-3.2330% different from number searched for)
+[INFO]    Total entries found after full analysis: 319115.0
+[INFO]    Final bin division list is:
+[5.0, 21.0, 29.0, 35.0, 40.0, 45.0, 53.0, 200.0]
+[INFO] Performing 8 divisions on 319115.0 total entries.
+[INFO]  Beginning division 1...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [ 5.  6.  7.  8.  9. 10. 11. 12. 13. 14. 15. 16. 17. 18. 19. 20. 21.]
+[INFO]      division_bin_vals: [ 781.  996. 1228. 1545. 1737. 2161. 2414. 2723. 2987. 3080. 3473. 3692.
+ 3962. 4187. 4513. 4865.]
+[INFO]    Found 44344.00 entries when looking for 39889.38. Checking previous bin...
+[INFO]    Found 39479.00 entries when looking for 39889.38.
+[INFO]    best_div_entries:   39479.00
+[INFO]    best_perc_diff:     -1.0288%
+[INFO]    best_bin_edge:      20.0
+[INFO]    best_div_bin_edges: [ 5.  6.  7.  8.  9. 10. 11. 12. 13. 14. 15. 16. 17. 18. 19. 20.]
+[INFO]    best_div_bin_vals:  [ 781.  996. 1228. 1545. 1737. 2161. 2414. 2723. 2987. 3080. 3473. 3692.
+ 3962. 4187. 4513.] 
+
+[INFO]  Beginning division 2...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [20. 21. 22. 23. 24. 25. 26. 27. 28.]
+[INFO]      division_bin_vals: [4865. 4960. 5302. 5356. 5811. 5996. 6252. 6574.]
+[INFO]    Found 45116.00 entries when looking for 39889.38. Checking previous bin...
+[INFO]    Found 38542.00 entries when looking for 39889.38.
+[INFO]    best_div_entries:   38542.00
+[INFO]    best_perc_diff:     -3.3778%
+[INFO]    best_bin_edge:      27.0
+[INFO]    best_div_bin_edges: [20. 21. 22. 23. 24. 25. 26. 27.]
+[INFO]    best_div_bin_vals:  [4865. 4960. 5302. 5356. 5811. 5996. 6252.] 
+
+[INFO]  Beginning division 3...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [27. 28. 29. 30. 31. 32. 33.]
+[INFO]      division_bin_vals: [6574. 6728. 7168. 7257. 7381. 7931.]
+[INFO]    Found 43039.00 entries when looking for 39889.38. Checking previous bin...
+[INFO]    Found 35108.00 entries when looking for 39889.38.
+[INFO]    best_div_entries:   43039.00
+[INFO]    best_perc_diff:     7.8959%
+[INFO]    best_bin_edge:      33.0
+[INFO]    best_div_bin_edges: [27. 28. 29. 30. 31. 32. 33.]
+[INFO]    best_div_bin_vals:  [6574. 6728. 7168. 7257. 7381. 7931.] 
+
+[INFO]  Beginning division 4...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [33. 34. 35. 36. 37. 38.]
+[INFO]      division_bin_vals: [8032. 8360. 8623. 8699. 8991.]
+[INFO]    Found 42705.00 entries when looking for 39889.38. Checking previous bin...
+[INFO]    Found 33714.00 entries when looking for 39889.38.
+[INFO]    best_div_entries:   42705.00
+[INFO]    best_perc_diff:     7.0586%
+[INFO]    best_bin_edge:      38.0
+[INFO]    best_div_bin_edges: [33. 34. 35. 36. 37. 38.]
+[INFO]    best_div_bin_vals:  [8032. 8360. 8623. 8699. 8991.] 
+
+[INFO]  Beginning division 5...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [38. 39. 40. 41. 42. 43.]
+[INFO]      division_bin_vals: [9263. 9378. 9547. 9589. 9441.]
+[INFO]    Found 47218.00 entries when looking for 39889.38. Checking previous bin...
+[INFO]    Found 37777.00 entries when looking for 39889.38.
+[INFO]    best_div_entries:   37777.00
+[INFO]    best_perc_diff:     -5.2956%
+[INFO]    best_bin_edge:      42.0
+[INFO]    best_div_bin_edges: [38. 39. 40. 41. 42.]
+[INFO]    best_div_bin_vals:  [9263. 9378. 9547. 9589.] 
+
+[INFO]  Beginning division 6...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [42. 43. 44. 45. 46. 47.]
+[INFO]      division_bin_vals: [9441. 9223. 9039. 8153. 7663.]
+[INFO]    Found 43519.00 entries when looking for 39889.38. Checking previous bin...
+[INFO]    Found 35856.00 entries when looking for 39889.38.
+[INFO]    best_div_entries:   43519.00
+[INFO]    best_perc_diff:     9.0992%
+[INFO]    best_bin_edge:      47.0
+[INFO]    best_div_bin_edges: [42. 43. 44. 45. 46. 47.]
+[INFO]    best_div_bin_vals:  [9441. 9223. 9039. 8153. 7663.] 
+
+[INFO]  Beginning division 7...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [47. 48. 49. 50. 51. 52. 53. 54. 55. 56. 57.]
+[INFO]      division_bin_vals: [6821. 5778. 5202. 4547. 3983. 3609. 3225. 2990. 2525. 2249.]
+[INFO]    Found 40929.00 entries when looking for 39889.38. Checking previous bin...
+[INFO]    Found 38680.00 entries when looking for 39889.38.
+[INFO]    best_div_entries:   40929.00
+[INFO]    best_perc_diff:     2.6063%
+[INFO]    best_bin_edge:      57.0
+[INFO]    best_div_bin_edges: [47. 48. 49. 50. 51. 52. 53. 54. 55. 56. 57.]
+[INFO]    best_div_bin_vals:  [6821. 5778. 5202. 4547. 3983. 3609. 3225. 2990. 2525. 2249.] 
+
+[INFO]  Division 8 was analyzed by deduction...
+[INFO]    first_bin_last_division=57.0, last_bin_last_division=200.0
+[INFO]    final bin edges: [ 57.  58.  59.  60.  61.  62.  63.  64.  65.  66.  67.  68.  69.  70.
+  71.  72.  73.  74.  75.  76.  77.  78.  79.  80.  81.  82.  83.  84.
+  85.  86.  87.  88.  89.  90.  91.  92.  93.  94.  95.  96.  97.  98.
+  99. 100. 101. 102. 103. 104. 105. 106. 107. 108. 109. 110. 111. 112.
+ 113. 114. 115. 116. 117. 118. 119. 120. 121. 122. 123. 124. 125. 126.
+ 127. 128. 129. 130. 131. 132. 133. 134. 135. 136. 137. 138. 139. 140.
+ 141. 142. 143. 144. 145. 146. 147. 148. 149. 150. 151. 152. 153. 154.
+ 155. 156. 157. 158. 159. 160. 161. 162. 163. 164. 165. 166. 167. 168.
+ 169. 170. 171. 172. 173. 174. 175. 176. 177. 178. 179. 180. 181. 182.
+ 183. 184. 185. 186. 187. 188. 189. 190. 191. 192. 193. 194. 195. 196.
+ 197. 198. 199. 200.]
+[INFO]    Excess entries in this division: 33125.0 (-16.9578% different from number searched for)
+[INFO]    Total entries found after full analysis: 319115.0
+[INFO]    Final bin division list is:
+[5.0, 20.0, 27.0, 33.0, 38.0, 42.0, 47.0, 57.0, 200.0]
+[INFO] Performing 9 divisions on 319115.0 total entries.
+[INFO]  Beginning division 1...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [ 5.  6.  7.  8.  9. 10. 11. 12. 13. 14. 15. 16. 17. 18. 19. 20.]
+[INFO]      division_bin_vals: [ 781.  996. 1228. 1545. 1737. 2161. 2414. 2723. 2987. 3080. 3473. 3692.
+ 3962. 4187. 4513.]
+[INFO]    Found 39479.00 entries when looking for 35457.22. Checking previous bin...
+[INFO]    Found 34966.00 entries when looking for 35457.22.
+[INFO]    best_div_entries:   34966.00
+[INFO]    best_perc_diff:     -1.3854%
+[INFO]    best_bin_edge:      19.0
+[INFO]    best_div_bin_edges: [ 5.  6.  7.  8.  9. 10. 11. 12. 13. 14. 15. 16. 17. 18. 19.]
+[INFO]    best_div_bin_vals:  [ 781.  996. 1228. 1545. 1737. 2161. 2414. 2723. 2987. 3080. 3473. 3692.
+ 3962. 4187.] 
+
+[INFO]  Beginning division 2...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [19. 20. 21. 22. 23. 24. 25. 26.]
+[INFO]      division_bin_vals: [4513. 4865. 4960. 5302. 5356. 5811. 5996.]
+[INFO]    Found 36803.00 entries when looking for 35457.22. Checking previous bin...
+[INFO]    Found 30807.00 entries when looking for 35457.22.
+[INFO]    best_div_entries:   36803.00
+[INFO]    best_perc_diff:     3.7955%
+[INFO]    best_bin_edge:      26.0
+[INFO]    best_div_bin_edges: [19. 20. 21. 22. 23. 24. 25. 26.]
+[INFO]    best_div_bin_vals:  [4513. 4865. 4960. 5302. 5356. 5811. 5996.] 
+
+[INFO]  Beginning division 3...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [26. 27. 28. 29. 30. 31. 32.]
+[INFO]      division_bin_vals: [6252. 6574. 6728. 7168. 7257. 7381.]
+[INFO]    Found 41360.00 entries when looking for 35457.22. Checking previous bin...
+[INFO]    Found 33979.00 entries when looking for 35457.22.
+[INFO]    best_div_entries:   33979.00
+[INFO]    best_perc_diff:     -4.1690%
+[INFO]    best_bin_edge:      31.0
+[INFO]    best_div_bin_edges: [26. 27. 28. 29. 30. 31.]
+[INFO]    best_div_bin_vals:  [6252. 6574. 6728. 7168. 7257.] 
+
+[INFO]  Beginning division 4...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [31. 32. 33. 34. 35. 36.]
+[INFO]      division_bin_vals: [7381. 7931. 8032. 8360. 8623.]
+[INFO]    Found 40327.00 entries when looking for 35457.22. Checking previous bin...
+[INFO]    Found 31704.00 entries when looking for 35457.22.
+[INFO]    best_div_entries:   31704.00
+[INFO]    best_perc_diff:     -10.5852%
+[INFO]    best_bin_edge:      35.0
+[INFO]    best_div_bin_edges: [31. 32. 33. 34. 35.]
+[INFO]    best_div_bin_vals:  [7381. 7931. 8032. 8360.] 
+
+[INFO]  Beginning division 5...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [35. 36. 37. 38. 39.]
+[INFO]      division_bin_vals: [8623. 8699. 8991. 9263.]
+[INFO]    Found 35576.00 entries when looking for 35457.22. Checking previous bin...
+[INFO]    Found 26313.00 entries when looking for 35457.22.
+[INFO]    best_div_entries:   35576.00
+[INFO]    best_perc_diff:     0.3350%
+[INFO]    best_bin_edge:      39.0
+[INFO]    best_div_bin_edges: [35. 36. 37. 38. 39.]
+[INFO]    best_div_bin_vals:  [8623. 8699. 8991. 9263.] 
+
+[INFO]  Beginning division 6...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [39. 40. 41. 42. 43.]
+[INFO]      division_bin_vals: [9378. 9547. 9589. 9441.]
+[INFO]    Found 37955.00 entries when looking for 35457.22. Checking previous bin...
+[INFO]    Found 28514.00 entries when looking for 35457.22.
+[INFO]    best_div_entries:   37955.00
+[INFO]    best_perc_diff:     7.0445%
+[INFO]    best_bin_edge:      43.0
+[INFO]    best_div_bin_edges: [39. 40. 41. 42. 43.]
+[INFO]    best_div_bin_vals:  [9378. 9547. 9589. 9441.] 
+
+[INFO]  Beginning division 7...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [43. 44. 45. 46. 47. 48.]
+[INFO]      division_bin_vals: [9223. 9039. 8153. 7663. 6821.]
+[INFO]    Found 40899.00 entries when looking for 35457.22. Checking previous bin...
+[INFO]    Found 34078.00 entries when looking for 35457.22.
+[INFO]    best_div_entries:   34078.00
+[INFO]    best_perc_diff:     -3.8898%
+[INFO]    best_bin_edge:      47.0
+[INFO]    best_div_bin_edges: [43. 44. 45. 46. 47.]
+[INFO]    best_div_bin_vals:  [9223. 9039. 8153. 7663.] 
+
+[INFO]  Beginning division 8...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [47. 48. 49. 50. 51. 52. 53. 54. 55.]
+[INFO]      division_bin_vals: [6821. 5778. 5202. 4547. 3983. 3609. 3225. 2990.]
+[INFO]    Found 36155.00 entries when looking for 35457.22. Checking previous bin...
+[INFO]    Found 33165.00 entries when looking for 35457.22.
+[INFO]    best_div_entries:   36155.00
+[INFO]    best_perc_diff:     1.9679%
+[INFO]    best_bin_edge:      55.0
+[INFO]    best_div_bin_edges: [47. 48. 49. 50. 51. 52. 53. 54. 55.]
+[INFO]    best_div_bin_vals:  [6821. 5778. 5202. 4547. 3983. 3609. 3225. 2990.] 
+
+[INFO]  Division 9 was analyzed by deduction...
+[INFO]    first_bin_last_division=55.0, last_bin_last_division=200.0
+[INFO]    final bin edges: [ 55.  56.  57.  58.  59.  60.  61.  62.  63.  64.  65.  66.  67.  68.
+  69.  70.  71.  72.  73.  74.  75.  76.  77.  78.  79.  80.  81.  82.
+  83.  84.  85.  86.  87.  88.  89.  90.  91.  92.  93.  94.  95.  96.
+  97.  98.  99. 100. 101. 102. 103. 104. 105. 106. 107. 108. 109. 110.
+ 111. 112. 113. 114. 115. 116. 117. 118. 119. 120. 121. 122. 123. 124.
+ 125. 126. 127. 128. 129. 130. 131. 132. 133. 134. 135. 136. 137. 138.
+ 139. 140. 141. 142. 143. 144. 145. 146. 147. 148. 149. 150. 151. 152.
+ 153. 154. 155. 156. 157. 158. 159. 160. 161. 162. 163. 164. 165. 166.
+ 167. 168. 169. 170. 171. 172. 173. 174. 175. 176. 177. 178. 179. 180.
+ 181. 182. 183. 184. 185. 186. 187. 188. 189. 190. 191. 192. 193. 194.
+ 195. 196. 197. 198. 199. 200.]
+[INFO]    Excess entries in this division: 37899.0 (6.8865% different from number searched for)
+[INFO]    Total entries found after full analysis: 319115.0
+[INFO]    Final bin division list is:
+[5.0, 19.0, 26.0, 31.0, 35.0, 39.0, 43.0, 47.0, 55.0, 200.0]
+[INFO] Performing 10 divisions on 319115.0 total entries.
+[INFO]  Beginning division 1...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [ 5.  6.  7.  8.  9. 10. 11. 12. 13. 14. 15. 16. 17. 18. 19.]
+[INFO]      division_bin_vals: [ 781.  996. 1228. 1545. 1737. 2161. 2414. 2723. 2987. 3080. 3473. 3692.
+ 3962. 4187.]
+[INFO]    Found 34966.00 entries when looking for 31911.50. Checking previous bin...
+[INFO]    Found 30779.00 entries when looking for 31911.50.
+[INFO]    best_div_entries:   30779.00
+[INFO]    best_perc_diff:     -3.5489%
+[INFO]    best_bin_edge:      18.0
+[INFO]    best_div_bin_edges: [ 5.  6.  7.  8.  9. 10. 11. 12. 13. 14. 15. 16. 17. 18.]
+[INFO]    best_div_bin_vals:  [ 781.  996. 1228. 1545. 1737. 2161. 2414. 2723. 2987. 3080. 3473. 3692.
+ 3962.] 
+
+[INFO]  Beginning division 2...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [18. 19. 20. 21. 22. 23. 24. 25.]
+[INFO]      division_bin_vals: [4187. 4513. 4865. 4960. 5302. 5356. 5811.]
+[INFO]    Found 34994.00 entries when looking for 31911.50. Checking previous bin...
+[INFO]    Found 29183.00 entries when looking for 31911.50.
+[INFO]    best_div_entries:   29183.00
+[INFO]    best_perc_diff:     -8.5502%
+[INFO]    best_bin_edge:      24.0
+[INFO]    best_div_bin_edges: [18. 19. 20. 21. 22. 23. 24.]
+[INFO]    best_div_bin_vals:  [4187. 4513. 4865. 4960. 5302. 5356.] 
+
+[INFO]  Beginning division 3...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [24. 25. 26. 27. 28. 29. 30.]
+[INFO]      division_bin_vals: [5811. 5996. 6252. 6574. 6728. 7168.]
+[INFO]    Found 38529.00 entries when looking for 31911.50. Checking previous bin...
+[INFO]    Found 31361.00 entries when looking for 31911.50.
+[INFO]    best_div_entries:   31361.00
+[INFO]    best_perc_diff:     -1.7251%
+[INFO]    best_bin_edge:      29.0
+[INFO]    best_div_bin_edges: [24. 25. 26. 27. 28. 29.]
+[INFO]    best_div_bin_vals:  [5811. 5996. 6252. 6574. 6728.] 
+
+[INFO]  Beginning division 4...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [29. 30. 31. 32. 33. 34.]
+[INFO]      division_bin_vals: [7168. 7257. 7381. 7931. 8032.]
+[INFO]    Found 37769.00 entries when looking for 31911.50. Checking previous bin...
+[INFO]    Found 29737.00 entries when looking for 31911.50.
+[INFO]    best_div_entries:   29737.00
+[INFO]    best_perc_diff:     -6.8142%
+[INFO]    best_bin_edge:      33.0
+[INFO]    best_div_bin_edges: [29. 30. 31. 32. 33.]
+[INFO]    best_div_bin_vals:  [7168. 7257. 7381. 7931.] 
+
+[INFO]  Beginning division 5...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [33. 34. 35. 36. 37.]
+[INFO]      division_bin_vals: [8032. 8360. 8623. 8699.]
+[INFO]    Found 33714.00 entries when looking for 31911.50. Checking previous bin...
+[INFO]    Found 25015.00 entries when looking for 31911.50.
+[INFO]    best_div_entries:   33714.00
+[INFO]    best_perc_diff:     5.6484%
+[INFO]    best_bin_edge:      37.0
+[INFO]    best_div_bin_edges: [33. 34. 35. 36. 37.]
+[INFO]    best_div_bin_vals:  [8032. 8360. 8623. 8699.] 
+
+[INFO]  Beginning division 6...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [37. 38. 39. 40. 41.]
+[INFO]      division_bin_vals: [8991. 9263. 9378. 9547.]
+[INFO]    Found 37179.00 entries when looking for 31911.50. Checking previous bin...
+[INFO]    Found 27632.00 entries when looking for 31911.50.
+[INFO]    best_div_entries:   27632.00
+[INFO]    best_perc_diff:     -13.4105%
+[INFO]    best_bin_edge:      40.0
+[INFO]    best_div_bin_edges: [37. 38. 39. 40.]
+[INFO]    best_div_bin_vals:  [8991. 9263. 9378.] 
+
+[INFO]  Beginning division 7...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [40. 41. 42. 43. 44.]
+[INFO]      division_bin_vals: [9547. 9589. 9441. 9223.]
+[INFO]    Found 37800.00 entries when looking for 31911.50. Checking previous bin...
+[INFO]    Found 28577.00 entries when looking for 31911.50.
+[INFO]    best_div_entries:   28577.00
+[INFO]    best_perc_diff:     -10.4492%
+[INFO]    best_bin_edge:      43.0
+[INFO]    best_div_bin_edges: [40. 41. 42. 43.]
+[INFO]    best_div_bin_vals:  [9547. 9589. 9441.] 
+
+[INFO]  Beginning division 8...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [43. 44. 45. 46. 47.]
+[INFO]      division_bin_vals: [9223. 9039. 8153. 7663.]
+[INFO]    Found 34078.00 entries when looking for 31911.50. Checking previous bin...
+[INFO]    Found 26415.00 entries when looking for 31911.50.
+[INFO]    best_div_entries:   34078.00
+[INFO]    best_perc_diff:     6.7891%
+[INFO]    best_bin_edge:      47.0
+[INFO]    best_div_bin_edges: [43. 44. 45. 46. 47.]
+[INFO]    best_div_bin_vals:  [9223. 9039. 8153. 7663.] 
+
+[INFO]  Beginning division 9...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [47. 48. 49. 50. 51. 52. 53. 54.]
+[INFO]      division_bin_vals: [6821. 5778. 5202. 4547. 3983. 3609. 3225.]
+[INFO]    Found 33165.00 entries when looking for 31911.50. Checking previous bin...
+[INFO]    Found 29940.00 entries when looking for 31911.50.
+[INFO]    best_div_entries:   33165.00
+[INFO]    best_perc_diff:     3.9281%
+[INFO]    best_bin_edge:      54.0
+[INFO]    best_div_bin_edges: [47. 48. 49. 50. 51. 52. 53. 54.]
+[INFO]    best_div_bin_vals:  [6821. 5778. 5202. 4547. 3983. 3609. 3225.] 
+
+[INFO]  Division 10 was analyzed by deduction...
+[INFO]    first_bin_last_division=54.0, last_bin_last_division=200.0
+[INFO]    final bin edges: [ 54.  55.  56.  57.  58.  59.  60.  61.  62.  63.  64.  65.  66.  67.
+  68.  69.  70.  71.  72.  73.  74.  75.  76.  77.  78.  79.  80.  81.
+  82.  83.  84.  85.  86.  87.  88.  89.  90.  91.  92.  93.  94.  95.
+  96.  97.  98.  99. 100. 101. 102. 103. 104. 105. 106. 107. 108. 109.
+ 110. 111. 112. 113. 114. 115. 116. 117. 118. 119. 120. 121. 122. 123.
+ 124. 125. 126. 127. 128. 129. 130. 131. 132. 133. 134. 135. 136. 137.
+ 138. 139. 140. 141. 142. 143. 144. 145. 146. 147. 148. 149. 150. 151.
+ 152. 153. 154. 155. 156. 157. 158. 159. 160. 161. 162. 163. 164. 165.
+ 166. 167. 168. 169. 170. 171. 172. 173. 174. 175. 176. 177. 178. 179.
+ 180. 181. 182. 183. 184. 185. 186. 187. 188. 189. 190. 191. 192. 193.
+ 194. 195. 196. 197. 198. 199. 200.]
+[INFO]    Excess entries in this division: 40889.0 (28.1325% different from number searched for)
+[INFO]    Total entries found after full analysis: 319115.0
+[INFO]    Final bin division list is:
+[5.0, 18.0, 24.0, 29.0, 33.0, 37.0, 40.0, 43.0, 47.0, 54.0, 200.0]
+[INFO] Performing 11 divisions on 319115.0 total entries.
+[INFO]  Beginning division 1...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [ 5.  6.  7.  8.  9. 10. 11. 12. 13. 14. 15. 16. 17. 18.]
+[INFO]      division_bin_vals: [ 781.  996. 1228. 1545. 1737. 2161. 2414. 2723. 2987. 3080. 3473. 3692.
+ 3962.]
+[INFO]    Found 30779.00 entries when looking for 29010.45. Checking previous bin...
+[INFO]    Found 26817.00 entries when looking for 29010.45.
+[INFO]    best_div_entries:   30779.00
+[INFO]    best_perc_diff:     6.0962%
+[INFO]    best_bin_edge:      18.0
+[INFO]    best_div_bin_edges: [ 5.  6.  7.  8.  9. 10. 11. 12. 13. 14. 15. 16. 17. 18.]
+[INFO]    best_div_bin_vals:  [ 781.  996. 1228. 1545. 1737. 2161. 2414. 2723. 2987. 3080. 3473. 3692.
+ 3962.] 
+
+[INFO]  Beginning division 2...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [18. 19. 20. 21. 22. 23. 24.]
+[INFO]      division_bin_vals: [4187. 4513. 4865. 4960. 5302. 5356.]
+[INFO]    Found 29183.00 entries when looking for 29010.45. Checking previous bin...
+[INFO]    Found 23827.00 entries when looking for 29010.45.
+[INFO]    best_div_entries:   29183.00
+[INFO]    best_perc_diff:     0.5948%
+[INFO]    best_bin_edge:      24.0
+[INFO]    best_div_bin_edges: [18. 19. 20. 21. 22. 23. 24.]
+[INFO]    best_div_bin_vals:  [4187. 4513. 4865. 4960. 5302. 5356.] 
+
+[INFO]  Beginning division 3...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [24. 25. 26. 27. 28. 29.]
+[INFO]      division_bin_vals: [5811. 5996. 6252. 6574. 6728.]
+[INFO]    Found 31361.00 entries when looking for 29010.45. Checking previous bin...
+[INFO]    Found 24633.00 entries when looking for 29010.45.
+[INFO]    best_div_entries:   31361.00
+[INFO]    best_perc_diff:     8.1024%
+[INFO]    best_bin_edge:      29.0
+[INFO]    best_div_bin_edges: [24. 25. 26. 27. 28. 29.]
+[INFO]    best_div_bin_vals:  [5811. 5996. 6252. 6574. 6728.] 
+
+[INFO]  Beginning division 4...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [29. 30. 31. 32. 33.]
+[INFO]      division_bin_vals: [7168. 7257. 7381. 7931.]
+[INFO]    Found 29737.00 entries when looking for 29010.45. Checking previous bin...
+[INFO]    Found 21806.00 entries when looking for 29010.45.
+[INFO]    best_div_entries:   29737.00
+[INFO]    best_perc_diff:     2.5044%
+[INFO]    best_bin_edge:      33.0
+[INFO]    best_div_bin_edges: [29. 30. 31. 32. 33.]
+[INFO]    best_div_bin_vals:  [7168. 7257. 7381. 7931.] 
+
+[INFO]  Beginning division 5...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [33. 34. 35. 36. 37.]
+[INFO]      division_bin_vals: [8032. 8360. 8623. 8699.]
+[INFO]    Found 33714.00 entries when looking for 29010.45. Checking previous bin...
+[INFO]    Found 25015.00 entries when looking for 29010.45.
+[INFO]    best_div_entries:   25015.00
+[INFO]    best_perc_diff:     -13.7725%
+[INFO]    best_bin_edge:      36.0
+[INFO]    best_div_bin_edges: [33. 34. 35. 36.]
+[INFO]    best_div_bin_vals:  [8032. 8360. 8623.] 
+
+[INFO]  Beginning division 6...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [36. 37. 38. 39. 40.]
+[INFO]      division_bin_vals: [8699. 8991. 9263. 9378.]
+[INFO]    Found 36331.00 entries when looking for 29010.45. Checking previous bin...
+[INFO]    Found 26953.00 entries when looking for 29010.45.
+[INFO]    best_div_entries:   26953.00
+[INFO]    best_perc_diff:     -7.0921%
+[INFO]    best_bin_edge:      39.0
+[INFO]    best_div_bin_edges: [36. 37. 38. 39.]
+[INFO]    best_div_bin_vals:  [8699. 8991. 9263.] 
+
+[INFO]  Beginning division 7...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [39. 40. 41. 42. 43.]
+[INFO]      division_bin_vals: [9378. 9547. 9589. 9441.]
+[INFO]    Found 37955.00 entries when looking for 29010.45. Checking previous bin...
+[INFO]    Found 28514.00 entries when looking for 29010.45.
+[INFO]    best_div_entries:   28514.00
+[INFO]    best_perc_diff:     -1.7113%
+[INFO]    best_bin_edge:      42.0
+[INFO]    best_div_bin_edges: [39. 40. 41. 42.]
+[INFO]    best_div_bin_vals:  [9378. 9547. 9589.] 
+
+[INFO]  Beginning division 8...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [42. 43. 44. 45. 46.]
+[INFO]      division_bin_vals: [9441. 9223. 9039. 8153.]
+[INFO]    Found 35856.00 entries when looking for 29010.45. Checking previous bin...
+[INFO]    Found 27703.00 entries when looking for 29010.45.
+[INFO]    best_div_entries:   27703.00
+[INFO]    best_perc_diff:     -4.5068%
+[INFO]    best_bin_edge:      45.0
+[INFO]    best_div_bin_edges: [42. 43. 44. 45.]
+[INFO]    best_div_bin_vals:  [9441. 9223. 9039.] 
+
+[INFO]  Beginning division 9...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [45. 46. 47. 48. 49. 50.]
+[INFO]      division_bin_vals: [8153. 7663. 6821. 5778. 5202.]
+[INFO]    Found 33617.00 entries when looking for 29010.45. Checking previous bin...
+[INFO]    Found 28415.00 entries when looking for 29010.45.
+[INFO]    best_div_entries:   28415.00
+[INFO]    best_perc_diff:     -2.0526%
+[INFO]    best_bin_edge:      49.0
+[INFO]    best_div_bin_edges: [45. 46. 47. 48. 49.]
+[INFO]    best_div_bin_vals:  [8153. 7663. 6821. 5778.] 
+
+[INFO]  Beginning division 10...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [49. 50. 51. 52. 53. 54. 55. 56. 57. 58.]
+[INFO]      division_bin_vals: [5202. 4547. 3983. 3609. 3225. 2990. 2525. 2249. 2065.]
+[INFO]    Found 30395.00 entries when looking for 29010.45. Checking previous bin...
+[INFO]    Found 28330.00 entries when looking for 29010.45.
+[INFO]    best_div_entries:   28330.00
+[INFO]    best_perc_diff:     -2.3455%
+[INFO]    best_bin_edge:      57.0
+[INFO]    best_div_bin_edges: [49. 50. 51. 52. 53. 54. 55. 56. 57.]
+[INFO]    best_div_bin_vals:  [5202. 4547. 3983. 3609. 3225. 2990. 2525. 2249.] 
+
+[INFO]  Division 11 was analyzed by deduction...
+[INFO]    first_bin_last_division=57.0, last_bin_last_division=200.0
+[INFO]    final bin edges: [ 57.  58.  59.  60.  61.  62.  63.  64.  65.  66.  67.  68.  69.  70.
+  71.  72.  73.  74.  75.  76.  77.  78.  79.  80.  81.  82.  83.  84.
+  85.  86.  87.  88.  89.  90.  91.  92.  93.  94.  95.  96.  97.  98.
+  99. 100. 101. 102. 103. 104. 105. 106. 107. 108. 109. 110. 111. 112.
+ 113. 114. 115. 116. 117. 118. 119. 120. 121. 122. 123. 124. 125. 126.
+ 127. 128. 129. 130. 131. 132. 133. 134. 135. 136. 137. 138. 139. 140.
+ 141. 142. 143. 144. 145. 146. 147. 148. 149. 150. 151. 152. 153. 154.
+ 155. 156. 157. 158. 159. 160. 161. 162. 163. 164. 165. 166. 167. 168.
+ 169. 170. 171. 172. 173. 174. 175. 176. 177. 178. 179. 180. 181. 182.
+ 183. 184. 185. 186. 187. 188. 189. 190. 191. 192. 193. 194. 195. 196.
+ 197. 198. 199. 200.]
+[INFO]    Excess entries in this division: 33125.0 (14.1830% different from number searched for)
+[INFO]    Total entries found after full analysis: 319115.0
+[INFO]    Final bin division list is:
+[5.0, 18.0, 24.0, 29.0, 33.0, 36.0, 39.0, 42.0, 45.0, 49.0, 57.0, 200.0]
+[INFO] Performing 12 divisions on 319115.0 total entries.
+[INFO]  Beginning division 1...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [ 5.  6.  7.  8.  9. 10. 11. 12. 13. 14. 15. 16. 17.]
+[INFO]      division_bin_vals: [ 781.  996. 1228. 1545. 1737. 2161. 2414. 2723. 2987. 3080. 3473. 3692.]
+[INFO]    Found 26817.00 entries when looking for 26592.92. Checking previous bin...
+[INFO]    Found 23125.00 entries when looking for 26592.92.
+[INFO]    best_div_entries:   26817.00
+[INFO]    best_perc_diff:     0.8426%
+[INFO]    best_bin_edge:      17.0
+[INFO]    best_div_bin_edges: [ 5.  6.  7.  8.  9. 10. 11. 12. 13. 14. 15. 16. 17.]
+[INFO]    best_div_bin_vals:  [ 781.  996. 1228. 1545. 1737. 2161. 2414. 2723. 2987. 3080. 3473. 3692.] 
+
+[INFO]  Beginning division 2...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [17. 18. 19. 20. 21. 22. 23.]
+[INFO]      division_bin_vals: [3962. 4187. 4513. 4865. 4960. 5302.]
+[INFO]    Found 27789.00 entries when looking for 26592.92. Checking previous bin...
+[INFO]    Found 22487.00 entries when looking for 26592.92.
+[INFO]    best_div_entries:   27789.00
+[INFO]    best_perc_diff:     4.4978%
+[INFO]    best_bin_edge:      23.0
+[INFO]    best_div_bin_edges: [17. 18. 19. 20. 21. 22. 23.]
+[INFO]    best_div_bin_vals:  [3962. 4187. 4513. 4865. 4960. 5302.] 
+
+[INFO]  Beginning division 3...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [23. 24. 25. 26. 27. 28.]
+[INFO]      division_bin_vals: [5356. 5811. 5996. 6252. 6574.]
+[INFO]    Found 29989.00 entries when looking for 26592.92. Checking previous bin...
+[INFO]    Found 23415.00 entries when looking for 26592.92.
+[INFO]    best_div_entries:   23415.00
+[INFO]    best_perc_diff:     -11.9502%
+[INFO]    best_bin_edge:      27.0
+[INFO]    best_div_bin_edges: [23. 24. 25. 26. 27.]
+[INFO]    best_div_bin_vals:  [5356. 5811. 5996. 6252.] 
+
+[INFO]  Beginning division 4...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [27. 28. 29. 30. 31.]
+[INFO]      division_bin_vals: [6574. 6728. 7168. 7257.]
+[INFO]    Found 27727.00 entries when looking for 26592.92. Checking previous bin...
+[INFO]    Found 20470.00 entries when looking for 26592.92.
+[INFO]    best_div_entries:   27727.00
+[INFO]    best_perc_diff:     4.2646%
+[INFO]    best_bin_edge:      31.0
+[INFO]    best_div_bin_edges: [27. 28. 29. 30. 31.]
+[INFO]    best_div_bin_vals:  [6574. 6728. 7168. 7257.] 
+
+[INFO]  Beginning division 5...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [31. 32. 33. 34. 35.]
+[INFO]      division_bin_vals: [7381. 7931. 8032. 8360.]
+[INFO]    Found 31704.00 entries when looking for 26592.92. Checking previous bin...
+[INFO]    Found 23344.00 entries when looking for 26592.92.
+[INFO]    best_div_entries:   23344.00
+[INFO]    best_perc_diff:     -12.2172%
+[INFO]    best_bin_edge:      34.0
+[INFO]    best_div_bin_edges: [31. 32. 33. 34.]
+[INFO]    best_div_bin_vals:  [7381. 7931. 8032.] 
+
+[INFO]  Beginning division 6...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [34. 35. 36. 37. 38.]
+[INFO]      division_bin_vals: [8360. 8623. 8699. 8991.]
+[INFO]    Found 34673.00 entries when looking for 26592.92. Checking previous bin...
+[INFO]    Found 25682.00 entries when looking for 26592.92.
+[INFO]    best_div_entries:   25682.00
+[INFO]    best_perc_diff:     -3.4254%
+[INFO]    best_bin_edge:      37.0
+[INFO]    best_div_bin_edges: [34. 35. 36. 37.]
+[INFO]    best_div_bin_vals:  [8360. 8623. 8699.] 
+
+[INFO]  Beginning division 7...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [37. 38. 39. 40.]
+[INFO]      division_bin_vals: [8991. 9263. 9378.]
+[INFO]    Found 27632.00 entries when looking for 26592.92. Checking previous bin...
+[INFO]    Found 18254.00 entries when looking for 26592.92.
+[INFO]    best_div_entries:   27632.00
+[INFO]    best_perc_diff:     3.9074%
+[INFO]    best_bin_edge:      40.0
+[INFO]    best_div_bin_edges: [37. 38. 39. 40.]
+[INFO]    best_div_bin_vals:  [8991. 9263. 9378.] 
+
+[INFO]  Beginning division 8...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [40. 41. 42. 43.]
+[INFO]      division_bin_vals: [9547. 9589. 9441.]
+[INFO]    Found 28577.00 entries when looking for 26592.92. Checking previous bin...
+[INFO]    Found 19136.00 entries when looking for 26592.92.
+[INFO]    best_div_entries:   28577.00
+[INFO]    best_perc_diff:     7.4609%
+[INFO]    best_bin_edge:      43.0
+[INFO]    best_div_bin_edges: [40. 41. 42. 43.]
+[INFO]    best_div_bin_vals:  [9547. 9589. 9441.] 
+
+[INFO]  Beginning division 9...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [43. 44. 45. 46. 47.]
+[INFO]      division_bin_vals: [9223. 9039. 8153. 7663.]
+[INFO]    Found 34078.00 entries when looking for 26592.92. Checking previous bin...
+[INFO]    Found 26415.00 entries when looking for 26592.92.
+[INFO]    best_div_entries:   26415.00
+[INFO]    best_perc_diff:     -0.6690%
+[INFO]    best_bin_edge:      46.0
+[INFO]    best_div_bin_edges: [43. 44. 45. 46.]
+[INFO]    best_div_bin_vals:  [9223. 9039. 8153.] 
+
+[INFO]  Beginning division 10...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [46. 47. 48. 49. 50. 51.]
+[INFO]      division_bin_vals: [7663. 6821. 5778. 5202. 4547.]
+[INFO]    Found 30011.00 entries when looking for 26592.92. Checking previous bin...
+[INFO]    Found 25464.00 entries when looking for 26592.92.
+[INFO]    best_div_entries:   25464.00
+[INFO]    best_perc_diff:     -4.2452%
+[INFO]    best_bin_edge:      50.0
+[INFO]    best_div_bin_edges: [46. 47. 48. 49. 50.]
+[INFO]    best_div_bin_vals:  [7663. 6821. 5778. 5202.] 
+
+[INFO]  Beginning division 11...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [50. 51. 52. 53. 54. 55. 56. 57. 58. 59.]
+[INFO]      division_bin_vals: [4547. 3983. 3609. 3225. 2990. 2525. 2249. 2065. 1978.]
+[INFO]    Found 27171.00 entries when looking for 26592.92. Checking previous bin...
+[INFO]    Found 25193.00 entries when looking for 26592.92.
+[INFO]    best_div_entries:   27171.00
+[INFO]    best_perc_diff:     2.1738%
+[INFO]    best_bin_edge:      59.0
+[INFO]    best_div_bin_edges: [50. 51. 52. 53. 54. 55. 56. 57. 58. 59.]
+[INFO]    best_div_bin_vals:  [4547. 3983. 3609. 3225. 2990. 2525. 2249. 2065. 1978.] 
+
+[INFO]  Division 12 was analyzed by deduction...
+[INFO]    first_bin_last_division=59.0, last_bin_last_division=200.0
+[INFO]    final bin edges: [ 59.  60.  61.  62.  63.  64.  65.  66.  67.  68.  69.  70.  71.  72.
+  73.  74.  75.  76.  77.  78.  79.  80.  81.  82.  83.  84.  85.  86.
+  87.  88.  89.  90.  91.  92.  93.  94.  95.  96.  97.  98.  99. 100.
+ 101. 102. 103. 104. 105. 106. 107. 108. 109. 110. 111. 112. 113. 114.
+ 115. 116. 117. 118. 119. 120. 121. 122. 123. 124. 125. 126. 127. 128.
+ 129. 130. 131. 132. 133. 134. 135. 136. 137. 138. 139. 140. 141. 142.
+ 143. 144. 145. 146. 147. 148. 149. 150. 151. 152. 153. 154. 155. 156.
+ 157. 158. 159. 160. 161. 162. 163. 164. 165. 166. 167. 168. 169. 170.
+ 171. 172. 173. 174. 175. 176. 177. 178. 179. 180. 181. 182. 183. 184.
+ 185. 186. 187. 188. 189. 190. 191. 192. 193. 194. 195. 196. 197. 198.
+ 199. 200.]
+[INFO]    Excess entries in this division: 29082.0 (9.3599% different from number searched for)
+[INFO]    Total entries found after full analysis: 319115.0
+[INFO]    Final bin division list is:
+[5.0, 17.0, 23.0, 27.0, 31.0, 34.0, 37.0, 40.0, 43.0, 46.0, 50.0, 59.0, 200.0]
+[INFO] Performing 13 divisions on 319115.0 total entries.
+[INFO]  Beginning division 1...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [ 5.  6.  7.  8.  9. 10. 11. 12. 13. 14. 15. 16. 17.]
+[INFO]      division_bin_vals: [ 781.  996. 1228. 1545. 1737. 2161. 2414. 2723. 2987. 3080. 3473. 3692.]
+[INFO]    Found 26817.00 entries when looking for 24547.31. Checking previous bin...
+[INFO]    Found 23125.00 entries when looking for 24547.31.
+[INFO]    best_div_entries:   23125.00
+[INFO]    best_perc_diff:     -5.7941%
+[INFO]    best_bin_edge:      16.0
+[INFO]    best_div_bin_edges: [ 5.  6.  7.  8.  9. 10. 11. 12. 13. 14. 15. 16.]
+[INFO]    best_div_bin_vals:  [ 781.  996. 1228. 1545. 1737. 2161. 2414. 2723. 2987. 3080. 3473.] 
+
+[INFO]  Beginning division 2...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [16. 17. 18. 19. 20. 21. 22.]
+[INFO]      division_bin_vals: [3692. 3962. 4187. 4513. 4865. 4960.]
+[INFO]    Found 26179.00 entries when looking for 24547.31. Checking previous bin...
+[INFO]    Found 21219.00 entries when looking for 24547.31.
+[INFO]    best_div_entries:   26179.00
+[INFO]    best_perc_diff:     6.6471%
+[INFO]    best_bin_edge:      22.0
+[INFO]    best_div_bin_edges: [16. 17. 18. 19. 20. 21. 22.]
+[INFO]    best_div_bin_vals:  [3692. 3962. 4187. 4513. 4865. 4960.] 
+
+[INFO]  Beginning division 3...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [22. 23. 24. 25. 26. 27.]
+[INFO]      division_bin_vals: [5302. 5356. 5811. 5996. 6252.]
+[INFO]    Found 28717.00 entries when looking for 24547.31. Checking previous bin...
+[INFO]    Found 22465.00 entries when looking for 24547.31.
+[INFO]    best_div_entries:   22465.00
+[INFO]    best_perc_diff:     -8.4828%
+[INFO]    best_bin_edge:      26.0
+[INFO]    best_div_bin_edges: [22. 23. 24. 25. 26.]
+[INFO]    best_div_bin_vals:  [5302. 5356. 5811. 5996.] 
+
+[INFO]  Beginning division 4...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [26. 27. 28. 29. 30.]
+[INFO]      division_bin_vals: [6252. 6574. 6728. 7168.]
+[INFO]    Found 26722.00 entries when looking for 24547.31. Checking previous bin...
+[INFO]    Found 19554.00 entries when looking for 24547.31.
+[INFO]    best_div_entries:   26722.00
+[INFO]    best_perc_diff:     8.8592%
+[INFO]    best_bin_edge:      30.0
+[INFO]    best_div_bin_edges: [26. 27. 28. 29. 30.]
+[INFO]    best_div_bin_vals:  [6252. 6574. 6728. 7168.] 
+
+[INFO]  Beginning division 5...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [30. 31. 32. 33. 34.]
+[INFO]      division_bin_vals: [7257. 7381. 7931. 8032.]
+[INFO]    Found 30601.00 entries when looking for 24547.31. Checking previous bin...
+[INFO]    Found 22569.00 entries when looking for 24547.31.
+[INFO]    best_div_entries:   22569.00
+[INFO]    best_perc_diff:     -8.0592%
+[INFO]    best_bin_edge:      33.0
+[INFO]    best_div_bin_edges: [30. 31. 32. 33.]
+[INFO]    best_div_bin_vals:  [7257. 7381. 7931.] 
+
+[INFO]  Beginning division 6...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [33. 34. 35. 36.]
+[INFO]      division_bin_vals: [8032. 8360. 8623.]
+[INFO]    Found 25015.00 entries when looking for 24547.31. Checking previous bin...
+[INFO]    Found 16392.00 entries when looking for 24547.31.
+[INFO]    best_div_entries:   25015.00
+[INFO]    best_perc_diff:     1.9053%
+[INFO]    best_bin_edge:      36.0
+[INFO]    best_div_bin_edges: [33. 34. 35. 36.]
+[INFO]    best_div_bin_vals:  [8032. 8360. 8623.] 
+
+[INFO]  Beginning division 7...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [36. 37. 38. 39.]
+[INFO]      division_bin_vals: [8699. 8991. 9263.]
+[INFO]    Found 26953.00 entries when looking for 24547.31. Checking previous bin...
+[INFO]    Found 17690.00 entries when looking for 24547.31.
+[INFO]    best_div_entries:   26953.00
+[INFO]    best_perc_diff:     9.8002%
+[INFO]    best_bin_edge:      39.0
+[INFO]    best_div_bin_edges: [36. 37. 38. 39.]
+[INFO]    best_div_bin_vals:  [8699. 8991. 9263.] 
+
+[INFO]  Beginning division 8...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [39. 40. 41. 42.]
+[INFO]      division_bin_vals: [9378. 9547. 9589.]
+[INFO]    Found 28514.00 entries when looking for 24547.31. Checking previous bin...
+[INFO]    Found 18925.00 entries when looking for 24547.31.
+[INFO]    best_div_entries:   28514.00
+[INFO]    best_perc_diff:     16.1594%
+[INFO]    best_bin_edge:      42.0
+[INFO]    best_div_bin_edges: [39. 40. 41. 42.]
+[INFO]    best_div_bin_vals:  [9378. 9547. 9589.] 
+
+[INFO]  Beginning division 9...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [42. 43. 44. 45.]
+[INFO]      division_bin_vals: [9441. 9223. 9039.]
+[INFO]    Found 27703.00 entries when looking for 24547.31. Checking previous bin...
+[INFO]    Found 18664.00 entries when looking for 24547.31.
+[INFO]    best_div_entries:   27703.00
+[INFO]    best_perc_diff:     12.8556%
+[INFO]    best_bin_edge:      45.0
+[INFO]    best_div_bin_edges: [42. 43. 44. 45.]
+[INFO]    best_div_bin_vals:  [9441. 9223. 9039.] 
+
+[INFO]  Beginning division 10...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [45. 46. 47. 48. 49.]
+[INFO]      division_bin_vals: [8153. 7663. 6821. 5778.]
+[INFO]    Found 28415.00 entries when looking for 24547.31. Checking previous bin...
+[INFO]    Found 22637.00 entries when looking for 24547.31.
+[INFO]    best_div_entries:   22637.00
+[INFO]    best_perc_diff:     -7.7821%
+[INFO]    best_bin_edge:      48.0
+[INFO]    best_div_bin_edges: [45. 46. 47. 48.]
+[INFO]    best_div_bin_vals:  [8153. 7663. 6821.] 
+
+[INFO]  Beginning division 11...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [48. 49. 50. 51. 52. 53. 54.]
+[INFO]      division_bin_vals: [5778. 5202. 4547. 3983. 3609. 3225.]
+[INFO]    Found 26344.00 entries when looking for 24547.31. Checking previous bin...
+[INFO]    Found 23119.00 entries when looking for 24547.31.
+[INFO]    best_div_entries:   23119.00
+[INFO]    best_perc_diff:     -5.8186%
+[INFO]    best_bin_edge:      53.0
+[INFO]    best_div_bin_edges: [48. 49. 50. 51. 52. 53.]
+[INFO]    best_div_bin_vals:  [5778. 5202. 4547. 3983. 3609.] 
+
+[INFO]  Beginning division 12...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [53. 54. 55. 56. 57. 58. 59. 60. 61. 62. 63. 64. 65. 66.]
+[INFO]      division_bin_vals: [3225. 2990. 2525. 2249. 2065. 1978. 1826. 1694. 1475. 1358. 1297. 1272.
+ 1166.]
+[INFO]    Found 25120.00 entries when looking for 24547.31. Checking previous bin...
+[INFO]    Found 23954.00 entries when looking for 24547.31.
+[INFO]    best_div_entries:   25120.00
+[INFO]    best_perc_diff:     2.3330%
+[INFO]    best_bin_edge:      66.0
+[INFO]    best_div_bin_edges: [53. 54. 55. 56. 57. 58. 59. 60. 61. 62. 63. 64. 65. 66.]
+[INFO]    best_div_bin_vals:  [3225. 2990. 2525. 2249. 2065. 1978. 1826. 1694. 1475. 1358. 1297. 1272.
+ 1166.] 
+
+[INFO]  Division 13 was analyzed by deduction...
+[INFO]    first_bin_last_division=66.0, last_bin_last_division=200.0
+[INFO]    final bin edges: [ 66.  67.  68.  69.  70.  71.  72.  73.  74.  75.  76.  77.  78.  79.
+  80.  81.  82.  83.  84.  85.  86.  87.  88.  89.  90.  91.  92.  93.
+  94.  95.  96.  97.  98.  99. 100. 101. 102. 103. 104. 105. 106. 107.
+ 108. 109. 110. 111. 112. 113. 114. 115. 116. 117. 118. 119. 120. 121.
+ 122. 123. 124. 125. 126. 127. 128. 129. 130. 131. 132. 133. 134. 135.
+ 136. 137. 138. 139. 140. 141. 142. 143. 144. 145. 146. 147. 148. 149.
+ 150. 151. 152. 153. 154. 155. 156. 157. 158. 159. 160. 161. 162. 163.
+ 164. 165. 166. 167. 168. 169. 170. 171. 172. 173. 174. 175. 176. 177.
+ 178. 179. 180. 181. 182. 183. 184. 185. 186. 187. 188. 189. 190. 191.
+ 192. 193. 194. 195. 196. 197. 198. 199. 200.]
+[INFO]    Excess entries in this division: 18994.0 (-22.6229% different from number searched for)
+[INFO]    Total entries found after full analysis: 319115.0
+[INFO]    Final bin division list is:
+[5.0, 16.0, 22.0, 26.0, 30.0, 33.0, 36.0, 39.0, 42.0, 45.0, 48.0, 53.0, 66.0, 200.0]
+[INFO] Performing 14 divisions on 319115.0 total entries.
+[INFO]  Beginning division 1...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [ 5.  6.  7.  8.  9. 10. 11. 12. 13. 14. 15. 16.]
+[INFO]      division_bin_vals: [ 781.  996. 1228. 1545. 1737. 2161. 2414. 2723. 2987. 3080. 3473.]
+[INFO]    Found 23125.00 entries when looking for 22793.93. Checking previous bin...
+[INFO]    Found 19652.00 entries when looking for 22793.93.
+[INFO]    best_div_entries:   23125.00
+[INFO]    best_perc_diff:     1.4525%
+[INFO]    best_bin_edge:      16.0
+[INFO]    best_div_bin_edges: [ 5.  6.  7.  8.  9. 10. 11. 12. 13. 14. 15. 16.]
+[INFO]    best_div_bin_vals:  [ 781.  996. 1228. 1545. 1737. 2161. 2414. 2723. 2987. 3080. 3473.] 
+
+[INFO]  Beginning division 2...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [16. 17. 18. 19. 20. 21. 22.]
+[INFO]      division_bin_vals: [3692. 3962. 4187. 4513. 4865. 4960.]
+[INFO]    Found 26179.00 entries when looking for 22793.93. Checking previous bin...
+[INFO]    Found 21219.00 entries when looking for 22793.93.
+[INFO]    best_div_entries:   21219.00
+[INFO]    best_perc_diff:     -6.9094%
+[INFO]    best_bin_edge:      21.0
+[INFO]    best_div_bin_edges: [16. 17. 18. 19. 20. 21.]
+[INFO]    best_div_bin_vals:  [3692. 3962. 4187. 4513. 4865.] 
+
+[INFO]  Beginning division 3...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [21. 22. 23. 24. 25. 26.]
+[INFO]      division_bin_vals: [4960. 5302. 5356. 5811. 5996.]
+[INFO]    Found 27425.00 entries when looking for 22793.93. Checking previous bin...
+[INFO]    Found 21429.00 entries when looking for 22793.93.
+[INFO]    best_div_entries:   21429.00
+[INFO]    best_perc_diff:     -5.9881%
+[INFO]    best_bin_edge:      25.0
+[INFO]    best_div_bin_edges: [21. 22. 23. 24. 25.]
+[INFO]    best_div_bin_vals:  [4960. 5302. 5356. 5811.] 
+
+[INFO]  Beginning division 4...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [25. 26. 27. 28. 29.]
+[INFO]      division_bin_vals: [5996. 6252. 6574. 6728.]
+[INFO]    Found 25550.00 entries when looking for 22793.93. Checking previous bin...
+[INFO]    Found 18822.00 entries when looking for 22793.93.
+[INFO]    best_div_entries:   25550.00
+[INFO]    best_perc_diff:     12.0913%
+[INFO]    best_bin_edge:      29.0
+[INFO]    best_div_bin_edges: [25. 26. 27. 28. 29.]
+[INFO]    best_div_bin_vals:  [5996. 6252. 6574. 6728.] 
+
+[INFO]  Beginning division 5...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [29. 30. 31. 32. 33.]
+[INFO]      division_bin_vals: [7168. 7257. 7381. 7931.]
+[INFO]    Found 29737.00 entries when looking for 22793.93. Checking previous bin...
+[INFO]    Found 21806.00 entries when looking for 22793.93.
+[INFO]    best_div_entries:   21806.00
+[INFO]    best_perc_diff:     -4.3342%
+[INFO]    best_bin_edge:      32.0
+[INFO]    best_div_bin_edges: [29. 30. 31. 32.]
+[INFO]    best_div_bin_vals:  [7168. 7257. 7381.] 
+
+[INFO]  Beginning division 6...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [32. 33. 34. 35.]
+[INFO]      division_bin_vals: [7931. 8032. 8360.]
+[INFO]    Found 24323.00 entries when looking for 22793.93. Checking previous bin...
+[INFO]    Found 15963.00 entries when looking for 22793.93.
+[INFO]    best_div_entries:   24323.00
+[INFO]    best_perc_diff:     6.7082%
+[INFO]    best_bin_edge:      35.0
+[INFO]    best_div_bin_edges: [32. 33. 34. 35.]
+[INFO]    best_div_bin_vals:  [7931. 8032. 8360.] 
+
+[INFO]  Beginning division 7...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [35. 36. 37. 38.]
+[INFO]      division_bin_vals: [8623. 8699. 8991.]
+[INFO]    Found 26313.00 entries when looking for 22793.93. Checking previous bin...
+[INFO]    Found 17322.00 entries when looking for 22793.93.
+[INFO]    best_div_entries:   26313.00
+[INFO]    best_perc_diff:     15.4386%
+[INFO]    best_bin_edge:      38.0
+[INFO]    best_div_bin_edges: [35. 36. 37. 38.]
+[INFO]    best_div_bin_vals:  [8623. 8699. 8991.] 
+
+[INFO]  Beginning division 8...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [38. 39. 40. 41.]
+[INFO]      division_bin_vals: [9263. 9378. 9547.]
+[INFO]    Found 28188.00 entries when looking for 22793.93. Checking previous bin...
+[INFO]    Found 18641.00 entries when looking for 22793.93.
+[INFO]    best_div_entries:   18641.00
+[INFO]    best_perc_diff:     -18.2195%
+[INFO]    best_bin_edge:      40.0
+[INFO]    best_div_bin_edges: [38. 39. 40.]
+[INFO]    best_div_bin_vals:  [9263. 9378.] 
+
+[INFO]  Beginning division 9...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [40. 41. 42. 43.]
+[INFO]      division_bin_vals: [9547. 9589. 9441.]
+[INFO]    Found 28577.00 entries when looking for 22793.93. Checking previous bin...
+[INFO]    Found 19136.00 entries when looking for 22793.93.
+[INFO]    best_div_entries:   19136.00
+[INFO]    best_perc_diff:     -16.0478%
+[INFO]    best_bin_edge:      42.0
+[INFO]    best_div_bin_edges: [40. 41. 42.]
+[INFO]    best_div_bin_vals:  [9547. 9589.] 
+
+[INFO]  Beginning division 10...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [42. 43. 44. 45.]
+[INFO]      division_bin_vals: [9441. 9223. 9039.]
+[INFO]    Found 27703.00 entries when looking for 22793.93. Checking previous bin...
+[INFO]    Found 18664.00 entries when looking for 22793.93.
+[INFO]    best_div_entries:   18664.00
+[INFO]    best_perc_diff:     -18.1185%
+[INFO]    best_bin_edge:      44.0
+[INFO]    best_div_bin_edges: [42. 43. 44.]
+[INFO]    best_div_bin_vals:  [9441. 9223.] 
+
+[INFO]  Beginning division 11...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [44. 45. 46. 47.]
+[INFO]      division_bin_vals: [9039. 8153. 7663.]
+[INFO]    Found 24855.00 entries when looking for 22793.93. Checking previous bin...
+[INFO]    Found 17192.00 entries when looking for 22793.93.
+[INFO]    best_div_entries:   24855.00
+[INFO]    best_perc_diff:     9.0422%
+[INFO]    best_bin_edge:      47.0
+[INFO]    best_div_bin_edges: [44. 45. 46. 47.]
+[INFO]    best_div_bin_vals:  [9039. 8153. 7663.] 
+
+[INFO]  Beginning division 12...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [47. 48. 49. 50. 51. 52.]
+[INFO]      division_bin_vals: [6821. 5778. 5202. 4547. 3983.]
+[INFO]    Found 26331.00 entries when looking for 22793.93. Checking previous bin...
+[INFO]    Found 22348.00 entries when looking for 22793.93.
+[INFO]    best_div_entries:   22348.00
+[INFO]    best_perc_diff:     -1.9563%
+[INFO]    best_bin_edge:      51.0
+[INFO]    best_div_bin_edges: [47. 48. 49. 50. 51.]
+[INFO]    best_div_bin_vals:  [6821. 5778. 5202. 4547.] 
+
+[INFO]  Beginning division 13...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [51. 52. 53. 54. 55. 56. 57. 58. 59. 60.]
+[INFO]      division_bin_vals: [3983. 3609. 3225. 2990. 2525. 2249. 2065. 1978. 1826.]
+[INFO]    Found 24450.00 entries when looking for 22793.93. Checking previous bin...
+[INFO]    Found 22624.00 entries when looking for 22793.93.
+[INFO]    best_div_entries:   22624.00
+[INFO]    best_perc_diff:     -0.7455%
+[INFO]    best_bin_edge:      59.0
+[INFO]    best_div_bin_edges: [51. 52. 53. 54. 55. 56. 57. 58. 59.]
+[INFO]    best_div_bin_vals:  [3983. 3609. 3225. 2990. 2525. 2249. 2065. 1978.] 
+
+[INFO]  Division 14 was analyzed by deduction...
+[INFO]    first_bin_last_division=59.0, last_bin_last_division=200.0
+[INFO]    final bin edges: [ 59.  60.  61.  62.  63.  64.  65.  66.  67.  68.  69.  70.  71.  72.
+  73.  74.  75.  76.  77.  78.  79.  80.  81.  82.  83.  84.  85.  86.
+  87.  88.  89.  90.  91.  92.  93.  94.  95.  96.  97.  98.  99. 100.
+ 101. 102. 103. 104. 105. 106. 107. 108. 109. 110. 111. 112. 113. 114.
+ 115. 116. 117. 118. 119. 120. 121. 122. 123. 124. 125. 126. 127. 128.
+ 129. 130. 131. 132. 133. 134. 135. 136. 137. 138. 139. 140. 141. 142.
+ 143. 144. 145. 146. 147. 148. 149. 150. 151. 152. 153. 154. 155. 156.
+ 157. 158. 159. 160. 161. 162. 163. 164. 165. 166. 167. 168. 169. 170.
+ 171. 172. 173. 174. 175. 176. 177. 178. 179. 180. 181. 182. 183. 184.
+ 185. 186. 187. 188. 189. 190. 191. 192. 193. 194. 195. 196. 197. 198.
+ 199. 200.]
+[INFO]    Excess entries in this division: 29082.0 (27.5866% different from number searched for)
+[INFO]    Total entries found after full analysis: 319115.0
+[INFO]    Final bin division list is:
+[5.0, 16.0, 21.0, 25.0, 29.0, 32.0, 35.0, 38.0, 40.0, 42.0, 44.0, 47.0, 51.0, 59.0, 200.0]
+[INFO] Performing 15 divisions on 319115.0 total entries.
+[INFO]  Beginning division 1...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [ 5.  6.  7.  8.  9. 10. 11. 12. 13. 14. 15. 16.]
+[INFO]      division_bin_vals: [ 781.  996. 1228. 1545. 1737. 2161. 2414. 2723. 2987. 3080. 3473.]
+[INFO]    Found 23125.00 entries when looking for 21274.33. Checking previous bin...
+[INFO]    Found 19652.00 entries when looking for 21274.33.
+[INFO]    best_div_entries:   19652.00
+[INFO]    best_perc_diff:     -7.6258%
+[INFO]    best_bin_edge:      15.0
+[INFO]    best_div_bin_edges: [ 5.  6.  7.  8.  9. 10. 11. 12. 13. 14. 15.]
+[INFO]    best_div_bin_vals:  [ 781.  996. 1228. 1545. 1737. 2161. 2414. 2723. 2987. 3080.] 
+
+[INFO]  Beginning division 2...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [15. 16. 17. 18. 19. 20. 21.]
+[INFO]      division_bin_vals: [3473. 3692. 3962. 4187. 4513. 4865.]
+[INFO]    Found 24692.00 entries when looking for 21274.33. Checking previous bin...
+[INFO]    Found 19827.00 entries when looking for 21274.33.
+[INFO]    best_div_entries:   19827.00
+[INFO]    best_perc_diff:     -6.8032%
+[INFO]    best_bin_edge:      20.0
+[INFO]    best_div_bin_edges: [15. 16. 17. 18. 19. 20.]
+[INFO]    best_div_bin_vals:  [3473. 3692. 3962. 4187. 4513.] 
+
+[INFO]  Beginning division 3...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [20. 21. 22. 23. 24. 25.]
+[INFO]      division_bin_vals: [4865. 4960. 5302. 5356. 5811.]
+[INFO]    Found 26294.00 entries when looking for 21274.33. Checking previous bin...
+[INFO]    Found 20483.00 entries when looking for 21274.33.
+[INFO]    best_div_entries:   20483.00
+[INFO]    best_perc_diff:     -3.7197%
+[INFO]    best_bin_edge:      24.0
+[INFO]    best_div_bin_edges: [20. 21. 22. 23. 24.]
+[INFO]    best_div_bin_vals:  [4865. 4960. 5302. 5356.] 
+
+[INFO]  Beginning division 4...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [24. 25. 26. 27. 28.]
+[INFO]      division_bin_vals: [5811. 5996. 6252. 6574.]
+[INFO]    Found 24633.00 entries when looking for 21274.33. Checking previous bin...
+[INFO]    Found 18059.00 entries when looking for 21274.33.
+[INFO]    best_div_entries:   18059.00
+[INFO]    best_perc_diff:     -15.1137%
+[INFO]    best_bin_edge:      27.0
+[INFO]    best_div_bin_edges: [24. 25. 26. 27.]
+[INFO]    best_div_bin_vals:  [5811. 5996. 6252.] 
+
+[INFO]  Beginning division 5...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [27. 28. 29. 30. 31.]
+[INFO]      division_bin_vals: [6574. 6728. 7168. 7257.]
+[INFO]    Found 27727.00 entries when looking for 21274.33. Checking previous bin...
+[INFO]    Found 20470.00 entries when looking for 21274.33.
+[INFO]    best_div_entries:   20470.00
+[INFO]    best_perc_diff:     -3.7808%
+[INFO]    best_bin_edge:      30.0
+[INFO]    best_div_bin_edges: [27. 28. 29. 30.]
+[INFO]    best_div_bin_vals:  [6574. 6728. 7168.] 
+
+[INFO]  Beginning division 6...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [30. 31. 32. 33.]
+[INFO]      division_bin_vals: [7257. 7381. 7931.]
+[INFO]    Found 22569.00 entries when looking for 21274.33. Checking previous bin...
+[INFO]    Found 14638.00 entries when looking for 21274.33.
+[INFO]    best_div_entries:   22569.00
+[INFO]    best_perc_diff:     6.0856%
+[INFO]    best_bin_edge:      33.0
+[INFO]    best_div_bin_edges: [30. 31. 32. 33.]
+[INFO]    best_div_bin_vals:  [7257. 7381. 7931.] 
+
+[INFO]  Beginning division 7...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [33. 34. 35. 36.]
+[INFO]      division_bin_vals: [8032. 8360. 8623.]
+[INFO]    Found 25015.00 entries when looking for 21274.33. Checking previous bin...
+[INFO]    Found 16392.00 entries when looking for 21274.33.
+[INFO]    best_div_entries:   25015.00
+[INFO]    best_perc_diff:     17.5830%
+[INFO]    best_bin_edge:      36.0
+[INFO]    best_div_bin_edges: [33. 34. 35. 36.]
+[INFO]    best_div_bin_vals:  [8032. 8360. 8623.] 
+
+[INFO]  Beginning division 8...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [36. 37. 38. 39.]
+[INFO]      division_bin_vals: [8699. 8991. 9263.]
+[INFO]    Found 26953.00 entries when looking for 21274.33. Checking previous bin...
+[INFO]    Found 17690.00 entries when looking for 21274.33.
+[INFO]    best_div_entries:   17690.00
+[INFO]    best_perc_diff:     -16.8482%
+[INFO]    best_bin_edge:      38.0
+[INFO]    best_div_bin_edges: [36. 37. 38.]
+[INFO]    best_div_bin_vals:  [8699. 8991.] 
+
+[INFO]  Beginning division 9...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [38. 39. 40. 41.]
+[INFO]      division_bin_vals: [9263. 9378. 9547.]
+[INFO]    Found 28188.00 entries when looking for 21274.33. Checking previous bin...
+[INFO]    Found 18641.00 entries when looking for 21274.33.
+[INFO]    best_div_entries:   18641.00
+[INFO]    best_perc_diff:     -12.3780%
+[INFO]    best_bin_edge:      40.0
+[INFO]    best_div_bin_edges: [38. 39. 40.]
+[INFO]    best_div_bin_vals:  [9263. 9378.] 
+
+[INFO]  Beginning division 10...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [40. 41. 42. 43.]
+[INFO]      division_bin_vals: [9547. 9589. 9441.]
+[INFO]    Found 28577.00 entries when looking for 21274.33. Checking previous bin...
+[INFO]    Found 19136.00 entries when looking for 21274.33.
+[INFO]    best_div_entries:   19136.00
+[INFO]    best_perc_diff:     -10.0512%
+[INFO]    best_bin_edge:      42.0
+[INFO]    best_div_bin_edges: [40. 41. 42.]
+[INFO]    best_div_bin_vals:  [9547. 9589.] 
+
+[INFO]  Beginning division 11...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [42. 43. 44. 45.]
+[INFO]      division_bin_vals: [9441. 9223. 9039.]
+[INFO]    Found 27703.00 entries when looking for 21274.33. Checking previous bin...
+[INFO]    Found 18664.00 entries when looking for 21274.33.
+[INFO]    best_div_entries:   18664.00
+[INFO]    best_perc_diff:     -12.2699%
+[INFO]    best_bin_edge:      44.0
+[INFO]    best_div_bin_edges: [42. 43. 44.]
+[INFO]    best_div_bin_vals:  [9441. 9223.] 
+
+[INFO]  Beginning division 12...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [44. 45. 46. 47.]
+[INFO]      division_bin_vals: [9039. 8153. 7663.]
+[INFO]    Found 24855.00 entries when looking for 21274.33. Checking previous bin...
+[INFO]    Found 17192.00 entries when looking for 21274.33.
+[INFO]    best_div_entries:   24855.00
+[INFO]    best_perc_diff:     16.8309%
+[INFO]    best_bin_edge:      47.0
+[INFO]    best_div_bin_edges: [44. 45. 46. 47.]
+[INFO]    best_div_bin_vals:  [9039. 8153. 7663.] 
+
+[INFO]  Beginning division 13...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [47. 48. 49. 50. 51.]
+[INFO]      division_bin_vals: [6821. 5778. 5202. 4547.]
+[INFO]    Found 22348.00 entries when looking for 21274.33. Checking previous bin...
+[INFO]    Found 17801.00 entries when looking for 21274.33.
+[INFO]    best_div_entries:   22348.00
+[INFO]    best_perc_diff:     5.0468%
+[INFO]    best_bin_edge:      51.0
+[INFO]    best_div_bin_edges: [47. 48. 49. 50. 51.]
+[INFO]    best_div_bin_vals:  [6821. 5778. 5202. 4547.] 
+
+[INFO]  Beginning division 14...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [51. 52. 53. 54. 55. 56. 57. 58. 59.]
+[INFO]      division_bin_vals: [3983. 3609. 3225. 2990. 2525. 2249. 2065. 1978.]
+[INFO]    Found 22624.00 entries when looking for 21274.33. Checking previous bin...
+[INFO]    Found 20646.00 entries when looking for 21274.33.
+[INFO]    best_div_entries:   20646.00
+[INFO]    best_perc_diff:     -2.9535%
+[INFO]    best_bin_edge:      58.0
+[INFO]    best_div_bin_edges: [51. 52. 53. 54. 55. 56. 57. 58.]
+[INFO]    best_div_bin_vals:  [3983. 3609. 3225. 2990. 2525. 2249. 2065.] 
+
+[INFO]  Division 15 was analyzed by deduction...
+[INFO]    first_bin_last_division=58.0, last_bin_last_division=200.0
+[INFO]    final bin edges: [ 58.  59.  60.  61.  62.  63.  64.  65.  66.  67.  68.  69.  70.  71.
+  72.  73.  74.  75.  76.  77.  78.  79.  80.  81.  82.  83.  84.  85.
+  86.  87.  88.  89.  90.  91.  92.  93.  94.  95.  96.  97.  98.  99.
+ 100. 101. 102. 103. 104. 105. 106. 107. 108. 109. 110. 111. 112. 113.
+ 114. 115. 116. 117. 118. 119. 120. 121. 122. 123. 124. 125. 126. 127.
+ 128. 129. 130. 131. 132. 133. 134. 135. 136. 137. 138. 139. 140. 141.
+ 142. 143. 144. 145. 146. 147. 148. 149. 150. 151. 152. 153. 154. 155.
+ 156. 157. 158. 159. 160. 161. 162. 163. 164. 165. 166. 167. 168. 169.
+ 170. 171. 172. 173. 174. 175. 176. 177. 178. 179. 180. 181. 182. 183.
+ 184. 185. 186. 187. 188. 189. 190. 191. 192. 193. 194. 195. 196. 197.
+ 198. 199. 200.]
+[INFO]    Excess entries in this division: 31060.0 (45.9975% different from number searched for)
+[INFO]    Total entries found after full analysis: 319115.0
+[INFO]    Final bin division list is:
+[5.0, 15.0, 20.0, 24.0, 27.0, 30.0, 33.0, 36.0, 38.0, 40.0, 42.0, 44.0, 47.0, 51.0, 58.0, 200.0]
+[INFO] Performing 16 divisions on 319115.0 total entries.
+[INFO]  Beginning division 1...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [ 5.  6.  7.  8.  9. 10. 11. 12. 13. 14. 15. 16.]
+[INFO]      division_bin_vals: [ 781.  996. 1228. 1545. 1737. 2161. 2414. 2723. 2987. 3080. 3473.]
+[INFO]    Found 23125.00 entries when looking for 19944.69. Checking previous bin...
+[INFO]    Found 19652.00 entries when looking for 19944.69.
+[INFO]    best_div_entries:   19652.00
+[INFO]    best_perc_diff:     -1.4675%
+[INFO]    best_bin_edge:      15.0
+[INFO]    best_div_bin_edges: [ 5.  6.  7.  8.  9. 10. 11. 12. 13. 14. 15.]
+[INFO]    best_div_bin_vals:  [ 781.  996. 1228. 1545. 1737. 2161. 2414. 2723. 2987. 3080.] 
+
+[INFO]  Beginning division 2...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [15. 16. 17. 18. 19. 20. 21.]
+[INFO]      division_bin_vals: [3473. 3692. 3962. 4187. 4513. 4865.]
+[INFO]    Found 24692.00 entries when looking for 19944.69. Checking previous bin...
+[INFO]    Found 19827.00 entries when looking for 19944.69.
+[INFO]    best_div_entries:   19827.00
+[INFO]    best_perc_diff:     -0.5901%
+[INFO]    best_bin_edge:      20.0
+[INFO]    best_div_bin_edges: [15. 16. 17. 18. 19. 20.]
+[INFO]    best_div_bin_vals:  [3473. 3692. 3962. 4187. 4513.] 
+
+[INFO]  Beginning division 3...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [20. 21. 22. 23. 24.]
+[INFO]      division_bin_vals: [4865. 4960. 5302. 5356.]
+[INFO]    Found 20483.00 entries when looking for 19944.69. Checking previous bin...
+[INFO]    Found 15127.00 entries when looking for 19944.69.
+[INFO]    best_div_entries:   20483.00
+[INFO]    best_perc_diff:     2.6990%
+[INFO]    best_bin_edge:      24.0
+[INFO]    best_div_bin_edges: [20. 21. 22. 23. 24.]
+[INFO]    best_div_bin_vals:  [4865. 4960. 5302. 5356.] 
+
+[INFO]  Beginning division 4...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [24. 25. 26. 27. 28.]
+[INFO]      division_bin_vals: [5811. 5996. 6252. 6574.]
+[INFO]    Found 24633.00 entries when looking for 19944.69. Checking previous bin...
+[INFO]    Found 18059.00 entries when looking for 19944.69.
+[INFO]    best_div_entries:   18059.00
+[INFO]    best_perc_diff:     -9.4546%
+[INFO]    best_bin_edge:      27.0
+[INFO]    best_div_bin_edges: [24. 25. 26. 27.]
+[INFO]    best_div_bin_vals:  [5811. 5996. 6252.] 
+
+[INFO]  Beginning division 5...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [27. 28. 29. 30.]
+[INFO]      division_bin_vals: [6574. 6728. 7168.]
+[INFO]    Found 20470.00 entries when looking for 19944.69. Checking previous bin...
+[INFO]    Found 13302.00 entries when looking for 19944.69.
+[INFO]    best_div_entries:   20470.00
+[INFO]    best_perc_diff:     2.6338%
+[INFO]    best_bin_edge:      30.0
+[INFO]    best_div_bin_edges: [27. 28. 29. 30.]
+[INFO]    best_div_bin_vals:  [6574. 6728. 7168.] 
+
+[INFO]  Beginning division 6...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [30. 31. 32. 33.]
+[INFO]      division_bin_vals: [7257. 7381. 7931.]
+[INFO]    Found 22569.00 entries when looking for 19944.69. Checking previous bin...
+[INFO]    Found 14638.00 entries when looking for 19944.69.
+[INFO]    best_div_entries:   22569.00
+[INFO]    best_perc_diff:     13.1580%
+[INFO]    best_bin_edge:      33.0
+[INFO]    best_div_bin_edges: [30. 31. 32. 33.]
+[INFO]    best_div_bin_vals:  [7257. 7381. 7931.] 
+
+[INFO]  Beginning division 7...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [33. 34. 35. 36.]
+[INFO]      division_bin_vals: [8032. 8360. 8623.]
+[INFO]    Found 25015.00 entries when looking for 19944.69. Checking previous bin...
+[INFO]    Found 16392.00 entries when looking for 19944.69.
+[INFO]    best_div_entries:   16392.00
+[INFO]    best_perc_diff:     -17.8127%
+[INFO]    best_bin_edge:      35.0
+[INFO]    best_div_bin_edges: [33. 34. 35.]
+[INFO]    best_div_bin_vals:  [8032. 8360.] 
+
+[INFO]  Beginning division 8...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [35. 36. 37. 38.]
+[INFO]      division_bin_vals: [8623. 8699. 8991.]
+[INFO]    Found 26313.00 entries when looking for 19944.69. Checking previous bin...
+[INFO]    Found 17322.00 entries when looking for 19944.69.
+[INFO]    best_div_entries:   17322.00
+[INFO]    best_perc_diff:     -13.1498%
+[INFO]    best_bin_edge:      37.0
+[INFO]    best_div_bin_edges: [35. 36. 37.]
+[INFO]    best_div_bin_vals:  [8623. 8699.] 
+
+[INFO]  Beginning division 9...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [37. 38. 39. 40.]
+[INFO]      division_bin_vals: [8991. 9263. 9378.]
+[INFO]    Found 27632.00 entries when looking for 19944.69. Checking previous bin...
+[INFO]    Found 18254.00 entries when looking for 19944.69.
+[INFO]    best_div_entries:   18254.00
+[INFO]    best_perc_diff:     -8.4769%
+[INFO]    best_bin_edge:      39.0
+[INFO]    best_div_bin_edges: [37. 38. 39.]
+[INFO]    best_div_bin_vals:  [8991. 9263.] 
+
+[INFO]  Beginning division 10...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [39. 40. 41. 42.]
+[INFO]      division_bin_vals: [9378. 9547. 9589.]
+[INFO]    Found 28514.00 entries when looking for 19944.69. Checking previous bin...
+[INFO]    Found 18925.00 entries when looking for 19944.69.
+[INFO]    best_div_entries:   18925.00
+[INFO]    best_perc_diff:     -5.1126%
+[INFO]    best_bin_edge:      41.0
+[INFO]    best_div_bin_edges: [39. 40. 41.]
+[INFO]    best_div_bin_vals:  [9378. 9547.] 
+
+[INFO]  Beginning division 11...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [41. 42. 43. 44.]
+[INFO]      division_bin_vals: [9589. 9441. 9223.]
+[INFO]    Found 28253.00 entries when looking for 19944.69. Checking previous bin...
+[INFO]    Found 19030.00 entries when looking for 19944.69.
+[INFO]    best_div_entries:   19030.00
+[INFO]    best_perc_diff:     -4.5861%
+[INFO]    best_bin_edge:      43.0
+[INFO]    best_div_bin_edges: [41. 42. 43.]
+[INFO]    best_div_bin_vals:  [9589. 9441.] 
+
+[INFO]  Beginning division 12...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [43. 44. 45. 46.]
+[INFO]      division_bin_vals: [9223. 9039. 8153.]
+[INFO]    Found 26415.00 entries when looking for 19944.69. Checking previous bin...
+[INFO]    Found 18262.00 entries when looking for 19944.69.
+[INFO]    best_div_entries:   18262.00
+[INFO]    best_perc_diff:     -8.4368%
+[INFO]    best_bin_edge:      45.0
+[INFO]    best_div_bin_edges: [43. 44. 45.]
+[INFO]    best_div_bin_vals:  [9223. 9039.] 
+
+[INFO]  Beginning division 13...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [45. 46. 47. 48.]
+[INFO]      division_bin_vals: [8153. 7663. 6821.]
+[INFO]    Found 22637.00 entries when looking for 19944.69. Checking previous bin...
+[INFO]    Found 15816.00 entries when looking for 19944.69.
+[INFO]    best_div_entries:   22637.00
+[INFO]    best_perc_diff:     13.4989%
+[INFO]    best_bin_edge:      48.0
+[INFO]    best_div_bin_edges: [45. 46. 47. 48.]
+[INFO]    best_div_bin_vals:  [8153. 7663. 6821.] 
+
+[INFO]  Beginning division 14...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [48. 49. 50. 51. 52. 53.]
+[INFO]      division_bin_vals: [5778. 5202. 4547. 3983. 3609.]
+[INFO]    Found 23119.00 entries when looking for 19944.69. Checking previous bin...
+[INFO]    Found 19510.00 entries when looking for 19944.69.
+[INFO]    best_div_entries:   19510.00
+[INFO]    best_perc_diff:     -2.1795%
+[INFO]    best_bin_edge:      52.0
+[INFO]    best_div_bin_edges: [48. 49. 50. 51. 52.]
+[INFO]    best_div_bin_vals:  [5778. 5202. 4547. 3983.] 
+
+[INFO]  Beginning division 15...
+[INFO]    Integration complete:
+[INFO]      division_bin_edges: [52. 53. 54. 55. 56. 57. 58. 59. 60.]
+[INFO]      division_bin_vals: [3609. 3225. 2990. 2525. 2249. 2065. 1978. 1826.]
+[INFO]    Found 20467.00 entries when looking for 19944.69. Checking previous bin...
+[INFO]    Found 18641.00 entries when looking for 19944.69.
+[INFO]    best_div_entries:   20467.00
+[INFO]    best_perc_diff:     2.6188%
+[INFO]    best_bin_edge:      60.0
+[INFO]    best_div_bin_edges: [52. 53. 54. 55. 56. 57. 58. 59. 60.]
+[INFO]    best_div_bin_vals:  [3609. 3225. 2990. 2525. 2249. 2065. 1978. 1826.] 
+
+[INFO]  Division 16 was analyzed by deduction...
+[INFO]    first_bin_last_division=60.0, last_bin_last_division=200.0
+[INFO]    final bin edges: [ 60.  61.  62.  63.  64.  65.  66.  67.  68.  69.  70.  71.  72.  73.
+  74.  75.  76.  77.  78.  79.  80.  81.  82.  83.  84.  85.  86.  87.
+  88.  89.  90.  91.  92.  93.  94.  95.  96.  97.  98.  99. 100. 101.
+ 102. 103. 104. 105. 106. 107. 108. 109. 110. 111. 112. 113. 114. 115.
+ 116. 117. 118. 119. 120. 121. 122. 123. 124. 125. 126. 127. 128. 129.
+ 130. 131. 132. 133. 134. 135. 136. 137. 138. 139. 140. 141. 142. 143.
+ 144. 145. 146. 147. 148. 149. 150. 151. 152. 153. 154. 155. 156. 157.
+ 158. 159. 160. 161. 162. 163. 164. 165. 166. 167. 168. 169. 170. 171.
+ 172. 173. 174. 175. 176. 177. 178. 179. 180. 181. 182. 183. 184. 185.
+ 186. 187. 188. 189. 190. 191. 192. 193. 194. 195. 196. 197. 198. 199.
+ 200.]
+[INFO]    Excess entries in this division: 27256.0 (36.6579% different from number searched for)
+[INFO]    Total entries found after full analysis: 319115.0
+[INFO]    Final bin division list is:
+[5.0, 15.0, 20.0, 24.0, 27.0, 30.0, 33.0, 35.0, 37.0, 39.0, 41.0, 43.0, 45.0, 48.0, 52.0, 60.0, 200.0]

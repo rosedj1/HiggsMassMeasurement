@@ -1,9 +1,13 @@
+# This is just like cmsstyle_plot.mplstyle, except that
+# it has smaller font and ticks.
 ## relative to font.size, using the following values: xx-small, x-small,
 ## small, medium, large, x-large, xx-large, larger, or smaller
 font.size    : 2
 lines.marker      : o    ## the default marker
 lines.markersize  : 4            ## markersize, in points
+lines.linewidth : 0.25  ## line width in points
 patch.edgecolor        : white   ## if forced, or patch is not filled
+patch.linewidth : 0.25
 axes.grid           : True   ## display grid or not
 axes.formatter.limits : -3, 3 ## use scientific notation if log10
 axes.formatter.use_mathtext : True ## When True, use mathtext for scientific

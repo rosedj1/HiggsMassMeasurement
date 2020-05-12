@@ -1,4 +1,6 @@
 import os
+import math
+import vaex
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
@@ -8,6 +10,7 @@ sys.path.append('/Users/Jake/')
 sys.path.append('/Users/Jake/HiggsMassMeasurement/')
 sys.path.append('/Users/Jake/HiggsMassMeasurement/d0_Studies/')
 from PyUtils.Utils_Files import makeDirs, make_str_title_friendly
+from d0_Utils.d0_fns import account_for_underoverflow_entries
 
 def change_cmap_bkg_to_white(colormap, n=256):
     """
@@ -47,7 +50,15 @@ def save_plots_to_outpath(save_plot=False, outpath="", file_name="DEFAULT_NAME",
 def make_1D_dist(ax, data, x_limits, x_bins, x_label, y_label, title, y_max=-1, log_scale=False):
     """
     Draw a kinematic distribution (e.g. eta1, gen_phi2, etc.) to an axes object in a figure.
-    This function does plot under/overflow bins.
+    This function plots under/overflow bins depending on if there are hist values
+    outside min/max of x_limits.
+    
+    NOTE: matplotlib makes a default bin starting at the bottom-left edge.
+        This is similar to excluding the right end of ranges(), etc.
+        Example: values = [4,5,6,7]
+                 x_limits = [4,7]
+             Then only the first THREE bins will show, since value=6 starts
+             at x=6 and goes to x=7.  Therefore value=7 will not show. 
     
     Parameters
     ----------
@@ -84,77 +95,32 @@ def make_1D_dist(ax, data, x_limits, x_bins, x_label, y_label, title, y_max=-1, 
         A 5-element list of the statistics of the ORIGINAL data 
         (i.e. data NOT put into under/overflow bins).
     """
-    textsize_legend = 9
-    textsize_axislabels = 12
-    textsize_title = 12
+#    textsize_legend = 9
+#    textsize_axislabels = 12
+#    textsize_title = 12
             
-    ax.set_xlabel(x_label, fontsize=textsize_axislabels)
-    ax.set_ylabel(y_label, fontsize=textsize_axislabels)
-    ax.set_title(title, fontsize=textsize_title)
+    ax.set_xlabel(x_label)#, fontsize=textsize_axislabels)
+    ax.set_ylabel(y_label)#, fontsize=textsize_axislabels)
+    ax.set_title(title)#, fontsize=textsize_title)
     
-    ax.set_xlim(x_limits)
     ax.grid(False)
-    
-    mod_data, n_underflow, n_overflow = add_underoverflow_entries(data, x_limits[0], x_limits[1])
-    
-    if y_max > 0: ax.set_ylim([0,y_max])
+                                
+    mod_data = account_for_underoverflow_entries(data, x_limits[0], x_limits[1], x_bins)
+                                
     if (log_scale): ax.set_yscale('log')
         
     stats = get_stats_1Dhist(data)
     label_legend = make_stats_legend_for_1dhist(stats)
     bin_vals, bin_edges, _ = ax.hist(mod_data, bins=x_bins, label=label_legend, histtype='step', color='b')
-    ax.legend(loc='upper right', framealpha=0.9, fontsize=textsize_legend)
+    ax.legend(loc='upper right', framealpha=0.9)#, fontsize=textsize_legend)
+    ax.set_xlim(x_limits)
+    if y_max == -1:
+        # Default y_max.
+        y_max = bin_vals.max() * 1.2 
+    ax.set_ylim([0,y_max])
     
     return ax, bin_vals, bin_edges, stats
                                 
-def add_underoverflow_entries(data, xmin, xmax):
-    """
-    Add the entries in the underflow and overflow bins, which would normally not be plotted on a histogram.
-    NB: Run all statistics on data BEFORE binning and before adding under-overflow entries.
-    
-    Parameters
-    ----------
-    data : array-like
-        The data, usually a numpy array or DataFrame series, which will get binned in a histogram. 
-    xmin : float
-        The left edge of the first bin. Any values in data that are less than xmin
-        (which usually would not be plotted) are now put into the xmin bin. 
-    xmax : float
-        The right edge of the last bin. Overflow values fit into this final bin. 
-        
-    Returns
-    -------
-    mod_data : array-like
-        The modified data with fake underflow and overflow entries appended. 
-        This way the binned mod_data will show under-overflow entries.
-    n_underflow : int
-        The number of entries in the underflow bin.
-    n_overflow : int
-        The number of entries in the overflow bin.
-    """
-    n_underflow = len(data[data < xmin])
-    n_overflow = len(data[data > xmax])
-    
-    # Create new data array where entries that would fall outside x-range
-    # now sit at underflow/overflow bins.
-    fake_under = n_underflow * [xmin]
-    fake_over = n_overflow * [xmax]
-
-    mod_data = data[ (xmin <= data) & (data <= xmax) ]
-    mod_data = np.append(mod_data, fake_under + fake_over)
-
-    n_data_init = len(data)
-    n_data_final = len(mod_data)
-
-    # Make sure that things make sense:
-    if n_data_init != n_data_final:
-        err_msg = (f"The initial number of entries in data ({n_data_init}) is different from "
-                   f"the final number ({n_data_final}), after accounting for underflow/overflow bins.\n"
-                   "Stopping now.")
-        raise RuntimeError(err_msg)
-                                
-    return mod_data, n_underflow, n_overflow
-
 def get_stats_1Dhist(data):
     """
     Return the statistics of array-like data.
@@ -180,9 +146,14 @@ def get_stats_1Dhist(data):
         stats[4] -> stdev : float 
             Standard error on the stdev. 
     """
-    n = len(data)
-    mean = np.mean(data)
-    stdev = np.std(data)
+    if isinstance(data, vaex.expression.Expression):
+        n = data.count()
+        mean = data.mean()
+        stdev = data.std()
+    else:
+        n = len(data)
+        mean = np.mean(data)
+        stdev = np.std(data)
     mean_err = np.abs(stdev) / np.sqrt(n)
     stdev_err = np.abs(stdev) / np.sqrt(2*n)
     
@@ -355,6 +326,15 @@ def make_2by2_subplots_for_ratioplots(fig_width=28, fig_height=16):
     The returned tuples can be intuitively sliced to get the axes you want:
         E.g. ax_ratio_tup[0][1] -> ax12_ratio
         
+    NOTES: 
+        Can probably be hugely simplified by implementing 
+        this from Suzanne:
+        
+        fig, ax = plt.subplots(nrows=2, ncols=1, 
+                               sharex=True, gridspec_kw={'height_ratios': [3, 1]}
+                               )
+       
+        
     Parameters
     ----------
     fig_width : float
@@ -410,3 +390,50 @@ def make_2by2_subplots_for_ratioplots(fig_width=28, fig_height=16):
     ax_ratio_tup = ((ax11_ratio, ax12_ratio), (ax21_ratio, ax22_ratio))
     
     return fig, ax_tup, ax_ratio_tup
+                                
+def ncolsrows_from_nplots(n_plots, force_ncols=0):
+    """
+    Return the number of rows and columns to be shown on a 
+    PDF page, based on the number of plots on that page.
+    
+    When n_plots <= 8, make a n_plots x 2 grid
+    (except when n_plots == 1, then make 1 x 1).
+    When 9 <= n_plots <= 15, make 3 x 3 grid.
+    When 16 <= n_plots <= 20, make 4 x 4 grid.
+    
+    Parameters
+    ----------
+    n_plots : int
+        The number of plots to be shown on a page.
+    force_ncols : int, optional
+        Force a certain number of columns of plots per page.
+        If not specified, it will be determined automatically 
+        as described 
+        
+    Returns
+    -------
+    rows : int
+        Number of rows of plots on grid.
+    cols : int
+        Number of columns of plots on grid.
+    """
+    if force_ncols > 0:
+        rows = math.ceil(n_plots / float(force_ncols))
+        cols = force_ncols
+    elif n_plots <= 8:
+        # Make n x 2 grid (or just 1 x 1 if n_plots == 1): 
+        rows = math.ceil(n_plots / 2.)
+        cols = min(n_plots, 2)
+    elif (n_plots <= 15): 
+        # Make n x 3 grid (or just 1 x 1, or 1 x 2): 
+        rows = math.ceil(n_plots / 3.)
+        cols = min(n_plots, 3)
+    elif (n_plots <= 20): 
+        # Make n x 3 grid (or just 1 x 1, or 1 x 2): 
+        rows = math.ceil(n_plots / 4.)
+        cols = min(n_plots, 4)
+    else: 
+        msg = "[ERROR] This function isn't built yet to handle"
+        msg += "n_plots > 20. Specified n_plots = {}".format(n_plots)
+        raise ValueError(msg)
+    return rows, cols
