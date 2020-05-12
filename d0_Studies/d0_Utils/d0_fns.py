@@ -252,7 +252,7 @@ def centers_of_binning_array(bin_arr, decimals=0):
     
     Parameters
     ----------
-    bin_arr : array
+    bin_arr : list or array-like
         Edges of bins: [left_edge_first_bin, ..., right_edge_last_bin]
     decimals : int, optional
         Number of decimal places to round bin centers.
@@ -261,7 +261,9 @@ def centers_of_binning_array(bin_arr, decimals=0):
     -------
     bin_centers_arr : array
         Centers between adjacent bin edges.
+        Will be of length = len(bin_arr) - 1
     """
+    bin_arr = np.array(bin_arr)
     bin_edges_low = bin_arr[:-1]
     bin_edges_high = bin_arr[1:]
     
