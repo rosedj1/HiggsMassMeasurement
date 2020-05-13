@@ -478,7 +478,7 @@ def find_equal_hist_divisions(bin_edges, bin_vals, K, verbose=False):
 
     return bin_div_ls, bin_stats_dict
 
-def find_equal_hist_regions_unbinned(vals_arr, r, verbose=False, round_to_n_decimals=2):
+def find_equal_hist_regions_unbinned(vals_arr, r, round_to_n_decimals=2, verbose=False):
     """
     Return the "bin edges" (really just values) which divide the 
     "histogram" (really just an array) into regions with equal number 
@@ -501,6 +501,8 @@ def find_equal_hist_regions_unbinned(vals_arr, r, verbose=False, round_to_n_deci
         Each region will contain approximately the same number of entries. 
     round_to_n_decimals : int
         Number of decimals to round bin edge values to. 
+    verbose : bool
+        Gives lots of juicy debugging details.
         
     Returns
     -------
@@ -592,7 +594,8 @@ def find_equal_hist_regions_unbinned(vals_arr, r, verbose=False, round_to_n_deci
         print(c)
         multiple = c.most_common(1)[0][0]
         err_msg = "[ERROR] The same bin edge ({}) was found multiple times.\n".format(multiple)
-        err_msg += "Most likely the value of r ({}) was too large. Try fewer regions.".format(r)
+        err_msg += "Either the value of r ({}) was too large or ".format(r)
+        err_msg += "the number of decimal places ({}) was too small.".format(round_to_n_decimals)
         raise RuntimeError(err_msg)
 
     if (verbose):
