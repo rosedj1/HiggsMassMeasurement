@@ -98,7 +98,7 @@ def prepare_vaex_df(vdf):
     vdf_concat["index"] = np.arange(vdf_concat.count())
     
     print("[INFO] Successfully retrieved vdf_concat!")
-    print("[INFO] vdf_concat has the following columns:\n{}".format(vdf_concat.column_names))
+    print("[INFO] vdf_concat has the following columns:\n{}\n".format(vdf_concat.column_names))
     
     return vdf_concat
 

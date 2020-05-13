@@ -86,10 +86,10 @@ label_LaTeX_dict = {
                    "independent_label":r"$\Delta p_{T} \equiv p_{T}^{\mathrm{REC}} - p_{T}^{\mathrm{GEN}} $",
                    "units":"GeV"},
     
-    "delta_pToverpT1"    : {"label":r"$ \Delta p_{T1} \ / p_{T1}^{\mathrm{GEN}}$", 
+    "delta_pToverGenpT1"    : {"label":r"$ \Delta p_{T1} \ / p_{T1}^{\mathrm{GEN}}$", 
                             "independent_label":r"$ \Delta p_{T} \ / p_{T}^{\mathrm{GEN}}$", 
                             "units":""},
-    "delta_pToverpT2"    : {"label":r"$ \Delta p_{T2} \ / p_{T2}^{\mathrm{GEN}}$", 
+    "delta_pToverGenpT2"    : {"label":r"$ \Delta p_{T2} \ / p_{T2}^{\mathrm{GEN}}$", 
                             "independent_label":r"$ \Delta p_{T} \ / p_{T}^{\mathrm{GEN}}$", 
                             "units":""},
     "delta_pToverRecpT1" : {"label":r"$ \Delta p_{T1} \ / p_{T1}^{\mathrm{REC}}$", 
@@ -98,6 +98,20 @@ label_LaTeX_dict = {
     "delta_pToverRecpT2" : {"label":r"$ \Delta p_{T2} \ / p_{T2}^{\mathrm{REC}}$", 
                             "independent_label":r"$ \Delta p_{T} \ / p_{T}^{\mathrm{REC}}$", 
                             "units":""},
+    "delta_pToverGenpTsqred1" : {"label":r"$ \Delta p_{T1} \ / (p_{T1}^{\mathrm{GEN}})^2$", 
+                        "independent_label":r"$ \Delta p_{T} \ / (p_{T}^{\mathrm{GEN}})^2$", 
+                        "units":r"$\mathrm{GeV}^{-1}$"},
+    "delta_pToverGenpTsqred2" : {"label":r"$ \Delta p_{T2} \ / (p_{T2}^{\mathrm{GEN}})^2$", 
+                        "independent_label":r"$ \Delta p_{T} \ / (p_{T}^{\mathrm{GEN}})^2$", 
+                        "units":r"$\mathrm{GeV}^{-1}$"},
+    "delta_pToverRecpTsqred1" : {"label":r"$ \Delta p_{T1} \ / (p_{T1}^{\mathrm{REC}})^2$", 
+                        "independent_label":r"$ \Delta p_{T} \ / (p_{T}^{\mathrm{REC}})^2$", 
+                        "units":r"$\mathrm{GeV}^{-1}$"},
+    "delta_pToverRecpTsqred2" : {"label":r"$ \Delta p_{T2} \ / (p_{T2}^{\mathrm{REC}})^2$", 
+                        "independent_label":r"$ \Delta p_{T} \ / (p_{T}^{\mathrm{REC}})^2$", 
+                        "units":r"$\mathrm{GeV}^{-1}$"},
+    
+    
     
 #     "delta_pToverpT2_squared" : {"label":r"$( p_{T}^{\mathrm{REC}} - p_{T}^{\mathrm{GEN}} ) / (p_{T}^{\mathrm{GEN}})^2 $ GeV$^{-1}$", "units":r"GeV$^{-1}$"},
     

@@ -72,8 +72,8 @@ n_plots = len(pT_ls) - 1
 rows, cols = ncolsrows_from_nplots(n_plots)
 print("Making a {}-page PDF.".format(n_pages))
 print("Making {} plots per page ({} x {} grid).\n".format(n_plots, rows, cols))
-print("|eta| regions:\n  {}".format(np.round(eta_ls, decimals=2)))
-print("pT regions:\n  {}".format(np.round(pT_ls, decimals=2)))
+print("|eta| regions:\n{}".format(np.round(eta_ls, decimals=2)))
+print("pT regions:\n{}".format(np.round(pT_ls, decimals=2)))
 #----------------#
 #----- Main -----#
 #----------------#
@@ -91,9 +91,8 @@ with PdfPages(fullpath) as pdf:
     for k in range(len(eta_ls)-1):
         eta_min = eta_ls[k]
         eta_max = eta_ls[k+1]
-
         eta_range = [eta_min, eta_max]
-        
+
         # Within this eta region, scan the pT regions. 
         t_start = time.perf_counter()
         f = plt.figure()

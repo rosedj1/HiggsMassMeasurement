@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.optimize import curve_fit
 
-from d0_Utils.d0_fns import shift_binning_array, get_subset_mask
+from d0_Utils.d0_fns import centers_of_binning_array, get_subset_mask
 from d0_Utils.d0_dicts import color_dict, label_LaTeX_dict
 
 from PyUtils.Utils_Plotting import make_stats_legend_for_gaus_fit
@@ -105,7 +105,7 @@ def iterative_fit_gaus(iterations, bin_edges, bin_vals,
             msg = msg.replace("fits", "fit") 
         print(msg)
 
-    bin_centers = shift_binning_array(bin_edges)
+    bin_centers = centers_of_binning_array(bin_edges)
 
 #    popt = np.zeros(3)
     stats_dict = {
