@@ -10,7 +10,7 @@ from PyUtils.Utils_Plotting import (change_cmap_bkg_to_white, save_plots_to_outp
 from PyUtils.Utils_Physics import theta2pseudorap, pseudorap2theta, calc_dR, calc_dphi
 from PyUtils.Utils_StatsAndFits import gaussian, fit_with_gaussian, iterative_fit_gaus
 from PyUtils.Utils_Collection_Helpers import weave_lists
-from d0_Utils.d0_fns import (make_binning_array, shift_binning_array, get_subset_mask, 
+from d0_Utils.d0_fns import (make_binning_array, centers_of_binning_array, get_subset_mask, 
                              make_kinem_subplot, combine_cut_list, calc_x_err_bins)
 from d0_Utils.d0_dicts import color_dict, label_LaTeX_dict
 
@@ -676,7 +676,7 @@ class KinematicBin():
             df = self.binned_df
 
             x_bin_arr, x_bin_width = make_binning_array(bin_limits)
-            x_bin_centers_arr = shift_binning_array(x_bin_arr)
+            x_bin_centers_arr = centers_of_binning_array(x_bin_arr)
 
             #--- Get data ---#
             # Make sure you're plotting gen and rec of same lepton.

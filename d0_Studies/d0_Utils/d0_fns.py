@@ -209,13 +209,14 @@ def account_for_underoverflow_entries(data, x_min, x_max, bin_edges):
 
     return mod_data
 
-def print_header_message(msg):
-    n = len(msg)
-    octothorpes = (n+12)*'#'  # Who names their variable 'octothorpes'? Honestly?
-    buff = 5*'#'
-    print(octothorpes)
-    print(buff, msg, buff)
-    print(octothorpes)
+def print_header_message(msg, pad_char="-", n_center_pad_chars=5):
+    pad_char_long = pad_char * (len(msg) + n_center_pad_chars*2 + 2)
+    pad_char_short = pad_char * n_center_pad_chars
+    banner = "#{}#".format(pad_char_long)
+    middle = "#{} {} {}#".format(pad_char_short, msg, pad_char_short)
+    print(banner)
+    print(middle)
+    print(banner)
     
 def make_binning_array(lim_ls):
     """
@@ -478,11 +479,10 @@ def find_equal_hist_divisions(bin_edges, bin_vals, K, verbose=False):
 
     return bin_div_ls, bin_stats_dict
 
-def find_equal_hist_regions_unbinned(vals_arr, r, round_to_n_decimals=2, verbose=False):
+def find_equal_hist_regions_unbinned(vals_arr, r, round_to_n_decimals=2, algo=("normal", -1), verbose=False):
     """
-    Return the "bin edges" (really just values) which divide the 
-    "histogram" (really just an array) into regions with equal number 
-    of values per region. 
+    Return the "bin edges" (really just specific values of vals_arr) 
+    which divide the array into regions with equal number of values per region. 
     
     Algorithm example:
         Want to split values of 100 entries up into 3 regions. 
@@ -499,9 +499,22 @@ def find_equal_hist_regions_unbinned(vals_arr, r, round_to_n_decimals=2, verbose
     r : int
         Number of regions to split histogram into.
         Each region will contain approximately the same number of entries. 
-    round_to_n_decimals : int
+    round_to_n_decimals : int, optional
         Number of decimals to round bin edge values to. 
-    verbose : bool
+    algo : 2-tuple, optional
+        algo[0] : str
+            The kind of algorithm to run as described below.
+        algo[1] : int 
+            The minimum number of entries per region acceptable. 
+            If `-1` then use the `r` specified.
+            
+        Possible algo's:
+        "normal" : default, split vals_arr up into `r` regions. 
+        "at_least" : request at least algo[1] entries per region, first trying `r` regions. 
+                     If there are fewer than algo[1] entries per region, then try `r-1` regions.
+                     Try recursively until to a minimum of 2 regions. Stops at 2 regions. 
+
+    verbose : bool, optional
         Gives lots of juicy debugging details.
         
     Returns
@@ -521,6 +534,30 @@ def find_equal_hist_regions_unbinned(vals_arr, r, round_to_n_decimals=2, verbose
 
     # Prepare the expectation of each region, based on sorted_vals_arr.
     entries_per_reg = float(entries_total) / float(r)
+    
+    mode = algo[0]
+    find_at_least_per_reg = algo[1]
+    if (mode in "at_least"):
+        # Make sure User specified desired number of entries per region.
+        assert find_at_least_per_reg > 0
+
+        while entries_per_reg < find_at_least_per_reg:
+            if (r == 2): 
+                msg = "[WARNING] Could not find at least {} entries per region.".format(find_at_least_per_reg)
+                print_header_message(msg)
+                break
+            # There are too few actual entries per region. 
+            # Decrement the number of regions.  
+            msg  = "  Expecting {:.2f} entries per region (using {} regions), ".format(entries_per_reg, r)
+            msg += "but need at least {} entries per region.\n".format(find_at_least_per_reg)
+            msg += "    Decrementing the number of regions from {} to {}".format(r, r-1)
+            r -= 1
+            print(msg)
+            
+            
+            entries_per_reg = float(entries_total) / float(r)
+        print("Splitting array into {} equal-entry regions, {} entries per region.".format(r, entries_per_reg))
+
     entries_per_reg_roundup = math.ceil(entries_per_reg)
     entries_per_reg_rounddown = math.floor(entries_per_reg)
     

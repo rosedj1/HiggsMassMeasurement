@@ -1,9 +1,11 @@
-# PURPOSE: Make PDFs of delta_pT/pT distributions, in given eta bins and pT bins.
-# NOTES:   User should check User parameters.
-#          One PDF is made per eta bin. 
-#          Within each eta bin, all pT bins are analyzed. 
-#          Within each pT bin, N q*d0BS distributions are made (per page).
+# PURPOSE: Make PDFs of any kinematic distribution (e.g., delta_pT/pT), 
+#          in specified eta, pT, and q*d0 bins.
+# NOTES:   One PDF is made per eta bin. 
+#          Each page of the PDF represents a different pT bin.
+#          Many plots are shown on a single page; these are different q*d0 bins.
+#          In total, N q*d0BS distributions are made per page.
 #          N is determined automatically based on len(qd0_ls).
+#          User should check User parameters.
 # SYNTAX:  python <script>.py
 # AUTHOR:  Jake Rosenzweig
 # DATE:    2020-05-13
@@ -31,7 +33,7 @@ from d0_Studies.kinematic_bins import (equal_entry_bin_edges_eta_mod1,
                                         binedges_qd0_tracker_res_mod
                                         )
 from d0_Utils.d0_dicts import label_LaTeX_dict
-from d0_Utils.d0_fns import make_binning_array
+from d0_Utils.d0_fns import make_binning_array, print_header_message
 
 from PyUtils.Utils_Physics import perc_diff
 from PyUtils.Utils_Files import makeDirs, make_str_title_friendly, check_overwrite
@@ -47,28 +49,28 @@ from matplotlib.backends.backend_pdf import PdfPages
 vdf_concat_MC_2017_DY = prepare_vaex_df(vdf_MC_2017_DY)
 vdf_concat_MC_2017_Jpsi = prepare_vaex_df(vdf_MC_2017_Jpsi)
 outdir = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/hists_dpToverpT/MC/2017/"
-filename_base = "Test05_MC2017DYandJpsi_wholenumber_pT__smallestRMS_qd0"
-overwrite = True
+filename_base = "Test07_forwardregion_MC2017DYandJpsi_wholenumber_pT__smallestRMS_qd0"
+overwrite = False
 verbose = True
 
 # Binning.
-eta_ls = equal_entry_bin_edges_eta_mod1_wholenum[:2]
-pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum[:2]
-qd0_ls = binedges_qd0_equalentry_smallest_qd0RMS[:5]
+eta_ls = equal_entry_bin_edges_eta_mod1_wholenum[10:]
+pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum[8:]
+qd0_ls = binedges_qd0_equalentry_smallest_qd0RMS[4:9]
 
 # Should not contain 1 or 2. 
 # Acceptable values found in prepare_vaex_df().
 kinem = "delta_pToverGenpT"  
 x_bin_info = [-0.1, 0.1, 0.002]
 x_zoom_range = [-0.15, 0.15]
+iter_gaus = (True, 3)
 
+# Cuts to make.
 dR_max = 0.008
 massZ_minmax_DY = [60, 120]
 massZ_minmax_Jpsi = [2.9, 3.3]
 
 p_str_latex = "$p_{T}$"
-
-iter_gaus = (True, 3)
 #----------------------#
 #----- Automatons -----#
 #----------------------#
@@ -89,17 +91,23 @@ extra_ += ".stat"
 stats_fullpath = os.path.join(outdir, stats_filename + extra_)
 check_overwrite(stats_fullpath, overwrite=overwrite) 
 # If file is there and you wish to overwrite, 
-# make sure not to append to existing file; get rid of it. 
+# make sure not to append to existing file; just get rid of it. 
 if (overwrite):
     try:
         os.remove(stats_fullpath)
     except:
         pass
 
+with open(stats_fullpath, "a") as f:
+    f.write("#NOTE: hist_stats=[n_entries, mean, mean_err, std, std_err]\n\n")
+    f.write("kinematic_variable, {}\n\n".format(kinem))
+    f.close()
+
 plt.style.use('grid_multiple_plots')
 
 total_entries = 0
 
+# Determine grid size per page.
 n_pdfs = len(eta_ls)-1
 n_pages = len(pT_ls) - 1
 n_plots_per_page = len(qd0_ls) - 1
@@ -146,16 +154,14 @@ for k in range(len(eta_ls)-1):
             f = plt.figure()
             for count in range(len(qd0_ls)-1):
                 ax = plt.subplot(rows,cols,count+1)
-                # ax = plt.subplot(4,2,count+1)
                 qd0_min = qd0_ls[count]
                 qd0_max = qd0_ls[count+1]
                 qd0_range = [qd0_min, qd0_max]
 
-                # x_bin_limits = [x_min, x_max, x_bin_width]
                 x_bins, bin_width = make_binning_array(x_bin_info)
 
-                x_label = label_LaTeX_dict[kinem + "1"]["independent_label"]
-                x_units = label_LaTeX_dict[kinem + "1"]["units"]
+                x_label = label_LaTeX_dict[kinem]["independent_label"]
+                x_units = label_LaTeX_dict[kinem]["units"]
                 y_label = hist_y_label(bin_width, x_units)
                 if len(x_units) > 0:
                     x_label += " [{}]".format(x_units)
@@ -182,34 +188,33 @@ for k in range(len(eta_ls)-1):
                                                              title="",
                                                              y_max=-1,
                                                             log_scale=False)
-                ax.text(0.025, 0.78, cuts, horizontalalignment='left', verticalalignment='center', transform=ax.transAxes,
-                       bbox=dict(boxstyle='square', facecolor='white', alpha=0.9))
-
-                stats_dict = { kinem : {} }
-                # stats_dict[kinem]['bin_vals'] = bin_vals
-                # stats_dict[kinem]['bin_edges'] = bin_edges
-                stats_dict[kinem]['range_eta'] = eta_range
-                stats_dict[kinem]['range_pT'] = pT_range
-                stats_dict[kinem]['range_qd0'] = qd0_range
-                stats_dict[kinem]['hist_stats'] = stats
+                ax.text(0.025, 0.78, cuts, horizontalalignment='left', verticalalignment='center', 
+                transform=ax.transAxes, bbox=dict(boxstyle='square', facecolor='white', alpha=0.9))
 
                 if (iter_gaus[0]):
                     # Do iterative fitting procedure.
                     # Produce a dictionary of stats for these fits.
-                    best_guess_coeff = np.max(bin_vals)  # The Gaus coeff is usually around the max height of Gaus curve.
+                    # The Gaus coeff is usually around the max height of Gaus curve.
+                    best_guess_coeff = np.max(bin_vals)  
                     best_guess_mean = stats[1]
                     best_guess_stdev = stats[3]
-                    stats_dict, ax = iterative_fit_gaus(iter_gaus[1], bin_edges, bin_vals, 
-                                                        param_guess=[best_guess_coeff, best_guess_mean, best_guess_stdev],
+                    fit_stats_dict, ax = iterative_fit_gaus(iter_gaus[1], bin_edges, bin_vals, 
+                                                        param_guess=[best_guess_coeff, 
+                                                                     best_guess_mean, 
+                                                                     best_guess_stdev],
                                                         param_bounds=([0,-1000,-100], [999999999,1000,100]),
                                                         ax=ax, draw_on_axes=True, verbose=verbose)
                     # Use plotted kinem as the key for this dict of stats. 
-                    stats_dict[kinem]['fit_stats'] = stats_dict         
 
                 with open(stats_fullpath, "a") as f:
-                    f.write("kinematic, {}\n".format(kinem))
-                    for key,val in stats_dict[kinem].items():
+                    f.write("range_eta, {}\n".format(eta_range))
+                    f.write("range_pT, {}\n".format(pT_range))
+                    f.write("range_qd0, {}\n".format(qd0_range))
+                    f.write("hist_stats, {}\n".format(stats))
+                    f.write("fit_stats:\n")
+                    for key,val in fit_stats_dict.items():
                         f.write("{}, {}\n".format(key, val))
+                    f.write("\n")
                     f.close()
 
             # End qd0 loop.
@@ -217,11 +222,15 @@ for k in range(len(eta_ls)-1):
             plt.tight_layout()
             pdf.savefig()
             plt.close("all")
-            print("  Page {}/{} made. Time taken: {:.2f} s".format(j+1, n_pages, t_end - t_start))
+
+            msg = "  Page {}/{} made. Time taken: {:.2f} s".format(j+1, n_pages, t_end - t_start)
+            print_header_message(msg)
+            print()
+
         # End pT loop. Make next page.
     t_end_page = time.perf_counter()
     print("PDF {}/{} made at:\n  {}".format(k+1, n_pdfs, fullpath))
-    print("(took {} SECONDS)".format(t_end_page - t_start_page))
+    print("(in {} s)".format(t_end_page - t_start_page))
     # Save this 1 eta reg, 1 pT reg, and all q*d0 plots on one page. 
 
 # Go to next pT reg and next page.
