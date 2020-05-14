@@ -1,62 +1,94 @@
-### Reading root files with vaex
+## Reading root files with vaex
 I have not been able to convert root files directly into 
 hdf5 files that are readable by vaex. 
 The closest I came was using the shell command `root2hdf5`
-(after doing cmsenv). Vaex was able to read it in, but the
+(after doing `cmsenv`). Vaex was able to read the **.hdf5** file in, but the
 resulting vaex DataFrame essentially had a single column 
 called "passedEvents". I wasn't able to parse any of it.
 
-Instead, I have found two options to convert a root file
-into a vaex DF (VDF). Let's call them (A) and (B):
+Instead, I have discovered two options to convert a **.root** file
+into a vaex-readable **.hdf5** file. Let's call the Options (A) and (B):
 
-*Option A:*
-root -> array -> dataframe -> csv -> hdf5
-     (1)      (2)          (3)    (4)
+### Option A
+    root -> array -> pandas DataFrame -> vaex DataFrame -> hdf5
+        (1)      (2)                 (3)               (4)
+        
+**Pros:** The npz is relatively light-weight. 
+  
+**Cons:** You will have to store a huge DF in local 
+memory during steps (3) and (4).
 
-(1) from root_numpy import root2array
-    arr = root2array("path/to/file.root", "passedEvents")
+(1) Convert root file to array (yikes).
+```python
+from root_numpy import root2array
+arr = root2array("path/to/file.root", "passedEvents")
+```
+(2) Convert array to pandas DataFrame (DF).
+```python
+import pandas
+df = pandas.DataFrame(arr)
+```
+(3) Convert pandas DF to vaex DF.
+```python
+import vaex
+vdf = vaex.from_pandas(df)
+```
+(4) Export the vaex DF to a vaex-readable **.hdf5** file.
+```python
+vdf.export_hdf5("sexy_file.hdf5")
+```
 
-(2) import numpy
-    numpy.savez_compressed("compressed_arr.npz", arr)
+##### Recommendation: 
+Are people yelling at you because you are using too much RAM 
+on the remote machines? Then after step (1), save the array 
+as an `.npz` file:
 
-(3) Move npz to local. 
-    import pandas
-    df = pandas.DataFrame(numpy.load("compressed_arr.npz")['arr_0'])
+(1b)
+```python
+import numpy
+numpy.savez_compressed("compressed_arr.npz", arr)
+```
 
-(4) import vaex
-    vdf = vaex.from_pandas(df)
-    vdf.export_hdf5("sexy_file.hdf5")
+Then move it to another machine that won't get you in trouble.
+Then replace step (2) above with (2'):
 
-Pros: 
-  - The npz is relatively light-weight. 
-Cons: 
-  - You will have to store a huge DF in local 
-    memory during steps (3) and (4).
+(2') Uncompress the **.npz** file and load it into a pandas DF:
+```python
+import pandas
+df = pandas.DataFrame(numpy.load("compressed_arr.npz")['arr_0'])
+```
+
+---
+
+### Option B
+    root -> array -> dataframe -> csv -> hdf5
+        (1)      (2)          (3)    (4)
+
+**Pros:**
+- Hypothetically could be done 100% remotely, 
+  if you can import `vaex` on a remote machine
+- More straightforward method. 
+  
+**Cons:**
+- The **.csv** file it makes can be enormous (~50 GB).
+
+Follow steps (1), (2) above, then:
+
+(3) Convert the pandas DF to a **.csv** file. 
+```python
+df.to_csv("bigass_file.csv")
+```
+
+(4) Load the **.csv** file into a vaex DF:
+```python
+import vaex
+vdf = vaex.from_csv("bigass_file.csv")
+```
+
+Finally, step (5) above.
+
 ----------
 
-*Option B:*
-root -> array -> dataframe -> hdf5
-     (1)      (2)          (3)
-
-(1) from root_numpy import root2array
-    arr = root2array("path/to/file.root", "passedEvents")
-
-(2) import pandas 
-    df = pandas.DataFrame(arr)
-
-(3) df.to_csv("bigass_file.csv")
-
-(4) import vaex
-    vdf = vaex.from_csv("bigass_file.csv")
-    vdf.export_hdf5("sexy_file.hdf5")
-
-Pros: 
-  - Hypothetically could be done 100% remotely, 
-    on melrose say, if we could only get vaex to work!
-  - More straightforward method. 
-Cons: 
-  - The csv file is usually enormous (~50 GB).
-----------
 To read the vdf, do: 
     vdf = vaex.open("sexy_file.hdf5")
 This file will be ~instantly read.
