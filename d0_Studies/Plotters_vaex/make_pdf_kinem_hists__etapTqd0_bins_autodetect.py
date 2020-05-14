@@ -1,5 +1,7 @@
 # PURPOSE: Make PDFs of any kinematic distribution (e.g., delta_pT/pT), 
 #          in specified eta, pT, and q*d0 bins.
+#          Can perform Gaussian fits of distributions and put the fit stats
+#          on the plots. 
 # NOTES:   One PDF is made per eta bin. 
 #          Each page of the PDF represents a different pT bin.
 #          Many plots are shown on a single page; these are different q*d0 bins.
@@ -8,18 +10,21 @@
 #          User should check User parameters.
 # SYNTAX:  python <script>.py
 # AUTHOR:  Jake Rosenzweig
-# DATE:    2020-05-13
+# UPDATED: 2020-05-14
 
 import os
 import sys
 import math
 import time
-sys.path.append('/Users/Jake/HiggsMassMeasurement/')
-sys.path.append('/Users/Jake/HiggsMassMeasurement/d0_Studies/')
+import pickle
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 
+# Local imports.
+sys.path.append('/Users/Jake/HiggsMassMeasurement/')
+sys.path.append('/Users/Jake/HiggsMassMeasurement/d0_Studies/')
 from vaex_Utils.vaex_dataframes import (vdf_MC_2017_DY, vdf_MC_2017_Jpsi, vdf_MC_2017_DY,
                                         prepare_vaex_df, vaex_apply_masks)
 from d0_Studies.kinematic_bins import (equal_entry_bin_edges_eta_mod1,
@@ -40,23 +45,24 @@ from PyUtils.Utils_Files import makeDirs, make_str_title_friendly, check_overwri
 from PyUtils.Utils_Plotting import hist_y_label, make_1D_dist, ncolsrows_from_nplots
 from PyUtils.Utils_StatsAndFits import iterative_fit_gaus
 
-from matplotlib.backends.backend_pdf import PdfPages
-
 #---------------------------#
 #----- User Parameters -----#
 #---------------------------#
 # Samples:
 vdf_concat_MC_2017_DY = prepare_vaex_df(vdf_MC_2017_DY)
 vdf_concat_MC_2017_Jpsi = prepare_vaex_df(vdf_MC_2017_Jpsi)
+
 outdir = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/hists_dpToverpT/MC/2017/"
-filename_base = "Test07_forwardregion_MC2017DYandJpsi_wholenumber_pT__smallestRMS_qd0"
-overwrite = False
+filename_base = "Test09_MC2017DYandJpsi_wholenumber_pT__autodetect_qd0_regions"
+overwrite = True
 verbose = True
 
+# Dictionary which contains equal-entry q*d0 bin edges.
+fullpath_pickle_dict = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/find_best_binning__eta_pT_qd0/equalentry_qd0_binedges__12_reg_max__atleast1000entriesperregion_Test01__0p0_eta_0p4__27p0_pT_50p0_GeV.pkl"
+
 # Binning.
-eta_ls = equal_entry_bin_edges_eta_mod1_wholenum[10:]
-pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum[8:]
-qd0_ls = binedges_qd0_equalentry_smallest_qd0RMS[4:9]
+eta_ls = equal_entry_bin_edges_eta_mod1_wholenum[0:3]
+pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum[5:8]
 
 # Should not contain 1 or 2. 
 # Acceptable values found in prepare_vaex_df().
@@ -103,28 +109,35 @@ with open(stats_fullpath, "a") as f:
     f.write("kinematic_variable, {}\n\n".format(kinem))
     f.close()
 
+with open(fullpath_pickle_dict, "rb") as f:
+    equalentry_binedge_dict = pickle.load(f)
+
 plt.style.use('grid_multiple_plots')
 
 total_entries = 0
 
-# Determine grid size per page.
+def get_grid_info(qd0_ls):
+    """ Determine grid size per page. Return grid info."""
+    n_plots_per_page = len(qd0_ls) - 1
+    rows, cols = ncolsrows_from_nplots(n_plots_per_page)
+    print("  This q*d0 bin edge list: {}".format(np.round(qd0_ls, decimals=4)))
+    print("  This page will contain {} plots ({} x {} grid).\n".format(n_plots_per_page, rows, cols))
+    return rows, cols
+
+# Determine PDF and page info.
 n_pdfs = len(eta_ls)-1
 n_pages = len(pT_ls) - 1
-n_plots_per_page = len(qd0_ls) - 1
-rows, cols = ncolsrows_from_nplots(n_plots_per_page)
-
 msg = "Making {} PDF.".format(n_pdfs)
 if n_pdfs > 1:
     msg = msg.replace("PDF", "PDFs")
 print(msg)
-print("  Each PDF will contain {} pages.".format(n_pages))
-print("  Each page will contain {} plots ({} x {} grid).\n".format(n_plots_per_page, rows, cols))
+print("Each PDF will contain {} pages.\n".format(n_pages))
 print("|eta| regions: {}\n".format(np.round(eta_ls, decimals=2)))
 print("pT regions: {}\n".format(np.round(pT_ls, decimals=2)))
-print("q*d0 regions: {}".format(np.round(qd0_ls, decimals=4)))
 #----------------#
 #----- Main -----#
 #----------------#
+
 # Loop over eta regions.
 for k in range(len(eta_ls)-1):
     eta_min = eta_ls[k]
@@ -152,6 +165,12 @@ for k in range(len(eta_ls)-1):
             # Within 1 pT region, scan the q*d0 regions and make 1 page of PDF. 
             t_start = time.perf_counter()
             f = plt.figure()
+
+            eta_key = "eta_bin_left_edge={}".format(eta_min)
+            pT_key = "pT_bin_left_edge={}".format(pT_min)
+            qd0_ls = equalentry_binedge_dict[eta_key][pT_key]
+
+            rows, cols = get_grid_info(qd0_ls)
             for count in range(len(qd0_ls)-1):
                 ax = plt.subplot(rows,cols,count+1)
                 qd0_min = qd0_ls[count]

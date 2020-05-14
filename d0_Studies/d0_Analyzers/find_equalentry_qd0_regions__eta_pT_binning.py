@@ -34,15 +34,15 @@ vdf_concat_MC_2017_DY = prepare_vaex_df(vdf_MC_2017_DY)
 vdf_concat_MC_2017_Jpsi = prepare_vaex_df(vdf_MC_2017_Jpsi)
 
 outdir = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/find_best_binning__eta_pT_qd0/"
-filename_base = "Everythingseemstobeworking_Test06"
-overwrite = True
+filename_base = "equalentry_qd0_binedges__12_reg_max__atleast1000entriesperregion_Test01"
+overwrite = False
 
 # Binning.
-eta_ls = equal_entry_bin_edges_eta_mod1_wholenum[5:7]
-pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum[4:7]
+eta_ls = equal_entry_bin_edges_eta_mod1_wholenum[0:3]
+pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum[5:8]
 qd0_limits = [-0.015, 0.015]
 
-r = 10  # Number of regions to split each q*d0 region into. 
+r = 12  # Number of regions to split each q*d0 region into. 
 algo = ("at_least", 1000)
 round_to_n_decimals = 5
 verbose = True
@@ -96,7 +96,7 @@ with open(fullpath, "w") as myfile:
 
         # Column names.
         col_str  = "{:<10}, {:<11}, {:<13}, ".format("bins_found","bins_wanted", "muons_per_reg")
-        col_str += "\t{}\t\t{}\t\t\t{}\n".format("eta_range,", "pT_range,", "q*d0_bins")
+        col_str += "\t{}\t\t{}\t\t{}\n".format("eta_range,", "pT_range,", "q*d0_bins")
         myfile.write(col_str)
 
         # Within this eta region, scan the pT regions. 
@@ -125,17 +125,19 @@ with open(fullpath, "w") as myfile:
             equal_entry_binedge_dict[eta_key_str][pT_key_str] = equalentry_binedge_ls
 
             info  = "{:<10}, {:<11}, {:<13}, ".format(r_updated, r, n_muons // r_updated)
-            info += "\t{},\t{},\t\t{}\n".format(eta_range, pT_range, equalentry_binedge_ls)
+            info += "\t{},\t\t{},\t\t{}\n".format(eta_range, pT_range, equalentry_binedge_ls)
             myfile.write(info)
 
             total_entries += n_muons
         # End pT loop. Go to next eta range
         myfile.write('\n')
-        print("Finished eta_range = {}".format(eta_range))
+        print("Finished eta_range = {}\n\n".format(eta_range))
     # End eta loop.
+print("[INFO] q*d0 bin edge info written to csv file:\n{}".format(fullpath))
 
 with open(fullpath_pickle,'wb') as output:
     pickle.dump(equal_entry_binedge_dict, output, pickle.HIGHEST_PROTOCOL)
+print("[INFO] q*d0 bin edge dict written to pickle file:\n{}".format(fullpath_pickle))
 
 total_muons_original = vdf_concat_MC_2017_DY.count() + vdf_concat_MC_2017_Jpsi.count()
 print("Total muons expected: {}".format(total_muons_original))
