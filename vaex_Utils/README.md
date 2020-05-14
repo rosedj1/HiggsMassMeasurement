@@ -9,13 +9,15 @@ called "passedEvents". I wasn't able to parse any of it.
 Instead, I have discovered two options to convert a **.root** file
 into a vaex-readable **.hdf5** file. Let's call the Options (A) and (B):
 
-### Option A
+### Option A, steps:
     root -> array -> pandas DataFrame -> vaex DataFrame -> hdf5
         (1)      (2)                 (3)               (4)
         
-**Pros:** The npz is relatively light-weight. 
+**Pros:** 
+- The npz is relatively light-weight. 
   
-**Cons:** You will have to store a huge DF in local 
+**Cons:** 
+- You will have to store a huge DF in local 
 memory during steps (3) and (4).
 
 (1) Convert root file to array (yikes).
@@ -38,7 +40,7 @@ vdf = vaex.from_pandas(df)
 vdf.export_hdf5("sexy_file.hdf5")
 ```
 
-##### Recommendation: 
+#### Recommendation: 
 Are people yelling at you because you are using too much RAM 
 on the remote machines? Then after step (1), save the array 
 as an `.npz` file:
@@ -60,7 +62,7 @@ df = pandas.DataFrame(numpy.load("compressed_arr.npz")['arr_0'])
 
 ---
 
-### Option B
+### Option B, steps:
     root -> array -> dataframe -> csv -> hdf5
         (1)      (2)          (3)    (4)
 
@@ -72,7 +74,7 @@ df = pandas.DataFrame(numpy.load("compressed_arr.npz")['arr_0'])
 **Cons:**
 - The **.csv** file it makes can be enormous (~50 GB).
 
-Follow steps (1), (2) above, then:
+Follow steps (1) and (2) above. Then:
 
 (3) Convert the pandas DF to a **.csv** file. 
 ```python
@@ -85,13 +87,15 @@ import vaex
 vdf = vaex.from_csv("bigass_file.csv")
 ```
 
-Finally, step (5) above.
+Finally, do step (5) above.
 
 ----------
 
 To read the vdf, do: 
-    vdf = vaex.open("sexy_file.hdf5")
+```python
+vdf = vaex.open("sexy_file.hdf5")
+```
 This file will be ~instantly read.
-It will not be stored in memory!
+All its tasty data are not stored in memory but are accessible through "expressions".
 Values are retrieved only when needed.
-<3 vaex
+**<3 vaex**
