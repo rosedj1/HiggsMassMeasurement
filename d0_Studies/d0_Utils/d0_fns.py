@@ -522,6 +522,8 @@ def find_equal_hist_regions_unbinned(vals_arr, r, round_to_n_decimals=2, algo=("
     bin_reg_ls : list
         A list of the edges of each region along the x-axis. 
         The number of entries between regions should have ~same number of entries.
+    r : int
+        A possibly updated number of regions, if algo was set to something other than "normal".
         
     Notes:
         - I used to call them "divisions" but now I call them "regions"
@@ -554,9 +556,8 @@ def find_equal_hist_regions_unbinned(vals_arr, r, round_to_n_decimals=2, algo=("
             r -= 1
             print(msg)
             
-            
             entries_per_reg = float(entries_total) / float(r)
-        print("Splitting array into {} equal-entry regions, {} entries per region.".format(r, entries_per_reg))
+        print("Splitting array into {} equal-entry regions, {:.2f} entries per region.".format(r, entries_per_reg))
 
     entries_per_reg_roundup = math.ceil(entries_per_reg)
     entries_per_reg_rounddown = math.floor(entries_per_reg)
@@ -575,8 +576,8 @@ def find_equal_hist_regions_unbinned(vals_arr, r, round_to_n_decimals=2, algo=("
         print("entries_total:             {}".format(entries_total))
         print("num_regions_with_more:     {}".format(num_regions_with_more))
         print("num_regions_with_fewer:    {}".format(num_regions_with_fewer))
-        print("first_bin_edge:            {:.2f}".format(first_bin))
-        print("last_bin_edge:             {:.2f}".format(last_bin))
+        print("first_bin_edge:            {:.4f}".format(first_bin))
+        print("last_bin_edge:             {:.4f}".format(last_bin))
         print("entries_per_reg:           {:.2f}".format(entries_per_reg))
         print("entries_per_reg_roundup:   {:.2f}".format(entries_per_reg_roundup))
         print("entries_per_reg_rounddown: {:.2f}".format(entries_per_reg_rounddown))
@@ -636,9 +637,9 @@ def find_equal_hist_regions_unbinned(vals_arr, r, round_to_n_decimals=2, algo=("
         raise RuntimeError(err_msg)
 
     if (verbose):
-        print("[INFO]    Final bin region list is:\n{}".format(bin_reg_ls))
+        print("[INFO] Final bin region list is:\n{}\n".format(bin_reg_ls))
 
-    return bin_reg_ls
+    return bin_reg_ls, r
 
 def collapse_eta_bin_edges(bin_ls, round_to_n_decimals=2):
     """
