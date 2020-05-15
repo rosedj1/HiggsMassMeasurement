@@ -1124,11 +1124,17 @@ class GraphLine():
         self.popt_linear = None
 
 class KinBin3D():
-    def __init__(self, eta_range, pT_range, qd0_range, n_entries, kinem, fit_stats_dict):
+    def __init__(self, eta_range, pT_range, qd0_range, n_entries, kinem, fit_stats_dict, pT_stats_ls, qd0_stats_ls):
         self.eta_range = eta_range
         self.pT_range = pT_range
         self.qd0_range = qd0_range
         self.n_entries = n_entries
         self.kinem = kinem
         self.fit_stats_dict = fit_stats_dict
+        self.pT_stats_ls = pT_stats_ls,
+        self.qd0_stats_ls = qd0_stats_ls
 
+    # def get_best_fit_results():
+    #     pass
+        
+    # def 

@@ -258,6 +258,30 @@ def iterative_fit_gaus(iterations, bin_edges, bin_vals,
             gaus_vals_x = np.linspace(new_bin_centers[0], new_bin_centers[-1], 500)
             gaus_vals_y = gaussian(gaus_vals_x, *popt)
             ax.plot(gaus_vals_x, gaus_vals_y, color=color_dict[count], label=leg_label_fit, linestyle='-', marker="")
-            ax.legend()
+            ax.legend(loc="upper right")
         
     return stats_dict, ax
+
+#--------------------------------------#
+#----- Error propagation formulae -----#
+#--------------------------------------#
+def prop_err_x_div_y(x, y, dx, dy):
+    """
+    Return the ratio of two numbers (r = x/y) and the 
+    corresponding uncertainty (dr), depending on (x, y, dx, dy).
+    by  from x (numerator) and y (denominator).
+
+    The error propagation formula is:
+        (dr)^2 = (dr/dx)^2 * (dx)^2 + (dr/dy)^2 * (dy)^2 + 2 * dr/dx * dr/dy * dx*dy
+        but we will ignore the final cross-term (correlation factor).
+            Newton says: 
+            dr/dx = 1/y
+            dr/dy = -x/(y^2)
+        So:
+            dr = sqrt( (dx/y)^2 + (-x/(y)^2 * dy)^2 )
+
+    *** This function been verified by an online calculator.
+    """
+    r = x / y
+    dr = np.sqrt((dx / y)**2 + (x / y**2 * dy)**2)
+    return r, dr

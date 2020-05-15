@@ -52,7 +52,7 @@ from d0_Utils.d0_cls import KinBin3D
 
 from PyUtils.Utils_Physics import perc_diff
 from PyUtils.Utils_Files import makeDirs, make_str_title_friendly, check_overwrite
-from PyUtils.Utils_Plotting import hist_y_label, make_1D_dist, ncolsrows_from_nplots
+from PyUtils.Utils_Plotting import hist_y_label, make_1D_dist, ncolsrows_from_nplots, get_stats_1Dhist
 from PyUtils.Utils_StatsAndFits import iterative_fit_gaus
 
 #---------------------------#
@@ -64,29 +64,30 @@ vdf_concat_MC_2017_Jpsi = prepare_vaex_df(vdf_MC_2017_Jpsi)
 
 # Dictionary which contains equal-entry q*d0 bin edges.
 # !!!!! FIXME: Substitute this with sys.argv[1] or the other one. 
-inpath_3Dbins_pickle_dict = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/find_best_binning__eta_pT_qd0/FIXME04_brokenequalentry__0p2_eta_0p4__100p0_pT_150p0_GeV.pkl"
+inpath_3Dbins_pickle_dict = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/find_best_binning__eta_pT_qd0/fullscan_06reg__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
 #-----Below is the big boy. Run this tonight. -----#
 # inpath_3Dbins_pickle_dict = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/find_best_binning__eta_pT_qd0/equalentry_qd0_binedges__20_regions_max__atleast1000entriesperregion__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
 outdir_plots = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/hists_dpToverpT/MC/2017/"
 outdir_kinbin_pkl = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/kinbin3D_pkls/"
 
 # filename_base = "realtest01_MC2017DYandJpsi_fullscan__autodetect_qd0_regions"
-filename_base = "FIXME03_brokenequalentry"
+filename_base = "fullscan_06reg"
 write_to_pickle = True
-overwrite = True
+overwrite = False
 verbose = True
 
 # Binning.
-# eta_ls = equal_entry_bin_edges_eta_mod1_wholenum
-eta_ls = [0.2, 0.4]
-# pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum
-pT_ls = [100.0, 150.0]
+eta_ls = equal_entry_bin_edges_eta_mod1_wholenum
+# eta_ls = [0.0, 0.2]
+pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum
+# pT_ls = [40.0, 50.0]
 
+# Kinematic to be plotted on all histograms. 
 # Should not contain 1 or 2. 
 # Acceptable values found in prepare_vaex_df().
 kinem = "delta_pToverGenpT"  
-x_bin_info = [-0.25, 0.25, 0.0025]
-x_zoom_range = [-0.27, 0.27]
+x_bin_info = [-0.4, 0.4, 0.004]
+x_zoom_range = [-0.45, 0.45]
 iter_gaus = (True, 3)
 
 # Cuts to make.
@@ -155,7 +156,7 @@ print("Each PDF will contain {} pages.\n".format(n_pages))
 print("|eta| regions: {}\n".format(np.round(eta_ls, decimals=2)))
 print("pT regions: {}\n".format(np.round(pT_ls, decimals=2)))
 
-# Unpack kinematic arrays for cuts.
+# Unpack kinematic data.
 eta_arr_DY = vdf_concat_MC_2017_DY.evaluate("eta")
 pT_arr_DY = vdf_concat_MC_2017_DY.evaluate("pT")
 qd0_arr_DY = vdf_concat_MC_2017_DY.evaluate("qd0BS")
@@ -279,6 +280,20 @@ for k in range(len(eta_ls)-1):
                 selected_muons_DY = kinem_arr_DY[all_masks_DY]
                 selected_muons_Jpsi = kinem_arr_Jpsi[all_masks_Jpsi]
 
+                # Get data and stats of q*d0 within this 3Dcube.
+                qd0_vals_this3Dcube_DY = qd0_arr_DY[all_masks_DY]
+                qd0_vals_this3Dcube_Jpsi = qd0_arr_Jpsi[all_masks_Jpsi]
+                qd0_vals_this3Dcube = np.concatenate( (qd0_vals_this3Dcube_DY, qd0_vals_this3Dcube_Jpsi) )
+                qd0_this3Dcube_stats_ls = get_stats_1Dhist(qd0_vals_this3Dcube)
+                print("qd0_this3Dcube_stats_ls:",qd0_this3Dcube_stats_ls)
+
+                # Get data and stats of pT within this 3Dcube.
+                pT_vals_this3Dcube_DY = pT_arr_DY[all_masks_DY]
+                pT_vals_this3Dcube_Jpsi = pT_arr_Jpsi[all_masks_Jpsi]
+                pT_vals_this3Dcube = np.concatenate( (pT_vals_this3Dcube_DY, pT_vals_this3Dcube_Jpsi) )
+                pT_this3Dcube_stats_ls = get_stats_1Dhist(pT_vals_this3Dcube)
+                print("pT_this3Dcube_stats_ls:",pT_this3Dcube_stats_ls)
+
                 # These masks get fucked up...
                 # all_masks_DY = vaex_apply_masks(vdf_concat_MC_2017_DY,   
                 #                                 eta_range, pT_range, qd0_range, 
@@ -296,6 +311,9 @@ for k in range(len(eta_ls)-1):
                 sum_mask_Jpsi = np.sum(all_masks_Jpsi)
                 assert sum_mask_DY == num_passed_DY
                 assert sum_mask_Jpsi == num_passed_Jpsi
+                assert len(qd0_vals_this3Dcube_DY) == num_passed_DY
+                assert len(qd0_vals_this3Dcube_Jpsi) == num_passed_Jpsi
+
                 print("np.sum(all_masks_DY),", sum_mask_DY)
                 print("len(selected_muons_DY),", num_passed_DY)
                 print("np.sum(all_masks_Jpsi),", sum_mask_Jpsi)
@@ -352,7 +370,9 @@ for k in range(len(eta_ls)-1):
                                         qd0_range=qd0_range,
                                         n_entries=n_entries_this3Dcube,
                                         kinem=kinem,
-                                        fit_stats_dict=fit_stats_dict
+                                        fit_stats_dict=fit_stats_dict,
+                                        pT_stats_ls=pT_this3Dcube_stats_ls,
+                                        qd0_stats_ls=qd0_this3Dcube_stats_ls,
                                     )
                                   )
 
