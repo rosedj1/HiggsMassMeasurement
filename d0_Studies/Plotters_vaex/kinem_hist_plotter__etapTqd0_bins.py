@@ -61,7 +61,7 @@ pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum[8:]
 qd0_ls = binedges_qd0_equalentry_smallest_qd0RMS[4:9]
 
 # Should not contain 1 or 2. 
-# Acceptable values found in prepare_vaex_df().
+# Acceptable values found in label_LaTeX_dict.
 kinem = "delta_pToverGenpT"  
 x_bin_info = [-0.1, 0.1, 0.002]
 x_zoom_range = [-0.15, 0.15]

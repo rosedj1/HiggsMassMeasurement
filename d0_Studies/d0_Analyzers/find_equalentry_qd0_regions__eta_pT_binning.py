@@ -1,11 +1,20 @@
 """
-# Purpose: Write information to a file that describes equal-entry regions in q*d0 distributions.
-# Syntax:  python <script.py>
+# Purpose: 
+#   Find the bin edges of q*d0 distributions.
+#   The q*d0 distributions will have eta and pT cuts applied. 
+#   User specifies the number of regions to split the hist up into,
+#   such that all regions have equal entries.
+#   Bin edges corresponding to the regions are recorded in a .csv file, 
+#   or usefully a .pkl file. A dictionary is saved to the .pkl. 
+# Syntax:  python script.py 
 # Notes:   User puts the number of regions (r) to split each q*d0 distribution, 
-#          such that each region will have equal entries in it.
+#            such that each region will have equal entries in it.
+#          User can also request that "at_least" N entries are found
+#            per region. If r did not give N, then r is decremented 
+#            until either N is found or r == 2. 
 #          Make sure to check all the parameters in "User Parameters".
 # Author:  Jake Rosenzweig
-# Date:    2020-05-13
+# Updated: 2020-05-14
 """
 import os
 import sys
@@ -34,16 +43,17 @@ vdf_concat_MC_2017_DY = prepare_vaex_df(vdf_MC_2017_DY)
 vdf_concat_MC_2017_Jpsi = prepare_vaex_df(vdf_MC_2017_Jpsi)
 
 outdir = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/find_best_binning__eta_pT_qd0/"
-filename_base = "equalentry_qd0_binedges__12_reg_max__atleast1000entriesperregion_Test01"
+filename_base = "equalentry_qd0bins_6max_atleast2000entperreg_Test01"
+write_to_pickle = True
 overwrite = False
 
 # Binning.
 eta_ls = equal_entry_bin_edges_eta_mod1_wholenum[0:3]
-pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum[5:8]
+pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum[0:4]
 qd0_limits = [-0.015, 0.015]
 
-r = 12  # Number of regions to split each q*d0 region into. 
-algo = ("at_least", 1000)
+r = 6  # Number of regions to split each q*d0 region into. 
+algo = ("at_least", 2000)
 round_to_n_decimals = 5
 verbose = True
 
@@ -85,6 +95,9 @@ check_overwrite(fullpath_pickle, overwrite=overwrite)
 equal_entry_binedge_dict = {}
 
 with open(fullpath, "w") as myfile:
+    myfile.write("all_eta_bins : {}\n".format(eta_ls))
+    myfile.write("all_pT_bins : {}\n\n".format(pT_ls))
+
     # Loop over eta regions.
     for k in range(len(eta_ls)-1):
         eta_min = eta_ls[k]
@@ -135,9 +148,10 @@ with open(fullpath, "w") as myfile:
     # End eta loop.
 print("[INFO] q*d0 bin edge info written to csv file:\n{}".format(fullpath))
 
-with open(fullpath_pickle,'wb') as output:
-    pickle.dump(equal_entry_binedge_dict, output, pickle.HIGHEST_PROTOCOL)
-print("[INFO] q*d0 bin edge dict written to pickle file:\n{}".format(fullpath_pickle))
+if (write_to_pickle):
+    with open(fullpath_pickle,'wb') as output:
+        pickle.dump(equal_entry_binedge_dict, output, pickle.HIGHEST_PROTOCOL)
+    print("[INFO] eta, pT, q*d0 bin dict written to pickle file:\n{}".format(fullpath_pickle))
 
 total_muons_original = vdf_concat_MC_2017_DY.count() + vdf_concat_MC_2017_Jpsi.count()
 print("Total muons expected: {}".format(total_muons_original))

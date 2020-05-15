@@ -1,16 +1,25 @@
-# PURPOSE: Make PDFs of any kinematic distribution (e.g., delta_pT/pT), 
-#          in specified eta, pT, and q*d0 bins.
-#          Can perform Gaussian fits of distributions and put the fit stats
-#          on the plots. 
-# NOTES:   One PDF is made per eta bin. 
-#          Each page of the PDF represents a different pT bin.
-#          Many plots are shown on a single page; these are different q*d0 bins.
-#          In total, N q*d0BS distributions are made per page.
-#          N is determined automatically based on len(qd0_ls).
-#          User should check User parameters.
-# SYNTAX:  python <script>.py
+"""
+# PURPOSE: 
+#   Make PDFs of any kinematic distribution (e.g., delta_pT/pT), 
+#   in specified eta, pT, and q*d0 bins.
+#   Also performs Gaussian fits of distributions, can show the fit stats
+#   on the plots, and saves the fit info in a ".stat" file.
+#   Optional: make a pickle file of the list of KinBin3D objects. 
+# NOTES:   
+#   One PDF is made per eta bin. 
+#   Each page of the PDF represents a different pT bin.
+#   Many plots are shown on a single page; these are different q*d0 bins.
+#   Each page can have a various number of q*d0 In total, N q*d0BS distributions are made per page.
+#   User must specify the dict which contains the bins:
+#              pickled_dict = {eta_bin_min : {pT_bin_min : [qd0_ls]} }
+#   N is determined automatically based on each len(qd0_ls).
+#   User should check User Parameters.
+#   On a full run of 13 eta bins, 12 pT bins, and 20 q*d0 regions (so 3120 "cubes"), 
+#     time elapsed ~6 hrs. This is ~8.5 plots/min.
+# SYNTAX:  python script.py
 # AUTHOR:  Jake Rosenzweig
 # UPDATED: 2020-05-14
+"""
 
 import os
 import sys
@@ -39,6 +48,7 @@ from d0_Studies.kinematic_bins import (equal_entry_bin_edges_eta_mod1,
                                         )
 from d0_Utils.d0_dicts import label_LaTeX_dict
 from d0_Utils.d0_fns import make_binning_array, print_header_message
+from d0_Utils.d0_cls import KinBin3D
 
 from PyUtils.Utils_Physics import perc_diff
 from PyUtils.Utils_Files import makeDirs, make_str_title_friendly, check_overwrite
@@ -52,23 +62,27 @@ from PyUtils.Utils_StatsAndFits import iterative_fit_gaus
 vdf_concat_MC_2017_DY = prepare_vaex_df(vdf_MC_2017_DY)
 vdf_concat_MC_2017_Jpsi = prepare_vaex_df(vdf_MC_2017_Jpsi)
 
-outdir = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/hists_dpToverpT/MC/2017/"
-filename_base = "Test09_MC2017DYandJpsi_wholenumber_pT__autodetect_qd0_regions"
-overwrite = True
+outdir_plots = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/hists_dpToverpT/MC/2017/"
+outdir_kinbin_pkl = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/kinbin3D_pkls/"
+
+filename_base = "realtest01_MC2017DYandJpsi_fullscan__autodetect_qd0_regions"
+write_to_pickle = True
+overwrite = False
 verbose = True
 
 # Dictionary which contains equal-entry q*d0 bin edges.
-fullpath_pickle_dict = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/find_best_binning__eta_pT_qd0/equalentry_qd0_binedges__12_reg_max__atleast1000entriesperregion_Test01__0p0_eta_0p4__27p0_pT_50p0_GeV.pkl"
+# inpath_3Dbins_pickle_dict = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/find_best_binning__eta_pT_qd0/equalentry_qd0_binedges__12_reg_max__atleast1000entriesperregion_Test01__0p0_eta_0p4__27p0_pT_50p0_GeV.pkl"
+inpath_3Dbins_pickle_dict = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/find_best_binning__eta_pT_qd0/equalentry_qd0_binedges__20_regions_max__atleast1000entriesperregion__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
 
 # Binning.
-eta_ls = equal_entry_bin_edges_eta_mod1_wholenum[0:3]
-pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum[5:8]
+eta_ls = equal_entry_bin_edges_eta_mod1_wholenum
+pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum
 
 # Should not contain 1 or 2. 
 # Acceptable values found in prepare_vaex_df().
 kinem = "delta_pToverGenpT"  
-x_bin_info = [-0.1, 0.1, 0.002]
-x_zoom_range = [-0.15, 0.15]
+x_bin_info = [-0.15, 0.15, 0.0015]
+x_zoom_range = [-0.18, 0.18]
 iter_gaus = (True, 3)
 
 # Cuts to make.
@@ -86,16 +100,17 @@ massZ_min_Jpsi = massZ_minmax_Jpsi[0]
 massZ_max_Jpsi = massZ_minmax_Jpsi[1]
 
 # Prep directories and file names. 
-makeDirs(outdir)
+makeDirs(outdir_plots)
 
-stats_filename = filename_base
-extra_   = "__{:.1f}_eta_{:.1f}".format(min(eta_ls), max(eta_ls))
-extra_  += "__{:.1f}_pT_{:.1f}_GeV".format(min(pT_ls), max(pT_ls))
-extra_ = make_str_title_friendly(extra_)
-extra_ += ".stat"
+suffix   = "__{:.1f}_eta_{:.1f}".format(min(eta_ls), max(eta_ls))
+suffix  += "__{:.1f}_pT_{:.1f}_GeV".format(min(pT_ls), max(pT_ls))
+suffix = make_str_title_friendly(suffix)
 
-stats_fullpath = os.path.join(outdir, stats_filename + extra_)
+stats_fullpath = os.path.join(outdir_plots, filename_base + suffix + ".stat")
+fullpath_kinbin_ls_pkl = os.path.join(outdir_kinbin_pkl, filename_base + suffix + ".pkl") 
+
 check_overwrite(stats_fullpath, overwrite=overwrite) 
+check_overwrite(fullpath_kinbin_ls_pkl, overwrite=overwrite) 
 # If file is there and you wish to overwrite, 
 # make sure not to append to existing file; just get rid of it. 
 if (overwrite):
@@ -109,12 +124,13 @@ with open(stats_fullpath, "a") as f:
     f.write("kinematic_variable, {}\n\n".format(kinem))
     f.close()
 
-with open(fullpath_pickle_dict, "rb") as f:
+with open(inpath_3Dbins_pickle_dict, "rb") as f:
     equalentry_binedge_dict = pickle.load(f)
 
 plt.style.use('grid_multiple_plots')
 
 total_entries = 0
+kinbin3D_ls = []
 
 def get_grid_info(qd0_ls):
     """ Determine grid size per page. Return grid info."""
@@ -150,12 +166,12 @@ for k in range(len(eta_ls)-1):
     extra = make_str_title_friendly(extra)
     extra += ".pdf"
 
-    fullpath = os.path.join(outdir, filename_base + extra)
-    check_overwrite(fullpath, overwrite=overwrite)    
+    outpath_pdf = os.path.join(outdir_plots, filename_base + extra)
+    check_overwrite(outpath_pdf, overwrite=overwrite)    
 
     print("Making PDF {}/{}...".format(k+1, n_pdfs))
     t_start_page = time.perf_counter()
-    with PdfPages(fullpath) as pdf:
+    with PdfPages(outpath_pdf) as pdf:
         # Within 1 eta region, scan the pT regions. 
         for j in range(len(pT_ls)-1):
             pT_min = pT_ls[j]
@@ -195,18 +211,23 @@ for k in range(len(eta_ls)-1):
                 all_masks_DY = vaex_apply_masks(  vdf_concat_MC_2017_DY,   eta_range, pT_range, qd0_range, massZ_minmax_DY,   dR_max)
                 all_masks_Jpsi = vaex_apply_masks(vdf_concat_MC_2017_Jpsi, eta_range, pT_range, qd0_range, massZ_minmax_Jpsi, dR_max)
 
-                total_entries += all_masks_DY.sum() + all_masks_Jpsi.sum()
-                ax, bin_vals, bin_edges, stats = make_1D_dist(ax=ax, 
-                                                           data=np.append(vdf_concat_MC_2017_DY.evaluate(kinem, selection=all_masks_DY), 
-                                                                         vdf_concat_MC_2017_Jpsi.evaluate(kinem, selection=all_masks_Jpsi)
-                                                                         ),
-                                                              x_limits=x_zoom_range,
-                                                              x_bins=x_bins, 
-                                                             x_label=x_label, 
-                                                             y_label=y_label,
-                                                             title="",
-                                                             y_max=-1,
-                                                            log_scale=False)
+                n_entries_this3Dcube = all_masks_DY.sum() + all_masks_Jpsi.sum()
+                total_entries += n_entries_this3Dcube
+
+                # Plot the kinem hist.
+                ax, bin_vals, bin_edges, stats = make_1D_dist(
+                                        ax=ax, 
+                                        data=np.append(
+                                            vdf_concat_MC_2017_DY.evaluate(kinem,selection=all_masks_DY), 
+                                            vdf_concat_MC_2017_Jpsi.evaluate(kinem,selection=all_masks_Jpsi),
+                                            ),
+                                        x_limits=x_zoom_range,
+                                        x_bins=x_bins, 
+                                        x_label=x_label, 
+                                        y_label=y_label,
+                                        title="",
+                                        y_max=-1,
+                                        log_scale=False)
                 ax.text(0.025, 0.78, cuts, horizontalalignment='left', verticalalignment='center', 
                 transform=ax.transAxes, bbox=dict(boxstyle='square', facecolor='white', alpha=0.9))
 
@@ -225,6 +246,17 @@ for k in range(len(eta_ls)-1):
                                                         ax=ax, draw_on_axes=True, verbose=verbose)
                     # Use plotted kinem as the key for this dict of stats. 
 
+                # Save all them tasty fit statistics. 
+                kinbin3D_ls.append( KinBin3D(
+                                        eta_range=eta_range,
+                                        pT_range=pT_range, 
+                                        qd0_range=qd0_range,
+                                        n_entries=n_entries_this3Dcube,
+                                        kinem=kinem,
+                                        fit_stats_dict=fit_stats_dict
+                                    )
+                                  )
+
                 with open(stats_fullpath, "a") as f:
                     f.write("range_eta, {}\n".format(eta_range))
                     f.write("range_pT, {}\n".format(pT_range))
@@ -242,20 +274,27 @@ for k in range(len(eta_ls)-1):
             pdf.savefig()
             plt.close("all")
 
-            msg = "  Page {}/{} made. Time taken: {:.2f} s".format(j+1, n_pages, t_end - t_start)
+            msg = "Page {}/{} made. Time taken: {:.2f} s".format(j+1, n_pages, t_end - t_start)
             print_header_message(msg)
             print()
 
         # End pT loop. Make next page.
     t_end_page = time.perf_counter()
-    print("PDF {}/{} made at:\n  {}".format(k+1, n_pdfs, fullpath))
-    print("(in {} s)".format(t_end_page - t_start_page))
+    msg_made_pdf = "PDF {}/{} made".format(k+1, n_pdfs)
+    print_header_message(msg_made_pdf, pad_char="~~~", n_center_pad_chars=5)
+    print("location: {}".format(outpath_pdf))
+    print("(took {} s)\n\n".format(t_end_page - t_start_page))
     # Save this 1 eta reg, 1 pT reg, and all q*d0 plots on one page. 
 
 # Go to next pT reg and next page.
 print("All PDFs created.")
 
+if (write_to_pickle):
+    with open(fullpath_kinbin_ls_pkl,'wb') as output:
+        pickle.dump(kinbin3D_ls, output, pickle.HIGHEST_PROTOCOL)
+    print("[INFO] 3Dkinbin list written to pickle file:\n{}\n".format(fullpath_kinbin_ls_pkl))
+    
 total_muons_original = vdf_concat_MC_2017_DY.count() + vdf_concat_MC_2017_Jpsi.count()
-print("Total muons expected: {}".format(total_muons_original))
+print("Total muons: {}".format(total_muons_original))
 perdif = perc_diff(total_entries, total_muons_original)
-print("Total muons found, inclusive all regions: {} (perc. diff. = {:.2f}%)".format(total_entries, perdif))
+print("Total muons found across all bins: {} (perc. diff. = {:.2f}%)".format(total_entries, perdif))

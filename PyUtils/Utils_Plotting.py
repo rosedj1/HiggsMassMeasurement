@@ -396,10 +396,10 @@ def ncolsrows_from_nplots(n_plots, force_ncols=0):
     Return the number of rows and columns to be shown on a 
     PDF page, based on the number of plots on that page.
     
-    When n_plots <= 8, make a n_plots x 2 grid
+    When n_plots <= 8, make up to  n_plots/2 x 2 grid
     (except when n_plots == 1, then make 1 x 1).
-    When 9 <= n_plots <= 15, make 3 x 3 grid.
-    When 16 <= n_plots <= 20, make 4 x 4 grid.
+    When 9 <= n_plots <= 15, make a n_plots/3 x 3 grid.
+    When 16 <= n_plots <= 20, make a n_plots/4 x 4 grid.
     
     Parameters
     ----------
