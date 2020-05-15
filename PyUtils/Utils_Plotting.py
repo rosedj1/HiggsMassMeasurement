@@ -104,7 +104,8 @@ def make_1D_dist(ax, data, x_limits, x_bins, x_label, y_label, title, y_max=-1, 
     ax.set_title(title)#, fontsize=textsize_title)
     
     ax.grid(False)
-                                
+
+    # Return the same length of data, just clip it (under/overflow bins).             
     mod_data = account_for_underoverflow_entries(data, x_limits[0], x_limits[1], x_bins)
                                 
     if (log_scale): ax.set_yscale('log')

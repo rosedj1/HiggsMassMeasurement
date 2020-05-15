@@ -41,20 +41,25 @@ from PyUtils.Utils_Files import makeDirs, make_str_title_friendly, check_overwri
 # Samples:
 vdf_concat_MC_2017_DY = prepare_vaex_df(vdf_MC_2017_DY)
 vdf_concat_MC_2017_Jpsi = prepare_vaex_df(vdf_MC_2017_Jpsi)
+print("start len(vdf_concat_MC_2017_DY),",len(vdf_concat_MC_2017_DY))
+print("start vdf_concat_MC_2017_Jpsi.count(),",vdf_concat_MC_2017_Jpsi.count())
 
 outdir = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/find_best_binning__eta_pT_qd0/"
-filename_base = "equalentry_qd0bins_6max_atleast2000entperreg_Test01"
+# filename_base = "prac02_equalentry_qd0bins_18regmax_gt2000entperreg"
+filename_base = "FIXME04_brokenequalentry"
 write_to_pickle = True
 overwrite = False
 
 # Binning.
-eta_ls = equal_entry_bin_edges_eta_mod1_wholenum[0:3]
-pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum[0:4]
+# eta_ls = equal_entry_bin_edges_eta_mod1_wholenum[0:3]
+eta_ls = [0.2, 0.4]
+# pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum
+pT_ls = [100.0, 150.0]
 qd0_limits = [-0.015, 0.015]
 
-r = 6  # Number of regions to split each q*d0 region into. 
-algo = ("at_least", 2000)
-round_to_n_decimals = 5
+r = 5  # Number of regions to split each q*d0 region into. 
+algo = ("at_least", 3000)
+# round_to_n_decimals = 5
 verbose = True
 
 dR_max = 0.008
@@ -96,7 +101,7 @@ equal_entry_binedge_dict = {}
 
 with open(fullpath, "w") as myfile:
     myfile.write("all_eta_bins : {}\n".format(eta_ls))
-    myfile.write("all_pT_bins : {}\n\n".format(pT_ls))
+    myfile.write("all_pT_bins  : {}\n\n".format(pT_ls))
 
     # Loop over eta regions.
     for k in range(len(eta_ls)-1):
@@ -118,23 +123,30 @@ with open(fullpath, "w") as myfile:
             pT_max = pT_ls[count+1]
             pT_range = [pT_min, pT_max]
 
-            pT_key_str = "pT_bin_left_edge={}".format(pT_min)
-
+            # No restriction on q*d0.
             all_masks_DY = vaex_apply_masks(  vdf_concat_MC_2017_DY,   eta_range, pT_range, qd0_limits, massZ_minmax_DY,   dR_max)
             all_masks_Jpsi = vaex_apply_masks(vdf_concat_MC_2017_Jpsi, eta_range, pT_range, qd0_limits, massZ_minmax_Jpsi, dR_max)
+            print("loop count,",count)
+            print("all_masks_DY.sum(),", all_masks_DY.sum())
+            print("all_masks_DY.count(),", all_masks_DY.count())
+            print("all_masks_Jpsi.sum(),", all_masks_Jpsi.sum())
+            print("all_masks_Jpsi.count(),", all_masks_Jpsi.count())
 
-            data = np.append(vdf_concat_MC_2017_DY.evaluate("qd0BS", selection=all_masks_DY), 
-                             vdf_concat_MC_2017_Jpsi.evaluate("qd0BS", selection=all_masks_Jpsi))
-
+            data = np.concatenate(
+                (vdf_concat_MC_2017_DY.evaluate("qd0BS", selection=all_masks_DY), 
+                 vdf_concat_MC_2017_Jpsi.evaluate("qd0BS", selection=all_masks_Jpsi) )
+                                 )
             n_muons = len(data)
+            print("len(data) after selection, before find_equal_hist_regions_unbinned(),",n_muons)
             equalentry_binedge_ls, r_updated = find_equal_hist_regions_unbinned(
                                             data, 
                                             r=r, 
                                             verbose=verbose,
-                                            algo=algo,
-                                            round_to_n_decimals=round_to_n_decimals)
+                                            algo=algo)
+                                            # round_to_n_decimals=round_to_n_decimals)
 
             # Append to dict.
+            pT_key_str = "pT_bin_left_edge={}".format(pT_min)
             equal_entry_binedge_dict[eta_key_str][pT_key_str] = equalentry_binedge_ls
 
             info  = "{:<10}, {:<11}, {:<13}, ".format(r_updated, r, n_muons // r_updated)
@@ -142,6 +154,7 @@ with open(fullpath, "w") as myfile:
             myfile.write(info)
 
             total_entries += n_muons
+            print("total_entries up to this point:,",total_entries)
         # End pT loop. Go to next eta range
         myfile.write('\n')
         print("Finished eta_range = {}\n\n".format(eta_range))

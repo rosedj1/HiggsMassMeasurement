@@ -1,11 +1,10 @@
 import warnings
 import numpy as np
 from scipy.optimize import curve_fit, OptimizeWarning
-from d0_Utils.d0_fns import centers_of_binning_array, get_subset_mask
+from d0_Utils.d0_fns import centers_of_binning_array, get_subset_mask, print_header_message
 from d0_Utils.d0_dicts import color_dict, label_LaTeX_dict
 
 from PyUtils.Utils_Plotting import make_stats_legend_for_gaus_fit
-
 #--- Fitting Functions ---#
 def gaussian(x, coeff, mu, sigma):#, normalize=False):
     """
@@ -129,7 +128,6 @@ def iterative_fit_gaus(iterations, bin_edges, bin_vals,
 
     bin_centers = centers_of_binning_array(bin_edges)
 
-#    popt = np.zeros(3)
     stats_dict = {
         'coeff_ls' : [],
         'coeff_err_ls' : [],
@@ -206,25 +204,31 @@ def iterative_fit_gaus(iterations, bin_edges, bin_vals,
             except ValueError:
                 # SciPy docs: 
                 # if either ydata or xdata contain NaNs, or if incompatible options are used.
+                error = "ValueError"
+                msg = "[WARNING] {} encountered during fit. Continuing on...".format(error)
+                print_header_message(msg, pad_char="!", n_center_pad_chars=10)
                 if (skip_bad_fit):
                     fit_converged = False
-                    error = "ValueError"
                 else:
                     raise ValueError
             except RuntimeError:
                 # SciPy docs: 
                 # if the least-squares minimization fails.
+                error = "RuntimeError"
+                msg = "[WARNING] {} encountered during fit. Continuing on...".format(error)
+                print_header_message(msg, pad_char="!", n_center_pad_chars=10)
                 if (skip_bad_fit):
                     fit_converged = False
-                    error = "RuntimeError"
                 else:
                     raise RuntimeError
             except OptimizeWarning:
                 # SciPy docs: 
                 # if the least-squares minimization fails.
+                error = "OptimizeWarning"
+                msg = "[WARNING] {} encountered during fit. Continuing on...".format(error)
+                print_header_message(msg, pad_char="!", n_center_pad_chars=10)
                 if (skip_bad_fit):
                     fit_converged = False
-                    error = "OptimizeWarning"
                 else:
                     raise OptimizeWarning
 
@@ -250,7 +254,7 @@ def iterative_fit_gaus(iterations, bin_edges, bin_vals,
     
             if ax is None:
                 f, ax = plt.subplots(figsize=(10,8))
-            # Get the values of the Gaussian fit for plotting.
+            # Plot the Gaussian curve across its optimal x-range.
             gaus_vals_x = np.linspace(new_bin_centers[0], new_bin_centers[-1], 500)
             gaus_vals_y = gaussian(gaus_vals_x, *popt)
             ax.plot(gaus_vals_x, gaus_vals_y, color=color_dict[count], label=leg_label_fit, linestyle='-', marker="")

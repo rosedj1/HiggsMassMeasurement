@@ -34,7 +34,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 # Local imports.
 sys.path.append('/Users/Jake/HiggsMassMeasurement/')
 sys.path.append('/Users/Jake/HiggsMassMeasurement/d0_Studies/')
-from vaex_Utils.vaex_dataframes import (vdf_MC_2017_DY, vdf_MC_2017_Jpsi, vdf_MC_2017_DY,
+from vaex_Utils.vaex_dataframes import (vdf_MC_2017_DY, vdf_MC_2017_Jpsi, vdf_MC_2016_DY,
                                         prepare_vaex_df, vaex_apply_masks)
 from d0_Studies.kinematic_bins import (equal_entry_bin_edges_eta_mod1,
                                         equal_entry_bin_edges_eta_mod2,
@@ -58,31 +58,35 @@ from PyUtils.Utils_StatsAndFits import iterative_fit_gaus
 #---------------------------#
 #----- User Parameters -----#
 #---------------------------#
-# Samples:
+# Samples with muons treated "individually":
 vdf_concat_MC_2017_DY = prepare_vaex_df(vdf_MC_2017_DY)
 vdf_concat_MC_2017_Jpsi = prepare_vaex_df(vdf_MC_2017_Jpsi)
 
+# Dictionary which contains equal-entry q*d0 bin edges.
+# !!!!! FIXME: Substitute this with sys.argv[1] or the other one. 
+inpath_3Dbins_pickle_dict = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/find_best_binning__eta_pT_qd0/FIXME04_brokenequalentry__0p2_eta_0p4__100p0_pT_150p0_GeV.pkl"
+#-----Below is the big boy. Run this tonight. -----#
+# inpath_3Dbins_pickle_dict = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/find_best_binning__eta_pT_qd0/equalentry_qd0_binedges__20_regions_max__atleast1000entriesperregion__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
 outdir_plots = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/hists_dpToverpT/MC/2017/"
 outdir_kinbin_pkl = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/kinbin3D_pkls/"
 
-filename_base = "realtest01_MC2017DYandJpsi_fullscan__autodetect_qd0_regions"
+# filename_base = "realtest01_MC2017DYandJpsi_fullscan__autodetect_qd0_regions"
+filename_base = "FIXME03_brokenequalentry"
 write_to_pickle = True
-overwrite = False
+overwrite = True
 verbose = True
 
-# Dictionary which contains equal-entry q*d0 bin edges.
-# inpath_3Dbins_pickle_dict = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/find_best_binning__eta_pT_qd0/equalentry_qd0_binedges__12_reg_max__atleast1000entriesperregion_Test01__0p0_eta_0p4__27p0_pT_50p0_GeV.pkl"
-inpath_3Dbins_pickle_dict = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/find_best_binning__eta_pT_qd0/equalentry_qd0_binedges__20_regions_max__atleast1000entriesperregion__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
-
 # Binning.
-eta_ls = equal_entry_bin_edges_eta_mod1_wholenum
-pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum
+# eta_ls = equal_entry_bin_edges_eta_mod1_wholenum
+eta_ls = [0.2, 0.4]
+# pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum
+pT_ls = [100.0, 150.0]
 
 # Should not contain 1 or 2. 
 # Acceptable values found in prepare_vaex_df().
 kinem = "delta_pToverGenpT"  
-x_bin_info = [-0.15, 0.15, 0.0015]
-x_zoom_range = [-0.18, 0.18]
+x_bin_info = [-0.25, 0.25, 0.0025]
+x_zoom_range = [-0.27, 0.27]
 iter_gaus = (True, 3)
 
 # Cuts to make.
@@ -122,10 +126,10 @@ if (overwrite):
 with open(stats_fullpath, "a") as f:
     f.write("#NOTE: hist_stats=[n_entries, mean, mean_err, std, std_err]\n\n")
     f.write("kinematic_variable, {}\n\n".format(kinem))
-    f.close()
 
 with open(inpath_3Dbins_pickle_dict, "rb") as f:
     equalentry_binedge_dict = pickle.load(f)
+print("unpickled equalentry_binedge_dict,",equalentry_binedge_dict)
 
 plt.style.use('grid_multiple_plots')
 
@@ -136,7 +140,7 @@ def get_grid_info(qd0_ls):
     """ Determine grid size per page. Return grid info."""
     n_plots_per_page = len(qd0_ls) - 1
     rows, cols = ncolsrows_from_nplots(n_plots_per_page)
-    print("  This q*d0 bin edge list: {}".format(np.round(qd0_ls, decimals=4)))
+    print("  This q*d0 bin edge list: {}".format(np.round(qd0_ls, decimals=5)))
     print("  This page will contain {} plots ({} x {} grid).\n".format(n_plots_per_page, rows, cols))
     return rows, cols
 
@@ -150,6 +154,23 @@ print(msg)
 print("Each PDF will contain {} pages.\n".format(n_pages))
 print("|eta| regions: {}\n".format(np.round(eta_ls, decimals=2)))
 print("pT regions: {}\n".format(np.round(pT_ls, decimals=2)))
+
+# Unpack kinematic arrays for cuts.
+eta_arr_DY = vdf_concat_MC_2017_DY.evaluate("eta")
+pT_arr_DY = vdf_concat_MC_2017_DY.evaluate("pT")
+qd0_arr_DY = vdf_concat_MC_2017_DY.evaluate("qd0BS")
+massZ_arr_DY = vdf_concat_MC_2017_DY.evaluate("massZ")
+dR_arr_DY = vdf_concat_MC_2017_DY.evaluate("delta_R")
+
+eta_arr_Jpsi = vdf_concat_MC_2017_Jpsi.evaluate("eta")
+pT_arr_Jpsi = vdf_concat_MC_2017_Jpsi.evaluate("pT")
+qd0_arr_Jpsi = vdf_concat_MC_2017_Jpsi.evaluate("qd0BS")
+massZ_arr_Jpsi = vdf_concat_MC_2017_Jpsi.evaluate("massZ")
+dR_arr_Jpsi = vdf_concat_MC_2017_Jpsi.evaluate("delta_R")
+
+# Kinematic to be plotted in each KinBin3D.
+kinem_arr_DY = vdf_concat_MC_2017_DY.evaluate(kinem)
+kinem_arr_Jpsi = vdf_concat_MC_2017_Jpsi.evaluate(kinem)
 #----------------#
 #----- Main -----#
 #----------------#
@@ -159,6 +180,7 @@ for k in range(len(eta_ls)-1):
     eta_min = eta_ls[k]
     eta_max = eta_ls[k+1]
     eta_range = [eta_min, eta_max]
+    print("eta loop k,",k)
 
     # For each eta range, make a pdf. 
     extra   = "__{:.1f}_eta_{:.1f}".format(eta_min, eta_max)
@@ -177,6 +199,7 @@ for k in range(len(eta_ls)-1):
             pT_min = pT_ls[j]
             pT_max = pT_ls[j+1]
             pT_range = [pT_min, pT_max]
+            print("pT loop j,",j)
 
             # Within 1 pT region, scan the q*d0 regions and make 1 page of PDF. 
             t_start = time.perf_counter()
@@ -185,6 +208,9 @@ for k in range(len(eta_ls)-1):
             eta_key = "eta_bin_left_edge={}".format(eta_min)
             pT_key = "pT_bin_left_edge={}".format(pT_min)
             qd0_ls = equalentry_binedge_dict[eta_key][pT_key]
+            print("eta_key,",eta_key)
+            print("pT_key,",pT_key)
+            print("qd0_ls,",qd0_ls)
 
             rows, cols = get_grid_info(qd0_ls)
             for count in range(len(qd0_ls)-1):
@@ -192,7 +218,9 @@ for k in range(len(eta_ls)-1):
                 qd0_min = qd0_ls[count]
                 qd0_max = qd0_ls[count+1]
                 qd0_range = [qd0_min, qd0_max]
-
+                print("qd0 loop", count)
+                print("qd0_min {}, qd0_max {}, qd0_range {}".format(qd0_min, qd0_max, qd0_range))
+                
                 x_bins, bin_width = make_binning_array(x_bin_info)
 
                 x_label = label_LaTeX_dict[kinem]["independent_label"]
@@ -207,27 +235,98 @@ for k in range(len(eta_ls)-1):
                 cuts += r"$\Delta R < %.3f$, " % (dR_max) + "\n"
                 cuts += r"$%.1f < m_{Z} < %.1f$ GeV,  " % (massZ_min_DY, massZ_max_DY) + "\n"
                 cuts += r"$%.1f < m_{J/\psi} < %.1f$ GeV" % (massZ_min_Jpsi, massZ_max_Jpsi)
+                print("cuts str,",cuts)
+                
+                # At this point, vdf_concat_MC_2017_X definitely has full entries.
+                # Previous cuts not applied here.
+                print("\napply masks with these cuts:")
+                print("eta_range",eta_range)
+                print("pT_range",pT_range)
+                print("qd0_range",qd0_range)
+                print("For DY: massZ_minmax_DY",massZ_minmax_DY)
+                print("For Jpsi: massZ_minmax_Jpsi",massZ_minmax_Jpsi)
+                print("dR_max",dR_max)
 
-                all_masks_DY = vaex_apply_masks(  vdf_concat_MC_2017_DY,   eta_range, pT_range, qd0_range, massZ_minmax_DY,   dR_max)
-                all_masks_Jpsi = vaex_apply_masks(vdf_concat_MC_2017_Jpsi, eta_range, pT_range, qd0_range, massZ_minmax_Jpsi, dR_max)
+                # try:
+                #     del vdf_MC_2017_DY
+                #     del vdf_MC_2017_Jpsi
+                #     del vdf_concat_MC_2017_DY
+                #     del vdf_concat_MC_2017_Jpsi
+                # except NameError:
+                #     pass
 
-                n_entries_this3Dcube = all_masks_DY.sum() + all_masks_Jpsi.sum()
+                # from vaex_Utils.vaex_dataframes import vdf_MC_2017_DY, vdf_MC_2017_Jpsi
+
+                # vdf_concat_MC_2017_DY = prepare_vaex_df(vdf_MC_2017_DY)
+                # vdf_concat_MC_2017_Jpsi = prepare_vaex_df(vdf_MC_2017_Jpsi)
+                # Prepare masks.
+                mask_eta_DY = (eta_min < np.abs(eta_arr_DY)) & (np.abs(eta_arr_DY) < eta_max)
+                mask_pT_DY = (pT_min < pT_arr_DY) & (pT_arr_DY < pT_max)
+                mask_qd0_DY = (qd0_min < qd0_arr_DY) & (qd0_arr_DY < qd0_max)
+                mask_massZ_DY = (massZ_min_DY < massZ_arr_DY) & (massZ_arr_DY < massZ_max_DY)
+                mask_dR_DY = (dR_arr_DY < dR_max)
+
+                mask_eta_Jpsi = (eta_min < np.abs(eta_arr_Jpsi)) & (np.abs(eta_arr_Jpsi) < eta_max)
+                mask_pT_Jpsi = (pT_min < pT_arr_Jpsi) & (pT_arr_Jpsi < pT_max)
+                mask_qd0_Jpsi = (qd0_min < qd0_arr_Jpsi) & (qd0_arr_Jpsi < qd0_max)
+                mask_massZ_Jpsi = (massZ_min_Jpsi < massZ_arr_Jpsi) & (massZ_arr_Jpsi < massZ_max_Jpsi)
+                mask_dR_Jpsi = (dR_arr_Jpsi < dR_max)
+
+                all_masks_DY = mask_eta_DY & mask_pT_DY & mask_qd0_DY & mask_massZ_DY & mask_dR_DY
+                all_masks_Jpsi = mask_eta_Jpsi & mask_pT_Jpsi & mask_qd0_Jpsi & mask_massZ_Jpsi & mask_dR_Jpsi
+
+                # The data to be histogrammed.
+                selected_muons_DY = kinem_arr_DY[all_masks_DY]
+                selected_muons_Jpsi = kinem_arr_Jpsi[all_masks_Jpsi]
+
+                # These masks get fucked up...
+                # all_masks_DY = vaex_apply_masks(vdf_concat_MC_2017_DY,   
+                #                                 eta_range, pT_range, qd0_range, 
+                #                                 massZ_minmax_DY, dR_max)
+                # all_masks_Jpsi = vaex_apply_masks(vdf_concat_MC_2017_Jpsi, 
+                #                                   eta_range, pT_range, qd0_range, 
+                #                                   massZ_minmax_Jpsi, dR_max)
+                # print("all_masks_DY.sum(),", all_masks_DY.sum())
+                # print("all_masks_DY.count(),", all_masks_DY.count())
+                # print("all_masks_Jpsi.sum(),", all_masks_Jpsi.sum())
+                # print("all_masks_Jpsi.count(),", all_masks_Jpsi.count())
+                num_passed_DY = len(selected_muons_DY)
+                num_passed_Jpsi = len(selected_muons_Jpsi)
+                sum_mask_DY = np.sum(all_masks_DY)
+                sum_mask_Jpsi = np.sum(all_masks_Jpsi)
+                assert sum_mask_DY == num_passed_DY
+                assert sum_mask_Jpsi == num_passed_Jpsi
+                print("np.sum(all_masks_DY),", sum_mask_DY)
+                print("len(selected_muons_DY),", num_passed_DY)
+                print("np.sum(all_masks_Jpsi),", sum_mask_Jpsi)
+                print("len(selected_muons_Jpsi),", num_passed_Jpsi)
+
+                n_entries_this3Dcube = num_passed_DY + num_passed_Jpsi
+                print("According to n_entries_this3Dcube: {}".format(n_entries_this3Dcube))
                 total_entries += n_entries_this3Dcube
+                print("total_entries cumulative,",total_entries,"\n")
 
+                # selected_DY_arr   = vdf_concat_MC_2017_DY.evaluate(  kinem,selection=all_masks_DY)
+                # selected_Jpsi_arr = vdf_concat_MC_2017_Jpsi.evaluate(kinem,selection=all_masks_Jpsi)
+                
+                # data = np.concatenate((selected_DY_arr, selected_Jpsi_arr))
+                data = np.concatenate((selected_muons_DY, selected_muons_Jpsi))
+
+                print("len(data) after concatenation:,",len(data))
+                print_header_message("!!!ABOUT TO MAKE PLOT!!!")
                 # Plot the kinem hist.
                 ax, bin_vals, bin_edges, stats = make_1D_dist(
-                                        ax=ax, 
-                                        data=np.append(
-                                            vdf_concat_MC_2017_DY.evaluate(kinem,selection=all_masks_DY), 
-                                            vdf_concat_MC_2017_Jpsi.evaluate(kinem,selection=all_masks_Jpsi),
-                                            ),
-                                        x_limits=x_zoom_range,
-                                        x_bins=x_bins, 
-                                        x_label=x_label, 
-                                        y_label=y_label,
-                                        title="",
-                                        y_max=-1,
-                                        log_scale=False)
+                                                    ax=ax, 
+                                                    # data definitely gets cut as expected.
+                                                    data=data,
+                                                    x_limits=x_zoom_range,
+                                                    x_bins=x_bins, 
+                                                    x_label=x_label, 
+                                                    y_label=y_label,
+                                                    title="",
+                                                    y_max=-1,
+                                                    log_scale=False)
+                print("stats ls: {}".format(stats))
                 ax.text(0.025, 0.78, cuts, horizontalalignment='left', verticalalignment='center', 
                 transform=ax.transAxes, bbox=dict(boxstyle='square', facecolor='white', alpha=0.9))
 
@@ -243,7 +342,7 @@ for k in range(len(eta_ls)-1):
                                                                      best_guess_mean, 
                                                                      best_guess_stdev],
                                                         param_bounds=([0,-1000,-100], [999999999,1000,100]),
-                                                        ax=ax, draw_on_axes=True, verbose=verbose)
+                                                        ax=ax, draw_on_axes=True, verbose=False)
                     # Use plotted kinem as the key for this dict of stats. 
 
                 # Save all them tasty fit statistics. 
@@ -281,9 +380,9 @@ for k in range(len(eta_ls)-1):
         # End pT loop. Make next page.
     t_end_page = time.perf_counter()
     msg_made_pdf = "PDF {}/{} made".format(k+1, n_pdfs)
-    print_header_message(msg_made_pdf, pad_char="~~~", n_center_pad_chars=5)
-    print("location: {}".format(outpath_pdf))
-    print("(took {} s)\n\n".format(t_end_page - t_start_page))
+    print_header_message(msg_made_pdf, pad_char="@", n_center_pad_chars=5)
+    print("location:\n  {}".format(outpath_pdf))
+    print("(took {:.2f} s)\n".format(t_end_page - t_start_page))
     # Save this 1 eta reg, 1 pT reg, and all q*d0 plots on one page. 
 
 # Go to next pT reg and next page.
@@ -292,7 +391,7 @@ print("All PDFs created.")
 if (write_to_pickle):
     with open(fullpath_kinbin_ls_pkl,'wb') as output:
         pickle.dump(kinbin3D_ls, output, pickle.HIGHEST_PROTOCOL)
-    print("[INFO] 3Dkinbin list written to pickle file:\n{}\n".format(fullpath_kinbin_ls_pkl))
+    print("[INFO] KinBin3D list written to pickle file:\n{}\n".format(fullpath_kinbin_ls_pkl))
     
 total_muons_original = vdf_concat_MC_2017_DY.count() + vdf_concat_MC_2017_Jpsi.count()
 print("Total muons: {}".format(total_muons_original))
