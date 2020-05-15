@@ -41,23 +41,21 @@ from PyUtils.Utils_Files import makeDirs, make_str_title_friendly, check_overwri
 # Samples:
 vdf_concat_MC_2017_DY = prepare_vaex_df(vdf_MC_2017_DY)
 vdf_concat_MC_2017_Jpsi = prepare_vaex_df(vdf_MC_2017_Jpsi)
-print("start len(vdf_concat_MC_2017_DY),",len(vdf_concat_MC_2017_DY))
-print("start vdf_concat_MC_2017_Jpsi.count(),",vdf_concat_MC_2017_Jpsi.count())
 
 outdir = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/find_best_binning__eta_pT_qd0/"
-# filename_base = "prac02_equalentry_qd0bins_18regmax_gt2000entperreg"
-filename_base = "fullscan_06reg"
+
+filename_base = "fullscan_12reg_3000perreg"
 write_to_pickle = True
 overwrite = False
 
 # Binning.
 eta_ls = equal_entry_bin_edges_eta_mod1_wholenum
-# eta_ls = [0.0, 0.2]
 pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum
-# pT_ls = [40.0, 50.0]
+# eta_ls = [1.4, 1.6]
+# pT_ls = [30.0, 40.0, 50.0]
 qd0_limits = [-0.015, 0.015]
 
-r = 6  # Number of regions to split each q*d0 region into. 
+r = 12  # Number of regions to split each q*d0 region into. 
 algo = ("at_least", 3000)
 # round_to_n_decimals = 5
 verbose = True

@@ -64,30 +64,37 @@ vdf_concat_MC_2017_Jpsi = prepare_vaex_df(vdf_MC_2017_Jpsi)
 
 # Dictionary which contains equal-entry q*d0 bin edges.
 # !!!!! FIXME: Substitute this with sys.argv[1] or the other one. 
-inpath_3Dbins_pickle_dict = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/find_best_binning__eta_pT_qd0/fullscan_06reg__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
-#-----Below is the big boy. Run this tonight. -----#
+
+# RUN THIS ONE 
+# inpath_3Dbins_pickle_dict = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/kinbin3D_pkls/fullscan_06reg__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
+# inpath_3Dbins_pickle_dict = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/find_best_binning__eta_pT_qd0/Test02_fullscan_06reg_dpToverGenpTsqred__1p4_eta_1p6__30p0_pT_50p0_GeV.pkl"
+inpath_3Dbins_pickle_dict = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/find_best_binning__eta_pT_qd0/fullscan_12reg_3000perreg__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
+
+
+#-----Below is a big boy. -----#
 # inpath_3Dbins_pickle_dict = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/find_best_binning__eta_pT_qd0/equalentry_qd0_binedges__20_regions_max__atleast1000entriesperregion__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
 outdir_plots = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/hists_dpToverpT/MC/2017/"
 outdir_kinbin_pkl = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/kinbin3D_pkls/"
 
 # filename_base = "realtest01_MC2017DYandJpsi_fullscan__autodetect_qd0_regions"
-filename_base = "fullscan_06reg"
+filename_base = "fullpath fullscan_12reg"
 write_to_pickle = True
 overwrite = False
 verbose = True
-
+skip_bad_fit = True
 # Binning.
 eta_ls = equal_entry_bin_edges_eta_mod1_wholenum
-# eta_ls = [0.0, 0.2]
 pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum
-# pT_ls = [40.0, 50.0]
+# eta_ls = [1.4, 1.6]
+# pT_ls = [30.0, 40.0, 50.0]
+
 
 # Kinematic to be plotted on all histograms. 
 # Should not contain 1 or 2. 
 # Acceptable values found in prepare_vaex_df().
 kinem = "delta_pToverGenpT"  
-x_bin_info = [-0.4, 0.4, 0.004]
-x_zoom_range = [-0.45, 0.45]
+x_bin_info = [-0.3, 0.3, 0.003]
+x_zoom_range = [-0.035, 0.035]
 iter_gaus = (True, 3)
 
 # Cuts to make.
@@ -360,7 +367,7 @@ for k in range(len(eta_ls)-1):
                                                                      best_guess_mean, 
                                                                      best_guess_stdev],
                                                         param_bounds=([0,-1000,-100], [999999999,1000,100]),
-                                                        ax=ax, draw_on_axes=True, verbose=False)
+                                                        ax=ax, draw_on_axes=True, verbose=False, skip_bad_fit=skip_bad_fit)
                     # Use plotted kinem as the key for this dict of stats. 
 
                 # Save all them tasty fit statistics. 

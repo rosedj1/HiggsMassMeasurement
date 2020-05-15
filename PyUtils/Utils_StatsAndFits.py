@@ -140,10 +140,12 @@ def iterative_fit_gaus(iterations, bin_edges, bin_vals,
     }
     
     count = 0
+    fit_converged = True
+    error = None
     while count < iterations:
         count += 1
         
-        if count == 1:
+        if (count == 1) or not (fit_converged):
             # First fit: use original histogram's mean and stdev to choose a fit range.
             this_coeff = param_guess[0]
             this_mean  = param_guess[1]
@@ -192,8 +194,6 @@ def iterative_fit_gaus(iterations, bin_edges, bin_vals,
             print("  Parameters guessed: {}".format(best_params_so_far))
 
         # Try to fit, but may encounter errors.
-        fit_converged = True
-        error = None
         with warnings.catch_warnings():
             warnings.simplefilter("error", OptimizeWarning)
             try:
@@ -239,24 +239,40 @@ def iterative_fit_gaus(iterations, bin_edges, bin_vals,
             print("    sigma = {:.3E}".format(popt[2]) + "\n")
         
         # Update stats dict.
-        stats_dict['coeff_ls'].append(popt[0])
-        stats_dict['mean_ls'].append(popt[1])
-        stats_dict['stdev_ls'].append(popt[2])
-        stats_dict['coeff_err_ls'].append(popt_err[0])
-        stats_dict['mean_err_ls'].append(popt_err[1])
-        stats_dict['stdev_err_ls'].append(popt_err[2])
-        stats_dict['fit_converged_ls'].append(fit_converged)
-        stats_dict['error_ls'].append(error)
+        try:
+            stats_dict['coeff_ls'].append(popt[0])
+            stats_dict['mean_ls'].append(popt[1])
+            stats_dict['stdev_ls'].append(popt[2])
+            stats_dict['coeff_err_ls'].append(popt_err[0])
+            stats_dict['mean_err_ls'].append(popt_err[1])
+            stats_dict['stdev_err_ls'].append(popt_err[2])
+            stats_dict['fit_converged_ls'].append(fit_converged)
+            stats_dict['error_ls'].append(error)
+        except UnboundLocalError:
+            # Then probably "local variable 'popt' referenced before assignment"
+            stats_dict['coeff_ls'].append(None)
+            stats_dict['mean_ls'].append(None)
+            stats_dict['stdev_ls'].append(None)
+            stats_dict['coeff_err_ls'].append(None)
+            stats_dict['mean_err_ls'].append(None)
+            stats_dict['stdev_err_ls'].append(None)
+            stats_dict['fit_converged_ls'].append(fit_converged)
+            stats_dict['error_ls'].append(error)
         
         if (draw_on_axes):
-            leg_label_fit = make_stats_legend_for_gaus_fit(popt, popt_err)
-            leg_label_fit = leg_label_fit.replace("Fit", "Gaus Fit {}:".format(count))
+            if (fit_converged):
+                gaus_vals_x = np.linspace(new_bin_centers[0], new_bin_centers[-1], 500)
+                gaus_vals_y = gaussian(gaus_vals_x, *popt)
+                leg_label_fit = make_stats_legend_for_gaus_fit(popt, popt_err)
+                leg_label_fit = leg_label_fit.replace("Fit", "Gaus Fit {}:".format(count))
+            else:
+                gaus_vals_x = 0
+                gaus_vals_y = 0
+                leg_label_fit = "Fit did not converge due to {}".format(error)
     
             if ax is None:
                 f, ax = plt.subplots(figsize=(10,8))
             # Plot the Gaussian curve across its optimal x-range.
-            gaus_vals_x = np.linspace(new_bin_centers[0], new_bin_centers[-1], 500)
-            gaus_vals_y = gaussian(gaus_vals_x, *popt)
             ax.plot(gaus_vals_x, gaus_vals_y, color=color_dict[count], label=leg_label_fit, linestyle='-', marker="")
             ax.legend(loc="upper right")
         
