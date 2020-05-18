@@ -6,7 +6,14 @@ from d0_Utils.d0_dicts import color_dict, label_LaTeX_dict
 
 from PyUtils.Utils_Plotting import make_stats_legend_for_gaus_fit
 #--- Fitting Functions ---#
-def gaussian(x, coeff, mu, sigma):#, normalize=False):
+def linear_func(x, b, m):
+    """
+    Calculate the y-value for a given x-value along a straight line, 
+    with b = y-intercept, and m = slope.     
+    """
+    return b + m * x
+
+def gaussian_func(x, coeff, mu, sigma):#, normalize=False):
     """
     Calculate the y-value for a given x-value along a Gaussian curve, 
     with mean = mu, and stdev = sigma. 
@@ -33,6 +40,46 @@ def gaussian(x, coeff, mu, sigma):#, normalize=False):
     
     return coeff * np.exp(expon)
 
+def fit_with_line(x_vals, y_vals, 
+                  guess_params=[0,1], 
+                  param_bounds=([-np.inf,-np.inf], [np.inf,np.inf]),
+                  absolute_sigma=True):
+    """
+    Fit a line to a set of data. Returns the best (intercept, slope) which fit the data.
+    
+    FIXME: NOT UP-TO-DATE
+    
+    Parameters
+    ----------
+    x_vals : array-like
+        The x values of the data. 
+    y_vals : array-like
+        The y values of the data.
+    guess_params : array-like
+        Initial guess for the parameters of the fitted Gaussian.: [coeff, mean, sigma].
+        Putting guess values can speed up fit time and can make fits converge where they would otherwise fail.
+        
+    Returns
+    -------
+    popt : 3-element array
+        A 3-element array of the the optimized parameters (coefficient, mean, sigma) of the fitted Gaussian: [coeff_best, mu_best, sigma_best]
+        From the scipy.optimize.curve_fit docstring:
+            "Optimal values for the parameters so that the sum of the squared residuals of f(xdata, *popt) - ydata is minimized."
+    pcov : 2d array
+        The covariance of popt.
+        From the scipy.optimize.curve_fit docstring:
+            "To compute one standard deviation errors on the parameters use perr = np.sqrt(np.diag(pcov))"
+    """
+    popt, pcov = curve_fit(linear_func, x_vals, y_vals, p0=guess_params, bounds=param_bounds)
+    
+    # FIXME: For some strange reason, sigma can turn out to be negative...
+    # Turns out SciPy already has an optional parameter to fix this!
+    # ...still getting negative sigma values... so take abs().
+#     popt[2] = np.abs(popt[2])
+    
+    popt_err = np.sqrt(np.diag(pcov))
+
+    return popt, popt_err, pcov
 def fit_with_gaussian(x_vals, y_vals, 
                       guess_params=[1,0,1], 
                       param_bounds=([0,-np.inf,-np.inf], [np.inf,np.inf,np.inf]),
@@ -61,7 +108,7 @@ def fit_with_gaussian(x_vals, y_vals,
         From the scipy.optimize.curve_fit docstring:
             "To compute one standard deviation errors on the parameters use perr = np.sqrt(np.diag(pcov))"
     """
-    popt, pcov = curve_fit(gaussian, x_vals, y_vals, p0=guess_params, bounds=param_bounds)
+    popt, pcov = curve_fit(gaussian_func, x_vals, y_vals, p0=guess_params, bounds=param_bounds)
     
     # FIXME: For some strange reason, sigma can turn out to be negative...
     # Turns out SciPy already has an optional parameter to fix this!
@@ -262,7 +309,7 @@ def iterative_fit_gaus(iterations, bin_edges, bin_vals,
         if (draw_on_axes):
             if (fit_converged):
                 gaus_vals_x = np.linspace(new_bin_centers[0], new_bin_centers[-1], 500)
-                gaus_vals_y = gaussian(gaus_vals_x, *popt)
+                gaus_vals_y = gaussian_func(gaus_vals_x, *popt)
                 leg_label_fit = make_stats_legend_for_gaus_fit(popt, popt_err)
                 leg_label_fit = leg_label_fit.replace("Fit", "Gaus Fit {}:".format(count))
             else:

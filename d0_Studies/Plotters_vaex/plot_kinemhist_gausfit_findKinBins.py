@@ -137,7 +137,6 @@ with open(stats_fullpath, "a") as f:
 
 with open(inpath_3Dbins_pickle_dict, "rb") as f:
     equalentry_binedge_dict = pickle.load(f)
-print("unpickled equalentry_binedge_dict,",equalentry_binedge_dict)
 
 plt.style.use('grid_multiple_plots')
 

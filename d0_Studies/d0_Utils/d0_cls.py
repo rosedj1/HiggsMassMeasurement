@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+from scipy.optimize import curve_fit
+
 # Not all of these may be used here. Just saving time for now.
 from PyUtils.Utils_Files import makeDirs, make_str_title_friendly, check_overwrite
 from PyUtils.Utils_Plotting import (change_cmap_bkg_to_white, save_plots_to_outpath, make_1D_dist, get_stats_1Dhist, 
@@ -8,7 +10,9 @@ from PyUtils.Utils_Plotting import (change_cmap_bkg_to_white, save_plots_to_outp
                                     make_stats_legend_for_1dhist, make_stats_legend_for_2dhist, 
                                     make_stats_legend_for_gaus_fit)
 from PyUtils.Utils_Physics import theta2pseudorap, pseudorap2theta, calc_dR, calc_dphi
-from PyUtils.Utils_StatsAndFits import gaussian, fit_with_gaussian, iterative_fit_gaus
+from PyUtils.Utils_StatsAndFits import (linear_func, gaussian_func, 
+                                        fit_with_gaussian, fit_with_line, 
+                                        iterative_fit_gaus)
 from PyUtils.Utils_Collection_Helpers import weave_lists
 from d0_Utils.d0_fns import (make_binning_array, centers_of_binning_array, get_subset_mask, 
                              make_kinem_subplot, combine_cut_list, calc_x_err_bins)
@@ -1007,9 +1011,348 @@ class KinBinOrganizer():
             self.hist_mean_err_ls.append(kb.stats_dict[kinem]['hist_stats'][2])
             self.fit_mean_ls.append(kb.stats_dict[kinem]['fit_stats']['mean_ls'][-1])
             self.fit_mean_err_ls.append(kb.stats_dict[kinem]['fit_stats']['mean_err_ls'][-1])
+
+class KinBin3D():
+    def __init__(self, eta_range, pT_range, qd0_range, n_entries, kinem, fit_stats_dict, pT_stats_ls, qd0_stats_ls):
+        self.eta_range = eta_range
+        self.pT_range = pT_range
+        self.qd0_range = qd0_range
+        self.n_entries = n_entries
+        self.kinem = kinem
+        self.fit_stats_dict = fit_stats_dict
+        self.pT_stats_ls = pT_stats_ls,
+        self.qd0_stats_ls = qd0_stats_ls
+        
+class KinBin3DOrganizer():
+    """
+    ~~~ New and improved KinBinOrganizer ~~~
+    Organizes KinBin3D objects by similar properties. Returns lists of KinBin objs.
+    """
+    def __init__(self, kinbin_ls):
+        self.kinbin_ls = kinbin_ls
+        
+        self.identify_eta_pT_ranges()
+        self.make_KinBin_dict()
+    
+    def identify_eta_pT_ranges(self):
+        """
+        Given the KinBin_ls that was given to this KinBin3DOrganizer, 
+        automatically identify the unique eta ranges and pT ranges of all KinBin3D objs.
+        """
+        # Identify available eta and pT values.
+        eta_range_unique = set([tuple(kb.eta_range) for kb in self.kinbin_ls])  # Nested lists have to become tuples first.
+        pT_range_unique = set([tuple(kb.pT_range) for kb in self.kinbin_ls])
+        sorted_eta_range_unique = sorted(list(eta_range_unique))
+        sorted_pT_range_unique = sorted(list(pT_range_unique))
+        self.eta_range_ls = [list(tup) for tup in sorted_eta_range_unique]
+        self.pT_range_ls = [list(tup) for tup in sorted_pT_range_unique]
+        
+        eta_min_unique = set([kb.eta_range[0] for kb in self.kinbin_ls])
+        pT_min_unique = set([kb.pT_range[0] for kb in self.kinbin_ls])
+        self.eta_min_ls = sorted(list(eta_min_unique))
+        self.pT_min_ls  = sorted(list(pT_min_unique))
+        
+        assert self.eta_min_ls == [eta_range[0] for eta_range in self.eta_range_ls]
+        assert self.pT_min_ls == [pT_range[0] for pT_range in self.pT_range_ls]
+        
+        print("Total number of KinBins:", len(self.kinbin_ls))
+        print("  eta_min_ls:\n  ", self.eta_min_ls)
+        print("  pT_min_ls:\n  ", self.pT_min_ls)
+        
+    def make_KinBin_dict(self):
+        """
+        Creates a dictionary of KinBin lists. 
+        
+        Takes in HUGE list of a KinBin3D objects, a list of eta bin edges, and a 
+        list of pT bin edges, and sorts KinBin3D objs based on which ones 
+        share the same ranges. 
+        eta, pT are keys, KinBin3D lists are the values.
+        """
+        # Make the dict.
+        kinbin_dict = {}
+        for eta_min in self.eta_min_ls:
+            kinbin_dict[eta_min] = {}
+
+            for pT_min in self.pT_min_ls:
+                kinbin_dict[eta_min][pT_min] = [kb for kb in self.kinbin_ls if (kb.eta_range[0] == eta_min) and (kb.pT_range[0] == pT_min)]
+        
+        self.kinbin_dict = kinbin_dict
+    
+    def find_similar_KinBins(self, eta_range, pT_range):
+        """
+        Takes in list of a KinBin3D objects and, depending on what eta and pT range you give it,
+        will return a subst of the original list which fall within those eta and pT range.
+        """
+        kb_same_eta = [kb for kb in self.kinbin_ls if kb.eta_range == eta_range]
+        kb_same_eta_same_pT = [kb for kb in kb_same_eta if kb.pT_range == pT_range]
+        
+        return kb_same_eta_same_pT
+    
+    def find_all_KinBin_ls_constant_range(self, const_range=[-1,-1], const_bin="pT"):
+        
+        ls_2D = []
+        if const_bin in "eta":
+            for pT_range in self.pT_range_ls:
+                ls_2D.append( self.find_similar_KinBins(const_range, pT_range) )
+                
+        elif const_bin in "pT":
+            for eta_range in self.eta_range_ls:
+                ls_2D.append( self.find_similar_KinBins(eta_range, const_range) )
+                
+        return ls_2D
+    
+    def get_plotting_vals_from_KinBin_ls(self, kinbin_ls):
+        
+        # Make sure each KinBin3D is in the same pT and eta range.
+        # Works for a SINGLE GRAPH LINE.
+        # Must first pass in a list of KinBin3D:
+        assert len(set([kb.pT_range for kb in kinbin_ls][0])) == 2
+        assert len(set([kb.eta_range for kb in kinbin_ls][0])) == 2
+
+        qd0_avg_ls = [kb.qd0_stats_ls[1] for kb in kinbin_ls]
+        dpToverpT_bestfitmean_ls = [kb.fit_stats_dict["mean_ls"][-1] for kb in kinbin_ls]
+        dpToverpT_bestfitmean_err_ls = [kb.fit_stats_dict["mean_err_ls"][-1] for kb in kinbin_ls]
+
+        return qd0_avg_ls, dpToverpT_bestfitmean_ls, dpToverpT_bestfitmean_err_ls
+
+class GraphLineKinBin3D():
+    import numpy as np
+    """
+    One of the lines drawn on a graph. Contains all the info that went into building this line. 
+    """
+    # Eventually just give this a list of KinBin3D obj.
+    def __init__(self, x_vals, y_vals, x_err_vals=None, y_err_vals=None):
+        self.x_vals = x_vals
+        self.y_vals = y_vals
+        self.x_err_vals = x_err_vals
+        self.y_err_vals = y_err_vals
+        
+    def draw_graph(self, x_label="", y_label="", title="", kbin_example=None, scale_by_1divpT=False, constant_bin="pT", ax=None, count=1, verbose=False, 
+                   fit_line=True, x_fit_range=None, legend_str_yequals="", legend_str_xvar=""):
+        """
+        Draws data points (values of: kinem_x, kinem_y) to an axes object. 
+        In particular, used for making dpT/pT vs. q*d0 plots, but could probably be generalized.
+        
+        Parameters
+        ----------
+        kinem_x : str
+            The full name of the kinematic variable plotted on the x-axis.
+            Should be a key in the label_LaTeX_dict.
+        kinem_y : str
+            The full name of the kinematic variable plotted on the y-axis.
+            Should be a key in the label_LaTeX_dict.
+        x_label : str
+            The x-axis label. If no x_label is given, then an automatic one 
+            is generated based on kinem_x.
+        y_label : str
+            The y-axis label. If no y_label is given, then an automatic one 
+            is generated based on kinem_y.
+        binning_type : str
+            Must be either 'eta' or 'pT'. Used for proper labeling of title and legend.
+        kbin_example : KinematicBin object
+            This KinematicBin contains all the cut information necessary for proper
+            legend and axes labeling.
+        ax : axes object
+            The axes on which to draw the graph. 
+            If an axes is not provided, a default one is made.
+        count : int
+            A key to a dictionary of colors. 
+            Values of the dict are color strings, like: 'black', 'red', etc. 
+        """
+        if constant_bin not in ["eta", "pT"]:
+            raise ValueError("[ERROR] Wrong `constant_bin` specified. Must be either 'pT' or 'eta'. Stopping now.")
+        
+        if ax is None:
+            f, ax = plt.subplots(figsize=(12.8, 9.6))
             
+        al=1  # alpha=0 is transparent
+        elw=1  # error bar line width
+        ms=1.5  # marker size
+        fontsize_legend = 6
+        
+#         if count == 2:
+#             count = 1
+            
+        ecolor=color_dict[count]
+        mec=color_dict[count]  # Marker edge color.
+        mfc=color_dict[count]  # Marker face color.
+        cs=1.5  # cap size
+        mew=0.7  # marker edge width
+
+        if len(x_label) == 0:
+            # Need x_label_base for legend.
+            x_label_base = r"avg $q(\mu^{\pm, \mathrm{REC} }) * d_{0}^{ \mathrm{BS} }$ [cm]"
+            x_label = x_label_base + "\n" + r"in $(\left| \eta \right|, p_{T}, q*d_{0})$ cube"
+#             x_label = label_LaTeX_dict[kinem_x]["independent_label"]
+#             unit_x = label_LaTeX_dict[kinem_x]["units"]
+#             if len(unit_x) > 0:
+#                 x_label += " [{}]".format(unit_x)
+        if len(y_label) == 0:
+            y_label = r"iter. Gaus fit $\mu( \Delta p_{T} \ / p_{T}^{\mathrm{REC}})$"
+#             y_label  = label_LaTeX_dict[kinem_y]["independent_label"]
+#             y_label += " (iterated Gaus fit mean)"
+#         title = label_LaTeX_dict[binning_type + "1"]["independent_label"] + " Binning"
+#         if binning_type == "eta":
+#             title = r"$\left| $" + title + r"$\right| $"
+        
+        # The "x-errors" are calculated automatically to be 1/2 the distance to the next data point. 
+#         low_x_err, high_x_err = calc_x_err_bins(self.x_vals)
+        
+        eta_range = kbin_example.eta_range
+        pT_range = kbin_example.pT_range
+        
+        eta_text = r"$%.1f < \left| \eta^{\mathrm{REC}} \right| < %.1f$" % (eta_range[0], eta_range[1])
+        pT_text = r"$%.1f < p_{T}^{\mathrm{REC}} < %.1f$ [GeV]" % (pT_range[0], pT_range[1])
+        
+        if (constant_bin in "pT"):
+            label_text = eta_text
+            title = pT_text
+        elif (constant_bin in "eta"):
+            label_text = pT_text
+            title = eta_text
+        else:
+            pass
+        
+        if (scale_by_1divpT):
+            avg_pT_for3Dcube = float(list(kbin_example.pT_stats_ls[0])[1])
+            avg_pT_err_for3Dcube = float(list(kbin_example.pT_stats_ls[0])[2])
+            
+            pT_scale_text = r" $* \frac{1}{\mathrm{avg}(p_{T}^{\mathrm{REC}})}$"
+            y_label += pT_scale_text
+            
+            title += "\n" + r"avg$(p_T) = %.2f \pm %.1E$ [GeV]" % (avg_pT_for3Dcube, avg_pT_err_for3Dcube)
+            
+            # Propagate errors on Gaus(mu) / avg(pT)
+            gaus_mu_vals = np.asarray(self.y_vals)
+            gaus_mu_err_vals = np.asarray(self.y_err_vals)
+            
+            y_vals, y_err_vals = prop_err_x_div_y(gaus_mu_vals, avg_pT_for3Dcube, gaus_mu_err_vals, avg_pT_err_for3Dcube)
+            if (verbose):
+                print("gaus_mu_vals:\n",gaus_mu_vals)
+                print("avg_pT_for3Dcube:\n",avg_pT_for3Dcube)
+                print("gaus_mu_err_vals:\n", gaus_mu_err_vals)
+                print("avg_pT_err_for3Dcube:\n",avg_pT_err_for3Dcube)
+                print("y_vals:\n",y_vals)
+                print("y_err_vals:\n",y_err_vals)
+        else:
+            y_vals = self.y_vals
+            y_err_vals = self.y_err_vals
+            
+        x_vals = self.x_vals
+        
+        ax.set_title(title)
+        ax.set_xlabel(x_label)
+        ax.set_ylabel(y_label)
+        
+        if (fit_line):
+            ax.errorbar(x_vals, y_vals, xerr=self.x_err_vals, yerr=y_err_vals, fmt='o',
+                    color=color_dict[count], 
+                        elinewidth=elw, ms=ms, 
+                        mec=mec, 
+                        capsize=cs, mew=mew,
+                        mfc=mfc, ecolor=ecolor)
+            ax = self.do_linear_fit(x_vals, y_vals, x_fit_range=x_fit_range, 
+                                                    ax=ax, count=count, leg_label_text=label_text, legend_str_yequals=r"$\Delta p_T/p_T$", legend_str_xvar=x_label_base, 
+                                                     scale_by_1divpT=scale_by_1divpT)
+        else:
+            ax.errorbar(x_vals, y_vals, xerr=self.x_err_vals, yerr=y_err_vals, fmt='o',
+                        color=color_dict[count], 
+                            elinewidth=elw, ms=ms, 
+                            mec=mec, 
+                            capsize=cs, mew=mew,
+                            mfc=mfc, ecolor=ecolor, label=label_text)  # This has label text here.
+            ax.legend(fontsize=fontsize_legend, loc="upper left", framealpha=al)#, fontsize=text_size_legend)
+        
+        # Don't show d0 cuts and the cuts of whatever binning type (like "eta") is being used.
+#         tmp_dict = kbin_example.cut_dict.copy()
+#         for key in list(kbin_example.cut_dict.keys()):
+#             if (binning_type in key) or ("d0" in key):
+#                 del tmp_dict[key]
+                    
+#         sorted_cut_ls = [value for (key, value) in sorted(tmp_dict.items())]
+#         cut_str = combine_cut_list(sorted_cut_ls)
+#         textbox_text = "Selections:\n" + cut_str  # Don't show the d0 cut text. Luckily it is the first by alphabetical sorting. 
+        
+#         if count == 1:
+#             ax.text(0.05, 0.85, textbox_text, horizontalalignment='left', verticalalignment='center', transform=ax.transAxes)
+
+    def do_linear_fit(self, x_vals, y_vals, x_fit_range, ax=None, count=1, leg_label_text="", legend_str_yequals="", legend_str_xvar="", scale_by_1divpT=False):
+        
+        if ax is None:
+            f, ax = plt.subplots()
+
+        popt, popt_err, pcov = fit_with_line(x_vals, y_vals)
+        intercept_best_fit = popt[0]
+        slope_best_fit = popt[1]
+        
+        if x_fit_range is None:
+            # Get it automatically from the x_vals.
+            x_fit_range = [min(x_vals), max(x_vals)]        
+        x_fit_range = np.linspace(x_fit_range[0], x_fit_range[1], 50)
+        
+        y_fit_vals = linear_func(x_fit_range, intercept_best_fit, slope_best_fit)
+        if (scale_by_1divpT):
+            label_text = r", %s * 1/$p_{T}$ = %.3E/[GeV] + %.3E/([GeV*cm]) * (%s) " % (legend_str_yequals, intercept_best_fit, slope_best_fit, legend_str_xvar)
+        else:
+            label_text = r", %s = %.3E + %.3E/[cm] * (%s) " % (legend_str_yequals, intercept_best_fit, slope_best_fit, legend_str_xvar)
+            
+        final_leg_text = leg_label_text + label_text
+
+        ax.plot(x_fit_range, y_fit_vals, color=color_dict[count], linewidth=0.75, marker="", label=final_leg_text)
+        
+        ax.legend(fontsize=6, loc="upper left", framealpha=1)#, fontsize=text_size_legend)
+        return ax
+
+#     def draw_multiple_graphs(self, x_label="", y_label="", title="", kbin_tup_ls=None, scale_by_1divpT=False, constant_bin="pT", ax=None, count=1, verbose=False, 
+#                    fit_line=True, x_fit_range=None, legend_str_yequals="", legend_str_xvar=""):
+#         """
+#         Draws data points (values of: kinem_x, kinem_y) to an axes object. 
+#         In particular, used for making dpT/pT vs. q*d0 plots, but could probably be generalized.
+        
+#         Parameters
+#         ----------
+#         kinem_x : str
+#             The full name of the kinematic variable plotted on the x-axis.
+#             Should be a key in the label_LaTeX_dict.
+#         kinem_y : str
+#             The full name of the kinematic variable plotted on the y-axis.
+#             Should be a key in the label_LaTeX_dict.
+#         x_label : str
+#             The x-axis label. If no x_label is given, then an automatic one 
+#             is generated based on kinem_x.
+#         y_label : str
+#             The y-axis label. If no y_label is given, then an automatic one 
+#             is generated based on kinem_y.
+#         binning_type : str
+#             Must be either 'eta' or 'pT'. Used for proper labeling of title and legend.
+#         kbin_example : KinematicBin object
+#             This KinematicBin contains all the cut information necessary for proper
+#             legend and axes labeling.
+#         ax : axes object
+#             The axes on which to draw the graph. 
+#             If an axes is not provided, a default one is made.
+#         count : int
+#             A key to a dictionary of colors. 
+#             Values of the dict are color strings, like: 'black', 'red', etc. 
+#         """
+       
+#         kbin_example = kbin_ls[0]
+#         for kb in kbin_ls:
+#             self.draw_graph(x_label=x_label, y_label=y_label, title=title, 
+#                             kbin_example=kbin_example, 
+#                             scale_by_1divpT=scale_by_1divpT, 
+#                             constant_bin=constant_bin, 
+#                             ax=ax, count=count, 
+#                             verbose=verbose, 
+#                             fit_line=fit_line, x_fit_range=x_fit_range, 
+#                             legend_str_yequals=legend_str_yequals, legend_str_xvar=legend_str_xvar)
+
+#-------------------
+
 class GraphLine():
     """
+    OLD VERSION!
+
     One of the lines drawn on a graph. Contains all the info that went into building this line. 
     """
     def __init__(self, x_vals, y_vals, y_err_vals=np.zeros(0)):
@@ -1122,19 +1465,3 @@ class GraphLine():
         # Draw fit on axes.
         # return optimized parameters
         self.popt_linear = None
-
-class KinBin3D():
-    def __init__(self, eta_range, pT_range, qd0_range, n_entries, kinem, fit_stats_dict, pT_stats_ls, qd0_stats_ls):
-        self.eta_range = eta_range
-        self.pT_range = pT_range
-        self.qd0_range = qd0_range
-        self.n_entries = n_entries
-        self.kinem = kinem
-        self.fit_stats_dict = fit_stats_dict
-        self.pT_stats_ls = pT_stats_ls,
-        self.qd0_stats_ls = qd0_stats_ls
-
-    # def get_best_fit_results():
-    #     pass
-        
-    # def 
