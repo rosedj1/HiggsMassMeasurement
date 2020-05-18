@@ -12,7 +12,7 @@ from PyUtils.Utils_Plotting import (change_cmap_bkg_to_white, save_plots_to_outp
 from PyUtils.Utils_Physics import theta2pseudorap, pseudorap2theta, calc_dR, calc_dphi
 from PyUtils.Utils_StatsAndFits import (linear_func, gaussian_func, 
                                         fit_with_gaussian, fit_with_line, 
-                                        iterative_fit_gaus)
+                                        iterative_fit_gaus, prop_err_x_div_y)
 from PyUtils.Utils_Collection_Helpers import weave_lists
 from d0_Utils.d0_fns import (make_binning_array, centers_of_binning_array, get_subset_mask, 
                              make_kinem_subplot, combine_cut_list, calc_x_err_bins)
@@ -1127,7 +1127,7 @@ class GraphLineKinBin3D():
         self.x_err_vals = x_err_vals
         self.y_err_vals = y_err_vals
         
-    def draw_graph(self, x_label="", y_label="", title="", kbin_example=None, scale_by_1divpT=False, constant_bin="pT", ax=None, count=1, verbose=False, 
+    def draw_graph(self, x_label="", y_label="", title="", kbin_ls=None, scale_by_1divpT=False, constant_bin="pT", ax=None, count=1, verbose=False, 
                    fit_line=True, x_fit_range=None, legend_str_yequals="", legend_str_xvar=""):
         """
         Draws data points (values of: kinem_x, kinem_y) to an axes object. 
@@ -1158,48 +1158,41 @@ class GraphLineKinBin3D():
         count : int
             A key to a dictionary of colors. 
             Values of the dict are color strings, like: 'black', 'red', etc. 
-        """
-        if constant_bin not in ["eta", "pT"]:
-            raise ValueError("[ERROR] Wrong `constant_bin` specified. Must be either 'pT' or 'eta'. Stopping now.")
+        """        
+        if constant_bin in "pT":
+            # Should be the case that each KinBin has same pT range.
+            tup_ls = [tuple(kb.pT_range) for kb in kbin_ls]
+        elif constant_bin in "eta":
+            # Similar argument for eta range.
+            tup_ls = [tuple(kb.eta_range) for kb in kbin_ls]
+        assert len(set(tup_ls)) == 1
         
+        kbin_example = kbin_ls[0]
+        eta_range = kbin_example.eta_range
+        pT_range = kbin_example.pT_range
+
         if ax is None:
             f, ax = plt.subplots(figsize=(12.8, 9.6))
             
-        al=1  # alpha=0 is transparent
-        elw=1  # error bar line width
-        ms=1.5  # marker size
-        fontsize_legend = 6
+        # al=1  # alpha=0 is transparent
+        # elw=1  # error bar line width
+        # ms=1.5  # marker size
+        # fontsize_legend = 6
         
-#         if count == 2:
-#             count = 1
-            
         ecolor=color_dict[count]
         mec=color_dict[count]  # Marker edge color.
         mfc=color_dict[count]  # Marker face color.
-        cs=1.5  # cap size
-        mew=0.7  # marker edge width
+        # cs=1.5  # cap size
+        # mew=0.7  # marker edge width
+        markerstyle = "None"  # For ax.errobar() it needs to be "None".
 
         if len(x_label) == 0:
             # Need x_label_base for legend.
             x_label_base = r"avg $q(\mu^{\pm, \mathrm{REC} }) * d_{0}^{ \mathrm{BS} }$ [cm]"
             x_label = x_label_base + "\n" + r"in $(\left| \eta \right|, p_{T}, q*d_{0})$ cube"
-#             x_label = label_LaTeX_dict[kinem_x]["independent_label"]
-#             unit_x = label_LaTeX_dict[kinem_x]["units"]
-#             if len(unit_x) > 0:
-#                 x_label += " [{}]".format(unit_x)
+
         if len(y_label) == 0:
             y_label = r"iter. Gaus fit $\mu( \Delta p_{T} \ / p_{T}^{\mathrm{REC}})$"
-#             y_label  = label_LaTeX_dict[kinem_y]["independent_label"]
-#             y_label += " (iterated Gaus fit mean)"
-#         title = label_LaTeX_dict[binning_type + "1"]["independent_label"] + " Binning"
-#         if binning_type == "eta":
-#             title = r"$\left| $" + title + r"$\right| $"
-        
-        # The "x-errors" are calculated automatically to be 1/2 the distance to the next data point. 
-#         low_x_err, high_x_err = calc_x_err_bins(self.x_vals)
-        
-        eta_range = kbin_example.eta_range
-        pT_range = kbin_example.pT_range
         
         eta_text = r"$%.1f < \left| \eta^{\mathrm{REC}} \right| < %.1f$" % (eta_range[0], eta_range[1])
         pT_text = r"$%.1f < p_{T}^{\mathrm{REC}} < %.1f$ [GeV]" % (pT_range[0], pT_range[1])
@@ -1214,24 +1207,22 @@ class GraphLineKinBin3D():
             pass
         
         if (scale_by_1divpT):
-            avg_pT_for3Dcube = float(list(kbin_example.pT_stats_ls[0])[1])
-            avg_pT_err_for3Dcube = float(list(kbin_example.pT_stats_ls[0])[2])
+            avg_pT_for3Dcubes = np.asarray([kb.pT_stats_ls[0][1] for kb in kbin_ls])#   float(list(kbin_example.pT_stats_ls[0])[1])
+            avg_pT_err_for3Dcubes = np.asarray([kb.pT_stats_ls[0][2] for kb in kbin_ls])#  float(list(kbin_example.pT_stats_ls[0])[2])
             
             pT_scale_text = r" $* \frac{1}{\mathrm{avg}(p_{T}^{\mathrm{REC}})}$"
             y_label += pT_scale_text
-            
-            title += "\n" + r"avg$(p_T) = %.2f \pm %.1E$ [GeV]" % (avg_pT_for3Dcube, avg_pT_err_for3Dcube)
             
             # Propagate errors on Gaus(mu) / avg(pT)
             gaus_mu_vals = np.asarray(self.y_vals)
             gaus_mu_err_vals = np.asarray(self.y_err_vals)
             
-            y_vals, y_err_vals = prop_err_x_div_y(gaus_mu_vals, avg_pT_for3Dcube, gaus_mu_err_vals, avg_pT_err_for3Dcube)
+            y_vals, y_err_vals = prop_err_x_div_y(gaus_mu_vals, avg_pT_for3Dcubes, gaus_mu_err_vals, avg_pT_err_for3Dcubes)
             if (verbose):
                 print("gaus_mu_vals:\n",gaus_mu_vals)
-                print("avg_pT_for3Dcube:\n",avg_pT_for3Dcube)
+                print("avg_pT_for3Dcube:\n",avg_pT_for3Dcubes)
                 print("gaus_mu_err_vals:\n", gaus_mu_err_vals)
-                print("avg_pT_err_for3Dcube:\n",avg_pT_err_for3Dcube)
+                print("avg_pT_err_for3Dcube:\n",avg_pT_err_for3Dcubes)
                 print("y_vals:\n",y_vals)
                 print("y_err_vals:\n",y_err_vals)
         else:
@@ -1245,23 +1236,23 @@ class GraphLineKinBin3D():
         ax.set_ylabel(y_label)
         
         if (fit_line):
-            ax.errorbar(x_vals, y_vals, xerr=self.x_err_vals, yerr=y_err_vals, fmt='o',
+            ax.errorbar(x_vals, y_vals, xerr=self.x_err_vals, yerr=y_err_vals, fmt=markerstyle,
                     color=color_dict[count], 
-                        elinewidth=elw, ms=ms, 
-                        mec=mec, 
-                        capsize=cs, mew=mew,
+                        # elinewidth=elw, ms=ms, 
+                        # mec=mec, 
+                        # capsize=cs, mew=mew,
                         mfc=mfc, ecolor=ecolor)
             ax = self.do_linear_fit(x_vals, y_vals, x_fit_range=x_fit_range, 
                                                     ax=ax, count=count, leg_label_text=label_text, legend_str_yequals=r"$\Delta p_T/p_T$", legend_str_xvar=x_label_base, 
                                                      scale_by_1divpT=scale_by_1divpT)
         else:
-            ax.errorbar(x_vals, y_vals, xerr=self.x_err_vals, yerr=y_err_vals, fmt='o',
+            ax.errorbar(x_vals, y_vals, xerr=self.x_err_vals, yerr=y_err_vals, fmt=markerstyle,
                         color=color_dict[count], 
-                            elinewidth=elw, ms=ms, 
-                            mec=mec, 
-                            capsize=cs, mew=mew,
+                            # elinewidth=elw, ms=ms, 
+                            # mec=mec, 
+                            # capsize=cs, mew=mew,
                             mfc=mfc, ecolor=ecolor, label=label_text)  # This has label text here.
-            ax.legend(fontsize=fontsize_legend, loc="upper left", framealpha=al)#, fontsize=text_size_legend)
+            ax.legend(loc="upper left", framealpha=al)#, fontsize=fontsize_legend)
         
         # Don't show d0 cuts and the cuts of whatever binning type (like "eta") is being used.
 #         tmp_dict = kbin_example.cut_dict.copy()
@@ -1292,60 +1283,16 @@ class GraphLineKinBin3D():
         
         y_fit_vals = linear_func(x_fit_range, intercept_best_fit, slope_best_fit)
         if (scale_by_1divpT):
-            label_text = r", %s * 1/$p_{T}$ = %.3E/[GeV] + %.3E/([GeV*cm]) * (%s) " % (legend_str_yequals, intercept_best_fit, slope_best_fit, legend_str_xvar)
+            label_text = r", %s * 1/avg$(p_{T})$ = %.3E/[GeV] + %.3E/([GeV*cm]) * (%s) " % (legend_str_yequals, intercept_best_fit, slope_best_fit, legend_str_xvar)
         else:
             label_text = r", %s = %.3E + %.3E/[cm] * (%s) " % (legend_str_yequals, intercept_best_fit, slope_best_fit, legend_str_xvar)
             
         final_leg_text = leg_label_text + label_text
 
-        ax.plot(x_fit_range, y_fit_vals, color=color_dict[count], linewidth=0.75, marker="", label=final_leg_text)
+        ax.plot(x_fit_range, y_fit_vals, color=color_dict[count], marker="", label=final_leg_text, alpha=0.7)
         
-        ax.legend(fontsize=6, loc="upper left", framealpha=1)#, fontsize=text_size_legend)
+        ax.legend(loc="upper left", framealpha=1)#, fontsize=text_size_legend)
         return ax
-
-#     def draw_multiple_graphs(self, x_label="", y_label="", title="", kbin_tup_ls=None, scale_by_1divpT=False, constant_bin="pT", ax=None, count=1, verbose=False, 
-#                    fit_line=True, x_fit_range=None, legend_str_yequals="", legend_str_xvar=""):
-#         """
-#         Draws data points (values of: kinem_x, kinem_y) to an axes object. 
-#         In particular, used for making dpT/pT vs. q*d0 plots, but could probably be generalized.
-        
-#         Parameters
-#         ----------
-#         kinem_x : str
-#             The full name of the kinematic variable plotted on the x-axis.
-#             Should be a key in the label_LaTeX_dict.
-#         kinem_y : str
-#             The full name of the kinematic variable plotted on the y-axis.
-#             Should be a key in the label_LaTeX_dict.
-#         x_label : str
-#             The x-axis label. If no x_label is given, then an automatic one 
-#             is generated based on kinem_x.
-#         y_label : str
-#             The y-axis label. If no y_label is given, then an automatic one 
-#             is generated based on kinem_y.
-#         binning_type : str
-#             Must be either 'eta' or 'pT'. Used for proper labeling of title and legend.
-#         kbin_example : KinematicBin object
-#             This KinematicBin contains all the cut information necessary for proper
-#             legend and axes labeling.
-#         ax : axes object
-#             The axes on which to draw the graph. 
-#             If an axes is not provided, a default one is made.
-#         count : int
-#             A key to a dictionary of colors. 
-#             Values of the dict are color strings, like: 'black', 'red', etc. 
-#         """
-       
-#         kbin_example = kbin_ls[0]
-#         for kb in kbin_ls:
-#             self.draw_graph(x_label=x_label, y_label=y_label, title=title, 
-#                             kbin_example=kbin_example, 
-#                             scale_by_1divpT=scale_by_1divpT, 
-#                             constant_bin=constant_bin, 
-#                             ax=ax, count=count, 
-#                             verbose=verbose, 
-#                             fit_line=fit_line, x_fit_range=x_fit_range, 
-#                             legend_str_yequals=legend_str_yequals, legend_str_xvar=legend_str_xvar)
 
 #-------------------
 
