@@ -5,17 +5,17 @@ import math
 sys.path.append('/Users/Jake/HiggsMassMeasurement/')
 sys.path.append('/Users/Jake/HiggsMassMeasurement/d0_Studies/')
 
+import numpy as np
 import matplotlib.pyplot as plt
 
 from vaex_Utils.vaex_dataframes import (vdf_MC_2017_DY, vdf_MC_2017_Jpsi, vdf_MC_2017_DY,
                                         prepare_vaex_df, vaex_apply_masks)
-from d0_Studies.kinematic_bins import (equal_entry_bin_edges_pT,
-                                       equal_entry_bin_edges_pT_mod2,
-                                       equal_entry_bin_edges_pT_sevenfifths,
-                                       equal_entry_bin_edges_pT_sevenfifths_mod,
-                                       equal_entry_bin_edges_eta, 
-                                       equal_entry_bin_edges_eta_mod1, 
-                                       equal_entry_bin_edges_eta_mod2,)
+from d0_Studies.kinematic_bins import (equal_entry_bin_edges_eta_mod1,
+                                        equal_entry_bin_edges_eta_mod2,
+                                        equal_entry_bin_edges_eta_mod1_wholenum,
+                                        equal_entry_bin_edges_pT_sevenfifths_to1000GeV,
+                                        bin_edges_pT_sevenfifths_to1000GeV_wholenum,
+                                        )
 from d0_Utils.d0_dicts import label_LaTeX_dict
 from d0_Utils.d0_fns import make_binning_array
 
@@ -29,17 +29,19 @@ from matplotlib.backends.backend_pdf import PdfPages
 #---------------------------#
 # Samples:
 vdf_concat_MC_2017_DY = prepare_vaex_df(vdf_MC_2017_DY)
+vdf_concat_MC_2017_Jpsi = prepare_vaex_df(vdf_MC_2017_Jpsi)
 
 outdir = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/qd0_hists/"
-filename_base = "MC2017DY_fullstats_sevenfifths_pT__no_qd0cuts_TESTdeploy02"
+# REMEMBER: if you just want to run DY (or J/psi), there is a different script for that!
+filename_base = "MC2017DYandJpsi_wholenumber_pTbin__inclu_qd0"
 overwrite = False
 
 # Binning.
-eta_ls = equal_entry_bin_edges_eta_mod2[:4]#[0.0, 0.2]#
-pT_ls = equal_entry_bin_edges_pT_sevenfifths#equal_entry_bin_edges_pT_mod2
-qd0_bin_info = [-0.02, 0.02, 0.0002]
+eta_ls = equal_entry_bin_edges_eta_mod1_wholenum
+pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum
+qd0_bin_info = [-0.015, 0.015, 0.0002]
 
-x_range = [-0.022, 0.022]
+x_range = [-0.020, 0.020]
 
 dR_max = 0.008
 massZ_minmax_DY = [60, 120]
@@ -62,11 +64,16 @@ qd0_min = qd0_bin_info[0]
 qd0_max = qd0_bin_info[1]
 qd0_range = qd0_bin_info[0:2]
 x_bins, bin_width = make_binning_array(qd0_bin_info)
-    
+
+total_entries = 0
+
+n_pages = len(eta_ls)-1
 n_plots = len(pT_ls) - 1
 rows, cols = ncolsrows_from_nplots(n_plots)
-print("[INFO] Making a {}-page PDF.".format(len(eta_ls)-1))
-print("[INFO] Making {} plots ({} x {} grid per page)".format(n_plots, rows, cols))
+print("Making a {}-page PDF.".format(n_pages))
+print("Making {} plots per page ({} x {} grid).\n".format(n_plots, rows, cols))
+print("|eta| regions:\n{}".format(np.round(eta_ls, decimals=2)))
+print("pT regions:\n{}".format(np.round(pT_ls, decimals=2)))
 #----------------#
 #----- Main -----#
 #----------------#
@@ -77,16 +84,15 @@ extra = make_str_title_friendly(extra)
 extra += ".pdf"
 
 fullpath = os.path.join(outdir, filename_base + extra)
-check_overwrite(fullpath, overwrite=overwrite)    
+check_overwrite(fullpath, overwrite=overwrite)
 
 with PdfPages(fullpath) as pdf:
-    # Loop over eta regions. 
+    # Loop over eta regions.
     for k in range(len(eta_ls)-1):
         eta_min = eta_ls[k]
         eta_max = eta_ls[k+1]
-
         eta_range = [eta_min, eta_max]
-        
+
         # Within this eta region, scan the pT regions. 
         t_start = time.perf_counter()
         f = plt.figure()
@@ -109,27 +115,34 @@ with PdfPages(fullpath) as pdf:
             cuts += r"$%.1f < m_{Z} < %.1f$ GeV,  " % (massZ_min_DY, massZ_max_DY) + "\n"
             cuts += r"$%.1f < m_{J/\psi} < %.1f$ GeV" % (massZ_min_Jpsi, massZ_max_Jpsi)
 
-            all_masks_DY = vaex_apply_masks(vdf_concat_MC_2017_DY, 
-                                            eta_range, pT_range, qd0_range, massZ_minmax_DY, 
-                                            dR_max)
-            ax, bin_vals, bin_edges, stats = make_1D_dist(ax=ax, 
-                                                          data=vdf_concat_MC_2017_DY.evaluate("qd0BS", selection=all_masks_DY),
+            all_masks_DY = vaex_apply_masks(  vdf_concat_MC_2017_DY,   eta_range, pT_range, qd0_range, massZ_minmax_DY,   dR_max)
+            all_masks_Jpsi = vaex_apply_masks(vdf_concat_MC_2017_Jpsi, eta_range, pT_range, qd0_range, massZ_minmax_Jpsi, dR_max)
+
+            ax, bin_vals, bin_edges, stats = make_1D_dist(ax=ax,
+                                                          data=np.append(vdf_concat_MC_2017_DY.evaluate("qd0BS", selection=all_masks_DY), 
+                                                                         vdf_concat_MC_2017_Jpsi.evaluate("qd0BS", selection=all_masks_Jpsi)
+                                                                         ),
                                                           x_limits=x_range,
-                                                          x_bins=x_bins, 
-                                                          x_label=x_label, 
+                                                          x_bins=x_bins,
+                                                          x_label=x_label,
                                                           y_label=y_label,
                                                           title="",
                                                           y_max=-1,
                                                           log_scale=False)
+            total_entries += stats[0]
             ax.text(0.025, 0.78, cuts, horizontalalignment='left', verticalalignment='center', transform=ax.transAxes,
                           bbox=dict(boxstyle='square', facecolor='white', alpha=0.9))
             t_end = time.perf_counter()
         # End pT loop.
-        
+
         plt.tight_layout()
         pdf.savefig()
         plt.close("all")
-        print("[INFO] Page {} made. Time taken: {:.2f} s".format(k+1, t_end - t_start))
+        print("Page {}/{} made. Time taken: {:.2f} s".format(k+1, n_pages, t_end - t_start))
 
     # End eta loop.
-    print("[INFO] PDF made at:\n  {}".format(fullpath))
+    print("PDF made at:\n  {}".format(fullpath))
+
+total_muons_original = vdf_concat_MC_2017_DY.count() + vdf_concat_MC_2017_Jpsi.count()
+print("Total muons expected: {}".format(total_muons_original))
+print("Total muons found, inclusive all regions: {}".format(total_entries))

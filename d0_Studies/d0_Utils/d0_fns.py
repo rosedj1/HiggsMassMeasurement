@@ -209,13 +209,14 @@ def account_for_underoverflow_entries(data, x_min, x_max, bin_edges):
 
     return mod_data
 
-def print_header_message(msg):
-    n = len(msg)
-    octothorpes = (n+12)*'#'  # Who names their variable 'octothorpes'? Honestly?
-    buff = 5*'#'
-    print(octothorpes)
-    print(buff, msg, buff)
-    print(octothorpes)
+def print_header_message(msg, pad_char="-", n_center_pad_chars=5):
+    pad_char_long = pad_char * (len(msg) + n_center_pad_chars*2 + 2)
+    pad_char_short = pad_char * n_center_pad_chars
+    banner = "#{}#".format(pad_char_long)
+    middle = "#{} {} {}#".format(pad_char_short, msg, pad_char_short)
+    print(banner)
+    print(middle)
+    print(banner)
     
 def make_binning_array(lim_ls):
     """
@@ -478,11 +479,11 @@ def find_equal_hist_divisions(bin_edges, bin_vals, K, verbose=False):
 
     return bin_div_ls, bin_stats_dict
 
-def find_equal_hist_regions_unbinned(vals_arr, r, verbose=False, round_to_n_decimals=2):
+# def find_equal_hist_regions_unbinned(vals_arr, r, round_to_n_decimals=2, algo=("normal", -1), verbose=False):
+def find_equal_hist_regions_unbinned(vals_arr, r, algo=("normal", -1), verbose=False):
     """
-    Return the "bin edges" (really just values) which divide the 
-    "histogram" (really just an array) into regions with equal number 
-    of values per region. 
+    Return the "bin edges" (really just specific values of vals_arr) 
+    which divide the array into regions with equal number of values per region. 
     
     Algorithm example:
         Want to split values of 100 entries up into 3 regions. 
@@ -499,26 +500,68 @@ def find_equal_hist_regions_unbinned(vals_arr, r, verbose=False, round_to_n_deci
     r : int
         Number of regions to split histogram into.
         Each region will contain approximately the same number of entries. 
-    round_to_n_decimals : int
+    DELETEround_to_n_decimals : int, optional
         Number of decimals to round bin edge values to. 
+    algo : 2-tuple, optional
+        algo[0] : str
+            The kind of algorithm to run as described below.
+        algo[1] : int 
+            The minimum number of entries per region acceptable. 
+            If `-1` then use the `r` specified.
+            
+        Possible algo's:
+        "normal" : default, split vals_arr up into `r` regions. 
+        "at_least" : request at least algo[1] entries per region, first trying `r` regions. 
+                     If there are fewer than algo[1] entries per region, then try `r-1` regions.
+                     Try recursively until to a minimum of 2 regions. Stops at 2 regions. 
+
+    verbose : bool, optional
+        Gives lots of juicy debugging details.
         
     Returns
     -------
     bin_reg_ls : list
         A list of the edges of each region along the x-axis. 
         The number of entries between regions should have ~same number of entries.
+    r : int
+        A possibly updated number of regions, if algo was set to something other than "normal".
         
     Notes:
         - I used to call them "divisions" but now I call them "regions"
     """
     entries_total = len(vals_arr)
     sorted_vals_arr = np.sort(vals_arr)
-    first_bin = round(sorted_vals_arr[0], round_to_n_decimals)
-    last_bin = round(sorted_vals_arr[-1], round_to_n_decimals)
+    # first_bin = round(sorted_vals_arr[0], round_to_n_decimals)
+    # last_bin = round(sorted_vals_arr[-1], round_to_n_decimals)
+    first_bin = sorted_vals_arr[0]
+    last_bin = sorted_vals_arr[-1]
     bin_reg_ls = [first_bin]  # This is what we are after ultimately. 
 
     # Prepare the expectation of each region, based on sorted_vals_arr.
     entries_per_reg = float(entries_total) / float(r)
+    
+    mode = algo[0]
+    find_at_least_per_reg = algo[1]
+    if (mode in "at_least"):
+        # Make sure User specified desired number of entries per region.
+        assert find_at_least_per_reg > 0
+
+        while entries_per_reg < find_at_least_per_reg:
+            if (r == 2): 
+                msg = "[WARNING] Could not find at least {} entries per region.".format(find_at_least_per_reg)
+                print_header_message(msg)
+                break
+            # There are too few actual entries per region. 
+            # Decrement the number of regions.  
+            msg  = "  Expecting {:.2f} entries per region (using {} regions), ".format(entries_per_reg, r)
+            msg += "but need at least {} entries per region.\n".format(find_at_least_per_reg)
+            msg += "    Decrementing the number of regions from {} to {}".format(r, r-1)
+            r -= 1
+            print(msg)
+            
+            entries_per_reg = float(entries_total) / float(r)
+        print("Splitting array into {} equal-entry regions, {:.2f} entries per region.".format(r, entries_per_reg))
+
     entries_per_reg_roundup = math.ceil(entries_per_reg)
     entries_per_reg_rounddown = math.floor(entries_per_reg)
     
@@ -536,8 +579,8 @@ def find_equal_hist_regions_unbinned(vals_arr, r, verbose=False, round_to_n_deci
         print("entries_total:             {}".format(entries_total))
         print("num_regions_with_more:     {}".format(num_regions_with_more))
         print("num_regions_with_fewer:    {}".format(num_regions_with_fewer))
-        print("first_bin_edge:            {:.2f}".format(first_bin))
-        print("last_bin_edge:             {:.2f}".format(last_bin))
+        print("first_bin_edge:            {:.4f}".format(first_bin))
+        print("last_bin_edge:             {:.4f}".format(last_bin))
         print("entries_per_reg:           {:.2f}".format(entries_per_reg))
         print("entries_per_reg_roundup:   {:.2f}".format(entries_per_reg_roundup))
         print("entries_per_reg_rounddown: {:.2f}".format(entries_per_reg_rounddown))
@@ -568,7 +611,7 @@ def find_equal_hist_regions_unbinned(vals_arr, r, verbose=False, round_to_n_deci
         """
         end_elem = start_elem + entries_to_scan-1
         bin_edge = arr[end_elem]
-        bin_edge = round(bin_edge, round_to_n_decimals)
+        # bin_edge = round(bin_edge, round_to_n_decimals)
         return end_elem, bin_edge
 
     # Did brief testing and concluded that it doesn't matter 
@@ -592,13 +635,14 @@ def find_equal_hist_regions_unbinned(vals_arr, r, verbose=False, round_to_n_deci
         print(c)
         multiple = c.most_common(1)[0][0]
         err_msg = "[ERROR] The same bin edge ({}) was found multiple times.\n".format(multiple)
-        err_msg += "Most likely the value of r ({}) was too large. Try fewer regions.".format(r)
+        err_msg += "Either the value of r ({}) was too large or ".format(r)
+        # err_msg += "the number of decimal places ({}) was too small.".format(round_to_n_decimals)
         raise RuntimeError(err_msg)
 
     if (verbose):
-        print("[INFO]    Final bin region list is:\n{}".format(bin_reg_ls))
+        print("[INFO] Final bin region list is:\n{}\n".format(bin_reg_ls))
 
-    return bin_reg_ls
+    return bin_reg_ls, r
 
 def collapse_eta_bin_edges(bin_ls, round_to_n_decimals=2):
     """

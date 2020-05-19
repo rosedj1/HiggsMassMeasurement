@@ -98,25 +98,23 @@ def prepare_vaex_df(vdf):
     vdf_concat["index"] = np.arange(vdf_concat.count())
     
     print("[INFO] Successfully retrieved vdf_concat!")
-    print("[INFO] vdf_concat has the following columns:\n{}".format(vdf_concat.column_names))
+    print("[INFO] vdf_concat has the following columns:\n{}\n".format(vdf_concat.column_names))
     
     return vdf_concat
 
 def vaex_apply_masks(vdf, eta_minmax, pT_minmax, qd0_minmax, massZ_minmax, dR_max):
+    print("Applying the following cuts to the VDF:")
+    cut_str  = '{} < vdf["eta"].abs()) & (vdf["eta"].abs() < {})\n'.format(eta_minmax[0], eta_minmax[1])
+    cut_str += '{} < vdf["pT"]) & (vdf["pT"] < {})\n'.format(pT_minmax[0], pT_minmax[1])
+    cut_str += '{} < vdf["qd0BS"]) & (vdf["qd0BS"] < {})\n'.format(qd0_minmax[0], qd0_minmax[1])
+    cut_str += '{} < vdf["massZ"]) & (vdf["massZ"] < {})\n'.format(massZ_minmax[0], massZ_minmax[1])
+    cut_str += 'vdf["delta_R"] < {})'.format(dR_max)
+    print(cut_str)
     
-    eta_min = eta_minmax[0]
-    eta_max = eta_minmax[1]
-    pT_min = pT_minmax[0]
-    pT_max = pT_minmax[1]
-    qd0_min = qd0_minmax[0]
-    qd0_max = qd0_minmax[1]
-    massZ_min = massZ_minmax[0]
-    massZ_max = massZ_minmax[1]
-    
-    mask_eta = (eta_min < vdf["eta"].abs()) & (vdf["eta"].abs() < eta_max)
-    mask_pT = (pT_min < vdf["pT"]) & (vdf["pT"] < pT_max)
-    mask_qd0 = (qd0_min < vdf["qd0BS"]) & (vdf["qd0BS"] < qd0_max)
-    mask_massZ = (massZ_min < vdf["massZ"]) & (vdf["massZ"] < massZ_max)
+    mask_eta = (eta_minmax[0] < vdf["eta"].abs()) & (vdf["eta"].abs() < eta_minmax[1])
+    mask_pT = (pT_minmax[0] < vdf["pT"]) & (vdf["pT"] < pT_minmax[1])
+    mask_qd0 = (qd0_minmax[0] < vdf["qd0BS"]) & (vdf["qd0BS"] < qd0_minmax[1])
+    mask_massZ = (massZ_minmax[0] < vdf["massZ"]) & (vdf["massZ"] < massZ_minmax[1])
     mask_dR = (vdf["delta_R"] < dR_max)
 
     all_masks = mask_eta & mask_pT & mask_qd0 & mask_massZ & mask_dR

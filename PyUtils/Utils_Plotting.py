@@ -1,14 +1,15 @@
 import os
 import math
+import sys
+sys.path.append('/Users/Jake/')
+sys.path.append('/Users/Jake/HiggsMassMeasurement/')
+sys.path.append('/Users/Jake/HiggsMassMeasurement/d0_Studies/')
 import vaex
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from matplotlib.colors import ListedColormap
-import sys
-sys.path.append('/Users/Jake/')
-sys.path.append('/Users/Jake/HiggsMassMeasurement/')
-sys.path.append('/Users/Jake/HiggsMassMeasurement/d0_Studies/')
+
 from PyUtils.Utils_Files import makeDirs, make_str_title_friendly
 from d0_Utils.d0_fns import account_for_underoverflow_entries
 
@@ -104,7 +105,8 @@ def make_1D_dist(ax, data, x_limits, x_bins, x_label, y_label, title, y_max=-1, 
     ax.set_title(title)#, fontsize=textsize_title)
     
     ax.grid(False)
-                                
+
+    # Return the same length of data, just clip it (under/overflow bins).             
     mod_data = account_for_underoverflow_entries(data, x_limits[0], x_limits[1], x_bins)
                                 
     if (log_scale): ax.set_yscale('log')
@@ -396,10 +398,10 @@ def ncolsrows_from_nplots(n_plots, force_ncols=0):
     Return the number of rows and columns to be shown on a 
     PDF page, based on the number of plots on that page.
     
-    When n_plots <= 8, make a n_plots x 2 grid
+    When n_plots <= 8, make up to  n_plots/2 x 2 grid
     (except when n_plots == 1, then make 1 x 1).
-    When 9 <= n_plots <= 15, make 3 x 3 grid.
-    When 16 <= n_plots <= 20, make 4 x 4 grid.
+    When 9 <= n_plots <= 15, make a n_plots/3 x 3 grid.
+    When 16 <= n_plots <= 20, make a n_plots/4 x 4 grid.
     
     Parameters
     ----------
