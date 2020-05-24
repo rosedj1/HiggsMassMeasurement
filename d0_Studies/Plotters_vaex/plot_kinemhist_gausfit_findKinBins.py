@@ -254,18 +254,6 @@ for k in range(len(eta_ls)-1):
                 print("For Jpsi: massZ_minmax_Jpsi",massZ_minmax_Jpsi)
                 print("dR_max",dR_max)
 
-                # try:
-                #     del vdf_MC_2017_DY
-                #     del vdf_MC_2017_Jpsi
-                #     del vdf_concat_MC_2017_DY
-                #     del vdf_concat_MC_2017_Jpsi
-                # except NameError:
-                #     pass
-
-                # from vaex_Utils.vaex_dataframes import vdf_MC_2017_DY, vdf_MC_2017_Jpsi
-
-                # vdf_concat_MC_2017_DY = prepare_vaex_df(vdf_MC_2017_DY)
-                # vdf_concat_MC_2017_Jpsi = prepare_vaex_df(vdf_MC_2017_Jpsi)
                 # Prepare masks.
                 mask_eta_DY = (eta_min < np.abs(eta_arr_DY)) & (np.abs(eta_arr_DY) < eta_max)
                 mask_pT_DY = (pT_min < pT_arr_DY) & (pT_arr_DY < pT_max)
@@ -300,17 +288,6 @@ for k in range(len(eta_ls)-1):
                 pT_this3Dcube_stats_ls = get_stats_1Dhist(pT_vals_this3Dcube)
                 print("pT_this3Dcube_stats_ls:",pT_this3Dcube_stats_ls)
 
-                # These masks get fucked up...
-                # all_masks_DY = vaex_apply_masks(vdf_concat_MC_2017_DY,   
-                #                                 eta_range, pT_range, qd0_range, 
-                #                                 massZ_minmax_DY, dR_max)
-                # all_masks_Jpsi = vaex_apply_masks(vdf_concat_MC_2017_Jpsi, 
-                #                                   eta_range, pT_range, qd0_range, 
-                #                                   massZ_minmax_Jpsi, dR_max)
-                # print("all_masks_DY.sum(),", all_masks_DY.sum())
-                # print("all_masks_DY.count(),", all_masks_DY.count())
-                # print("all_masks_Jpsi.sum(),", all_masks_Jpsi.sum())
-                # print("all_masks_Jpsi.count(),", all_masks_Jpsi.count())
                 num_passed_DY = len(selected_muons_DY)
                 num_passed_Jpsi = len(selected_muons_Jpsi)
                 sum_mask_DY = np.sum(all_masks_DY)
@@ -337,7 +314,6 @@ for k in range(len(eta_ls)-1):
                 data = np.concatenate((selected_muons_DY, selected_muons_Jpsi))
 
                 print("len(data) after concatenation:,",len(data))
-                print_header_message("!!!ABOUT TO MAKE PLOT!!!")
                 # Plot the kinem hist.
                 ax, bin_vals, bin_edges, stats = make_1D_dist(
                                                     ax=ax, 

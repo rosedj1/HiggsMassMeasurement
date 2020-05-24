@@ -19,20 +19,14 @@
 import os
 import sys
 import pickle
-sys.path.append('/Users/Jake/HiggsMassMeasurement/')
-sys.path.append('/Users/Jake/HiggsMassMeasurement/d0_Studies/')
 
 import numpy as np
 
 from vaex_Utils.vaex_dataframes import (vdf_MC_2017_DY, vdf_MC_2017_Jpsi, vdf_MC_2017_DY,
                                         prepare_vaex_df, vaex_apply_masks)
 from d0_Utils.d0_fns import find_equal_hist_regions_unbinned
-from d0_Studies.kinematic_bins import (equal_entry_bin_edges_eta_mod1,
-                                        equal_entry_bin_edges_eta_mod2,
-                                        equal_entry_bin_edges_eta_mod1_wholenum,
-                                        equal_entry_bin_edges_pT_sevenfifths_to1000GeV,
-                                        bin_edges_pT_sevenfifths_to1000GeV_wholenum,
-                                        )
+from d0_Studies.kinematic_bins import (equal_entry_bin_edges_eta_mod1_wholenum,
+                                        bin_edges_pT_sevenfifths_to1000GeV_wholenum)
 from PyUtils.Utils_Files import makeDirs, make_str_title_friendly, check_overwrite
 
 #---------------------------#
@@ -42,22 +36,22 @@ from PyUtils.Utils_Files import makeDirs, make_str_title_friendly, check_overwri
 vdf_concat_MC_2017_DY = prepare_vaex_df(vdf_MC_2017_DY)
 vdf_concat_MC_2017_Jpsi = prepare_vaex_df(vdf_MC_2017_Jpsi)
 
-outdir = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/find_best_binning__eta_pT_qd0/"
+# outdir = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/find_best_binning__eta_pT_qd0/"
+outdir = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/Pickles/"
 
-filename_base = "fullscan_12reg_3000perreg"
+filename_base = "test01_sepscanspersample"
 write_to_pickle = True
 overwrite = False
 
 # Binning.
-eta_ls = equal_entry_bin_edges_eta_mod1_wholenum
-pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum
-# eta_ls = [1.4, 1.6]
-# pT_ls = [30.0, 40.0, 50.0]
+# eta_ls = equal_entry_bin_edges_eta_mod1_wholenum
+# pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum
+eta_ls = [1.4, 1.6]
+pT_ls = [30.0, 40.0, 50.0]
 qd0_limits = [-0.015, 0.015]
 
-r = 12  # Number of regions to split each q*d0 region into. 
+r = 6  # Number of regions to split each q*d0 region into. 
 algo = ("at_least", 3000)
-# round_to_n_decimals = 5
 verbose = True
 
 dR_max = 0.008
@@ -84,7 +78,9 @@ print("pT regions:\n  {}\n".format(np.round(pT_ls, decimals=2)))
 #----- Main -----#
 #----------------#
 # Make only 1 PDF. Each page is a different eta cut.
-extra   = "__{:.1f}_eta_{:.1f}".format(min(eta_ls), max(eta_ls))
+extra = "_{}reg".format(r)
+extra  += "with{}perreg".format(algo[1])
+extra  += "__{:.1f}_eta_{:.1f}".format(min(eta_ls), max(eta_ls))
 extra  += "__{:.1f}_pT_{:.1f}_GeV".format(min(pT_ls), max(pT_ls))
 extra = make_str_title_friendly(extra)
 extra += ".csv"
@@ -141,7 +137,7 @@ with open(fullpath, "w") as myfile:
                                             r=r, 
                                             verbose=verbose,
                                             algo=algo)
-                                            # round_to_n_decimals=round_to_n_decimals)
+                                            )
 
             # Append to dict.
             pT_key_str = "pT_bin_left_edge={}".format(pT_min)

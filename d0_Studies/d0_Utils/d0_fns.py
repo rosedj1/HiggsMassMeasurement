@@ -523,6 +523,7 @@ def find_equal_hist_regions_unbinned(vals_arr, r, algo=("normal", -1), verbose=F
     bin_reg_ls : list
         A list of the edges of each region along the x-axis. 
         The number of entries between regions should have ~same number of entries.
+        If 
     r : int
         A possibly updated number of regions, if algo was set to something other than "normal".
         
@@ -530,6 +531,8 @@ def find_equal_hist_regions_unbinned(vals_arr, r, algo=("normal", -1), verbose=F
         - I used to call them "divisions" but now I call them "regions"
     """
     entries_total = len(vals_arr)
+    if entries_total == 0:
+        return [None, None] , -1
     sorted_vals_arr = np.sort(vals_arr)
     # first_bin = round(sorted_vals_arr[0], round_to_n_decimals)
     # last_bin = round(sorted_vals_arr[-1], round_to_n_decimals)
@@ -553,8 +556,8 @@ def find_equal_hist_regions_unbinned(vals_arr, r, algo=("normal", -1), verbose=F
                 break
             # There are too few actual entries per region. 
             # Decrement the number of regions.  
-            msg  = "  Expecting {:.2f} entries per region (using {} regions), ".format(entries_per_reg, r)
-            msg += "but need at least {} entries per region.\n".format(find_at_least_per_reg)
+            msg  = "  Found {:.2f} entries per region (using {} regions), ".format(entries_per_reg, r)
+            msg += "but require at least {} entries per region.\n".format(find_at_least_per_reg)
             msg += "    Decrementing the number of regions from {} to {}".format(r, r-1)
             r -= 1
             print(msg)
@@ -628,16 +631,19 @@ def find_equal_hist_regions_unbinned(vals_arr, r, algo=("normal", -1), verbose=F
         bin_reg_ls.append(bin_edge)
         elem += 1  # Must not include this element again. 
               
-    # I think this will only trigger if r == entries_total, which is absurd.
+    # I think this will only trigger if r == entries_total.
+    # Can happen when the number of entries is VERY small. 
     if len(set(bin_reg_ls)) != len(bin_reg_ls):
         from collections import Counter
         c = Counter(bin_reg_ls)
         print(c)
         multiple = c.most_common(1)[0][0]
-        err_msg = "[ERROR] The same bin edge ({}) was found multiple times.\n".format(multiple)
-        err_msg += "Either the value of r ({}) was too large or ".format(r)
-        # err_msg += "the number of decimal places ({}) was too small.".format(round_to_n_decimals)
-        raise RuntimeError(err_msg)
+        print(
+            f"[WARNING] The same bin edge ({multiple}) was found multiple times.\n"
+            f"          Using an ad hoc solution: duplicating first bin and shifting it left a little."
+        )
+        bin_reg_ls[0] = bin_reg_ls[0] - 1E-14 * abs(bin_reg_ls[0])
+        # raise RuntimeError(err_msg)
 
     if (verbose):
         print("[INFO] Final bin region list is:\n{}\n".format(bin_reg_ls))

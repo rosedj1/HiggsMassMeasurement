@@ -156,8 +156,8 @@ def get_stats_1Dhist(data):
         n = len(data)
         mean = np.mean(data)
         stdev = np.std(data)
-    mean_err = np.abs(stdev) / np.sqrt(n)
-    stdev_err = np.abs(stdev) / np.sqrt(2*n)
+    mean_err = np.abs(stdev) / float(np.sqrt(n))
+    stdev_err = np.abs(stdev) / float(np.sqrt(2*n))
     
     stats = [n, mean, mean_err, stdev, stdev_err]
 
@@ -292,7 +292,7 @@ def make_stats_legend_for_gaus_fit(popt, popt_err):
     leg_label  = r"Fit $C$ = {:4.3E} $\pm$ {:4.3E}".format(coeff, coeff_err) + "\n"
     leg_label += r"Fit $\mu$ = {:4.3E} $\pm$ {:4.3E}".format(mean, mean_err) + "\n"
     leg_label += r"Fit $\sigma$ = {:4.3E} $\pm$ {:4.3E}".format(stdev, stdev_err)
-
+    
     return leg_label
                                 
 def hist_y_label(bin_width, unit):
@@ -369,7 +369,7 @@ def make_2by2_subplots_for_ratioplots(fig_width=28, fig_height=16):
     
     magnification = 2.5  # How many times taller the main plot is relative to ratio plot.
     plot_width = (1 - x_left - leftright_spacing - buffer_on_right) * 0.5
-    plot_ratio_height = (1 - y_bottom - updown_spacing - buffer_on_top) / (2 * (magnification + 1))
+    plot_ratio_height = (1 - y_bottom - updown_spacing - buffer_on_top) / float((2 * (magnification + 1)))
     plot_height = magnification * plot_ratio_height
 
     # You can derive these formulae pretty easily. Just make a diagram.

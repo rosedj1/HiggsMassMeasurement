@@ -4,9 +4,12 @@ A file to store vaex functions and filepaths.
 import vaex  # The holy grail.
 import numpy as np
 
-vdf_MC_2016_DY = vaex.open("/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/NTuples/MC/2016/MC_2016_DY.hdf5")
-vdf_MC_2017_DY = vaex.open("/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/NTuples/MC/2017/MC_2017_DY.hdf5")
-vdf_MC_2017_Jpsi = vaex.open("/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/NTuples/MC/2017/MC_2017_Jpsi.hdf5")
+# vdf_MC_2016_DY = vaex.open("/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/NTuples/MC/2016/MC_2016_DY.hdf5")
+# vdf_MC_2017_DY = vaex.open("/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/NTuples/MC/2017/MC_2017_DY.hdf5")
+# vdf_MC_2017_Jpsi = vaex.open("/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/NTuples/MC/2017/MC_2017_Jpsi.hdf5")
+vdf_MC_2016_DY = vaex.open("/ufrc/avery/rosedj1/HiggsMassMeasurement/Samples/MC_2016/MC_2016_DY.hdf5")
+vdf_MC_2017_DY = vaex.open("/ufrc/avery/rosedj1/HiggsMassMeasurement/Samples/MC_2017/MC_2017_DY.hdf5")
+vdf_MC_2017_Jpsi = vaex.open("/ufrc/avery/rosedj1/HiggsMassMeasurement/Samples/MC_2017/MC_2017_Jpsi.hdf5")
 
 def df_drop_cols(df, col_keep_ls, inplace=True):
     import pandas
@@ -104,12 +107,14 @@ def prepare_vaex_df(vdf):
 
 def vaex_apply_masks(vdf, eta_minmax, pT_minmax, qd0_minmax, massZ_minmax, dR_max):
     print("Applying the following cuts to the VDF:")
-    cut_str  = '{} < vdf["eta"].abs()) & (vdf["eta"].abs() < {})\n'.format(eta_minmax[0], eta_minmax[1])
-    cut_str += '{} < vdf["pT"]) & (vdf["pT"] < {})\n'.format(pT_minmax[0], pT_minmax[1])
-    cut_str += '{} < vdf["qd0BS"]) & (vdf["qd0BS"] < {})\n'.format(qd0_minmax[0], qd0_minmax[1])
-    cut_str += '{} < vdf["massZ"]) & (vdf["massZ"] < {})\n'.format(massZ_minmax[0], massZ_minmax[1])
-    cut_str += 'vdf["delta_R"] < {})'.format(dR_max)
-    print(cut_str)
+    cut_str  = (
+        f'{eta_minmax[0]} < vdf["eta"].abs()) & (vdf["eta"].abs() < {eta_minmax[1]})\n'
+        f'{pT_minmax[0]} < vdf["pT"]) & (vdf["pT"] < {pT_minmax[1]})\n'
+        f'{qd0_minmax[0]} < vdf["qd0BS"]) & (vdf["qd0BS"] < {qd0_minmax[1]})\n'
+        f'{massZ_minmax[0]} < vdf["massZ"]) & (vdf["massZ"] < {massZ_minmax[1]})\n'
+        f'vdf["delta_R"] < {dR_max})'
+        )
+    print(cut_str + "\n")
     
     mask_eta = (eta_minmax[0] < vdf["eta"].abs()) & (vdf["eta"].abs() < eta_minmax[1])
     mask_pT = (pT_minmax[0] < vdf["pT"]) & (vdf["pT"] < pT_minmax[1])

@@ -21,6 +21,7 @@ def copyFile(inDir,fileName,outDir):
 def makeDirs(dir_):                       
     """
     If the directory (dir_) does not exist, then make it. 
+    Makes directories recursively.
     """
     if not os.path.exists(dir_):          
         os.makedirs(os.path.abspath(dir_))
