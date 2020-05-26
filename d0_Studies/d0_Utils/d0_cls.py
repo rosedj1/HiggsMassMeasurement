@@ -1026,9 +1026,9 @@ class KinBin3D():
         self.n_entries = n_entries
         self.kinem = kinem
         self.fit_stats_dict = fit_stats_dict
-        self.fit_type = fit_type,
-        self.pT_stats_ls = pT_stats_ls,
-        self.qd0_stats_ls = qd0_stats_ls,
+        self.fit_type = fit_type
+        self.pT_stats_ls = pT_stats_ls
+        self.qd0_stats_ls = qd0_stats_ls
         self.cut_str=cut_str
         
 class KinBin3DOrganizer():

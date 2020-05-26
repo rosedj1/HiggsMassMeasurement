@@ -39,10 +39,11 @@
 # AUTHOR:  Jake Rosenzweig
 # UPDATED: 2020-05-26
 """
+import time
+t_prog_start = time.perf_counter()
 import os
 import sys
 import math
-import time
 import pickle
 import ROOT
 # import argparse 
@@ -83,15 +84,14 @@ vdf_concat_MC_2017_DY = prepare_vaex_df(vdf_MC_2017_DY)
 vdf_concat_MC_2017_Jpsi = prepare_vaex_df(vdf_MC_2017_Jpsi)
 
 # Dictionary which contains equal-entry q*d0 bin edges.
-# inpath_equalentry_pickl_dict = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pkl_and_csv/20200526_quarterstats_12regwith2000perreg__0p0_eta_0p4__5p0_pT_1000p0_GeV.pkl"
-inpath_equalentry_pickl_dict = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pkl_and_csv/20200526_lowstats_endcap_6regwith3000perreg__2p0_eta_2p4__38p0_pT_1000p0_GeV.pkl"
+inpath_equalentry_pickl_dict = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pkl_and_csv/20200526_fullstats_12regwith3000perreg__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
 
 # Outgoing dirs. 
 outdir_plots = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/Plots/hists_dpToverpT/"
 outdir_kinbin_pkl = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pkl_and_csv/kinbins/"
 
 # Filename of outdict is automatic.
-overwrite = False
+overwrite = True
 verbose = True
 skip_bad_fit = True
 do_unbinned_fit = True
@@ -180,7 +180,6 @@ kinbin_dict = {
 #--- Plot Settings ---#
 #---------------------#
 ROOT.RooMsgService.instance().setStreamStatus(1,False)
-plt.style.use("/home/rosedj1/.config/matplotlib/mpl_configdir/stylelib/grid_multiple_plots_python2.mplstyle")
 
 x_bins, bin_width = make_binning_array(x_bin_info)
 
@@ -261,6 +260,7 @@ for sample_name in sample_name_ls:
         # For each eta range, make a pdf. 
         filename_base = filename.split("__")[0]
         extra  = (
+            f"__{sample_name}"
             f"__{eta_min:.1f}_eta_{eta_max:.1f}"
             f"__{min(pT_ls):.1f}_pT_{max(pT_ls):.1f}_GeV"
         )
@@ -300,6 +300,12 @@ for sample_name in sample_name_ls:
                 print("qd0_ls,",qd0_ls)
 
                 rows, cols = get_grid_info(qd0_ls)
+
+                if ((rows * cols) > 6) and (iter_gaus[1] > 3):
+                    # Lots of fit info will be printed to legend. Shrink font. 
+                    plt.style.use("/home/rosedj1/.config/matplotlib/mpl_configdir/stylelib/grid_morethan6plots_manyiters.mplstyle")
+                else:
+                    plt.style.use("/home/rosedj1/.config/matplotlib/mpl_configdir/stylelib/grid_multiple_plots.mplstyle")
 
                 # Make a kinbin list for this (eta, pT) region.
                 kinbin3D_ls = []
@@ -515,13 +521,15 @@ for sample_name in sample_name_ls:
 print("All PDFs created.")
 
 with open(fullpath_kinbin_ls_pkl,'wb') as output:
-    pickle.dump(kinbin3D_ls, output, protocol=2)
+    pickle.dump(kinbin3D_ls_OLD, output, protocol=2)
 print("[INFO] KinBin3D list written to pickle file:\n{}\n".format(fullpath_kinbin_ls_pkl))
 
 with open(fullpath_kinbin_dict_pkl,'wb') as output:
     pickle.dump(kinbin_dict, output, protocol=2)
 print("[INFO] KinBin3D dict written to pickle file:\n{}\n".format(fullpath_kinbin_dict_pkl))
-    
+
+t_prog_end = time.perf_counter()
+print(f"[INFO] Total time taken: {t_prog_end - t_prog_start} sec.")
 # total_muons_original = vdf_concat_MC_2017_DY.count() + vdf_concat_MC_2017_Jpsi.count()
 # total_muons_found = total_num_muons_DY + total_num_muons_Jpsi
 # perdif = perc_diff(total_muons_found, total_muons_original)

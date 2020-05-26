@@ -46,7 +46,10 @@ def check_overwrite(outfile, overwrite=False):
         raise RuntimeError(err_msg)
     
 def make_str_title_friendly(cut_str, keep_whitespace=False):
+    title = title.replace('-13','muPlus')
+    title = title.replace('+13','muMinus')
     title = cut_str.replace('&&','_')
+    title = cut_str.replace('&','_')
     title = title.replace('<','_lt_')
     title = title.replace('>','_gt_')
     if not (keep_whitespace): 
@@ -57,8 +60,7 @@ def make_str_title_friendly(cut_str, keep_whitespace=False):
     title = title.replace('-','neg')
     title = title.replace('+','pos')
     title = title.replace('||','or')
-    title = title.replace('-13','muPlus')
-    title = title.replace('+13','muMinus')
+    title = title.replace('|','or')
     return title
                   
 def root2feather(infile_root, outfile_fullpath):

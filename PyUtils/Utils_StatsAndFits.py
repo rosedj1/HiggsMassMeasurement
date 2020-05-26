@@ -570,6 +570,11 @@ def prop_err_x_div_y(x, y, dx, dy):
 
     *** This function been verified by an online calculator.
     """
-    r = x / float(y)
-    dr = np.sqrt((dx / float(y))**2 + (x / float(y)**2 * dy)**2)
+    x = np.array(x, dtype=float)
+    y = np.array(y, dtype=float)
+    dx = np.array(dx, dtype=float)
+    dy = np.array(dy, dtype=float)
+    
+    r = x / y
+    dr = np.sqrt((dx / y)**2 + (x / y**2 * dy)**2)
     return r, dr

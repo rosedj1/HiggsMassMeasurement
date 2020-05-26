@@ -63,18 +63,18 @@ outdir = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pkl_and_csv/"
 # overwrite = args.overwrite
 # verbose = args.verbose
 # filename_base = "20200526_fullstats"
-filename_base = "20200526_lowstats_endcap"
+filename_base = "20200526_test01_shrink_legend_font"
 overwrite = False
 verbose = True
 
 # Binning.
-eta_ls = equal_entry_bin_edges_eta_mod1_wholenum[9:]
-pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum[6:]
+eta_ls = equal_entry_bin_edges_eta_mod1_wholenum[:2]
+pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum[:5]
 # eta_ls = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
 # pT_ls = [5.0, 7.0, 10.0, 14.0, 20.0, 27.0, 38.0]
 qd0_limits = [-0.015, 0.015]
 
-r = 6  # Number of regions to split each q*d0 region into. 
+r = 12  # Number of regions to split each q*d0 region into. 
 algo = ("at_least", 3000)
 
 dR_max = 0.008
