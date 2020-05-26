@@ -1013,15 +1013,23 @@ class KinBinOrganizer():
             self.fit_mean_err_ls.append(kb.stats_dict[kinem]['fit_stats']['mean_err_ls'][-1])
 
 class KinBin3D():
-    def __init__(self, eta_range, pT_range, qd0_range, n_entries, kinem, fit_stats_dict, pT_stats_ls, qd0_stats_ls):
+    def __init__(self, eta_range, pT_range, qd0_range, 
+                 n_entries, kinem, fit_stats_dict, fit_type, 
+                 pT_stats_ls, qd0_stats_ls, cut_str):
+        """
+        fit_type : str
+            Either "binned" or "unbinned"
+        """
         self.eta_range = eta_range
         self.pT_range = pT_range
         self.qd0_range = qd0_range
         self.n_entries = n_entries
         self.kinem = kinem
         self.fit_stats_dict = fit_stats_dict
+        self.fit_type = fit_type,
         self.pT_stats_ls = pT_stats_ls,
-        self.qd0_stats_ls = qd0_stats_ls
+        self.qd0_stats_ls = qd0_stats_ls,
+        self.cut_str=cut_str
         
 class KinBin3DOrganizer():
     """

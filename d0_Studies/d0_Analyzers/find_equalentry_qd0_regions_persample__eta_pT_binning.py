@@ -1,16 +1,16 @@
 """
 # Purpose: 
-#   Find the bin edges of q*d0 distributions such that all regions 
-#   of the dist. have equal entries.
-#   Each q*d0 distribution will have eta and pT cuts applied. 
-#   User specifies the number of equal-entry regions to split each dist up into.
+#   Cycle over eta, pT, and q*d0 bins. 
+#   Within each "cube", look at all q*d0 values. 
+#   Choose the q*d0 values which split the q*d0 distribution 
+#   up into `r` equal-entry regions (r is chosen by the User).
 #   Bin edges of equal-entry regions are recorded in a .csv file, 
-#   and a .pkl file. A dictionary is saved to the .pkl. 
+#   and a dictionary saved in a .pkl file.
 # Syntax:  
+#   python script.py > output.txt  (recommended)
 #   python script.py 
-#   python script.py > output.txt
 # Notes:   
-#   This code runs on DY, J/psi, and DY+J/psi, treating each individually.
+#   This code runs on DY, J/psi, and DY+J/psi, treating each sample individually.
 #   User puts the number of regions (r) to split each q*d0 distribution, 
 #   such that each region will have equal entries in it.
 #   User can also request that "at_least" N entries are found
@@ -19,11 +19,13 @@
 #   Make sure to check all the parameters in "User Parameters".
 #   Should be used with Python 3.X.
 # Author:  Jake Rosenzweig
-# Updated: 2020-05-24
+# Updated: 2020-05-25
 """
 import os
 import sys
+import math
 import pickle
+import argparse
 
 import numpy as np
 
@@ -32,8 +34,20 @@ from vaex_Utils.vaex_dataframes import (vdf_MC_2017_DY, vdf_MC_2017_Jpsi, vdf_MC
 from d0_Utils.d0_fns import find_equal_hist_regions_unbinned
 from d0_Studies.kinematic_bins import (equal_entry_bin_edges_eta_mod1_wholenum,
                                         bin_edges_pT_sevenfifths_to1000GeV_wholenum)
-from PyUtils.Utils_Files import makeDirs, make_str_title_friendly, check_overwrite
+from PyUtils.Utils_Files import makeDirs, make_str_title_friendly, check_overwrite      
 
+
+# def ParseOption():
+#     parser = argparse.ArgumentParser(description='submit all')
+#     parser.add_argument('--pklfilename', dest='filename_base', type=str, help='') 
+#     parser.add_argument('--verbose', dest='verbose', type=int, default=1, help='')
+#     parser.add_argument('--overwrite', dest='overwrite', type=int, default=0, help='')  
+    
+#     args = parser.parse_args()                                                                                         
+#     return args          
+                                                                                                         
+# args = ParseOption()                    
+                                                                     
 #---------------------------#
 #----- User Parameters -----#
 #---------------------------#
@@ -45,16 +59,19 @@ vdf_concat_MC_2017_Jpsi = prepare_vaex_df(vdf_MC_2017_Jpsi)
 # Where to save pkl and csv files.
 outdir = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pkl_and_csv/"
 
-filename_base = "fullscan_individ_and_comb_samples"
-write_to_pickle = True
+# filename_base = "test05_individsamples_lowstats"
+# filename_base = args.filename_base
+# overwrite = args.overwrite
+# verbose = args.verbose
+filename_base = "20200525_fullstats"
 overwrite = False
 verbose = True
 
 # Binning.
 eta_ls = equal_entry_bin_edges_eta_mod1_wholenum
 pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum
-# eta_ls = [1.4, 1.6]
-# pT_ls = [30.0, 40.0, 50.0]
+# eta_ls = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
+# pT_ls = [5.0, 7.0, 10.0, 14.0, 20.0, 27.0, 38.0]
 qd0_limits = [-0.015, 0.015]
 
 r = 12  # Number of regions to split each q*d0 region into. 
@@ -97,7 +114,10 @@ fullpath_pickle = fullpath_csv.replace(".csv", ".pkl")
 check_overwrite(fullpath_csv, overwrite=overwrite)
 check_overwrite(fullpath_pickle, overwrite=overwrite)
 
-equal_entry_binedge_dict = {}
+equal_entry_binedge_dict = {
+    "all_eta_bins" : eta_ls,
+    "all_pT_bins" : pT_ls,
+}
 
 with open(fullpath_csv, "w") as myfile:
     myfile.write(f"all_eta_bins : {eta_ls}\n")
@@ -114,7 +134,7 @@ with open(fullpath_csv, "w") as myfile:
 
         # Column names.
         col_str  = (
-            f"{'sample':<7}, {'bins_found':<2}, {'bins_wanted':<2}, {'muons_per_reg':<10}, "
+            f"{'sample':<7}, {'bins_found':<10}, {'bins_wanted':<11}, {'muons_per_reg':<13}, "
             f"\teta_range,\t\tpT_range,\t\tq*d0_bins\n"
         )
         myfile.write(col_str)
@@ -141,7 +161,7 @@ with open(fullpath_csv, "w") as myfile:
             assert vdf_concat_MC_2017_Jpsi.count() == n_tot_Jpsi
 
             if (verbose):
-                print(f"pT_loop_count: {count}/{max_count}")
+                print(f"pT_loop_count: {count}/{max_count-1}")
                 print(f"  eta_range={eta_range}")
                 print(f"  pT_range={pT_range}")
 
@@ -187,11 +207,11 @@ with open(fullpath_csv, "w") as myfile:
             n_muons_Jpsi = len(qd0_arr_sel_Jpsi)
             n_muons_comb = len(qd0_arr_sel_comb)
             info  = (
-                f"{'DY':<7}, {r_updated_DY:<2}, {r:<2}, {n_muons_DY // r_updated_DY:<10}, "
+                f"{'DY':<7}, {r_updated_DY:<10}, {r:<11}, {math.ceil(n_muons_DY / r_updated_DY):<13}, "
                 f"\t{eta_range},\t\t{pT_range},\t\t{equalentry_binedge_ls_DY}\n"
-                f"{'Jpsi':<7}, {r_updated_Jpsi:<2}, {r:<2}, {n_muons_Jpsi // r_updated_Jpsi:<10}, "
+                f"{'Jpsi':<7}, {r_updated_Jpsi:<10}, {r:<11}, {math.ceil(n_muons_Jpsi / r_updated_Jpsi):<13}, "
                 f"\t{eta_range},\t\t{pT_range},\t\t{equalentry_binedge_ls_Jpsi}\n"
-                f"{'DY+Jpsi':<7}, {r_updated_comb:<2}, {r:<2}, {n_muons_comb // r_updated_comb:<10}, "
+                f"{'DY+Jpsi':<7}, {r_updated_comb:<10}, {r:<11}, {math.ceil(n_muons_comb / r_updated_comb):<13}, "
                 f"\t{eta_range},\t\t{pT_range},\t\t{equalentry_binedge_ls_comb}\n"
             )
             myfile.write(info)
@@ -205,10 +225,9 @@ with open(fullpath_csv, "w") as myfile:
     
 print(f"[INFO] q*d0 bin edge info written to csv file:\n{fullpath_csv}")
 
-if (write_to_pickle):
-    with open(fullpath_pickle,'wb') as output:
-        pickle.dump(equal_entry_binedge_dict, output, pickle.HIGHEST_PROTOCOL)
-    print(f"[INFO] eta, pT, q*d0 bin dict written to pickle file:\n{fullpath_pickle}\n")
+with open(fullpath_pickle,'wb') as output:
+    pickle.dump(equal_entry_binedge_dict, output, pickle.HIGHEST_PROTOCOL)
+print(f"[INFO] eta, pT, q*d0 bin dict written to pickle file:\n{fullpath_pickle}\n")
 
 total_muons_original = vdf_concat_MC_2017_DY.count() + vdf_concat_MC_2017_Jpsi.count()
 perc = total_entries / float(total_muons_original) * 100.

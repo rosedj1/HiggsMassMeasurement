@@ -638,10 +638,9 @@ def find_equal_hist_regions_unbinned(vals_arr, r, algo=("normal", -1), verbose=F
         c = Counter(bin_reg_ls)
         print(c)
         multiple = c.most_common(1)[0][0]
-        print(
-            f"[WARNING] The same bin edge ({multiple}) was found multiple times.\n"
-            f"          Using an ad hoc solution: duplicating first bin and shifting it left a little."
-        )
+        msg  = "[WARNING] The same bin edge ({multiple}) was found multiple times.\n"
+        msg += "Using an ad hoc solution: duplicating first bin and shifting it left a little."
+        print(msg)
         bin_reg_ls[0] = bin_reg_ls[0] - 1E-14 * abs(bin_reg_ls[0])
         # raise RuntimeError(err_msg)
 

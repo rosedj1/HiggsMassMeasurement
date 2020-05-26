@@ -1,10 +1,8 @@
 import os
 import math
 import sys
-sys.path.append('/Users/Jake/')
-sys.path.append('/Users/Jake/HiggsMassMeasurement/')
-sys.path.append('/Users/Jake/HiggsMassMeasurement/d0_Studies/')
 import vaex
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
@@ -114,7 +112,7 @@ def make_1D_dist(ax, data, x_limits, x_bins, x_label, y_label, title, y_max=-1, 
     stats = get_stats_1Dhist(data)
     label_legend = make_stats_legend_for_1dhist(stats)
     bin_vals, bin_edges, _ = ax.hist(mod_data, bins=x_bins, label=label_legend, histtype='step', color='b')
-    ax.legend(loc='upper right', framealpha=0.9)#, fontsize=textsize_legend)
+    ax.legend(loc='upper right', framealpha=1.0)#, fontsize=textsize_legend)
     ax.set_xlim(x_limits)
     if y_max == -1:
         # Default y_max.
