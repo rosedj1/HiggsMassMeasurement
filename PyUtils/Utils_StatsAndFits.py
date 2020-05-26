@@ -412,8 +412,10 @@ def iterative_fit_gaus_unbinned(num_iters, data,
         count += 1
         
         if count == 1:
-            x_min = data.min()
-            x_max = data.max()
+            # x_min = data.min()
+            # x_max = data.max()
+            x_min = data.mean() - num_sigmas * data.std()
+            x_max = data.mean() + num_sigmas * data.std()
         elif count > 1:
             # Use the num_sigmas, previous fit sigma, and mean, to determine next fit range. 
             x_min = bestfit_mean - num_sigmas * bestfit_stdev

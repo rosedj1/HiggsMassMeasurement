@@ -59,23 +59,23 @@ vdf_concat_MC_2017_Jpsi = prepare_vaex_df(vdf_MC_2017_Jpsi)
 # Where to save pkl and csv files.
 outdir = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pkl_and_csv/"
 
-# filename_base = "test05_individsamples_lowstats"
 # filename_base = args.filename_base
 # overwrite = args.overwrite
 # verbose = args.verbose
-filename_base = "20200525_fullstats"
+# filename_base = "20200526_fullstats"
+filename_base = "20200526_lowstats_endcap"
 overwrite = False
 verbose = True
 
 # Binning.
-eta_ls = equal_entry_bin_edges_eta_mod1_wholenum
-pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum
+eta_ls = equal_entry_bin_edges_eta_mod1_wholenum[9:]
+pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum[6:]
 # eta_ls = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
 # pT_ls = [5.0, 7.0, 10.0, 14.0, 20.0, 27.0, 38.0]
 qd0_limits = [-0.015, 0.015]
 
-r = 12  # Number of regions to split each q*d0 region into. 
-algo = ("at_least", 2000)
+r = 6  # Number of regions to split each q*d0 region into. 
+algo = ("at_least", 3000)
 
 dR_max = 0.008
 massZ_minmax_DY = [60, 120]
@@ -117,6 +117,7 @@ check_overwrite(fullpath_pickle, overwrite=overwrite)
 equal_entry_binedge_dict = {
     "all_eta_bins" : eta_ls,
     "all_pT_bins" : pT_ls,
+    "sample_name_ls" : ["DY", "Jpsi", "DY+Jpsi"],
 }
 
 with open(fullpath_csv, "w") as myfile:
@@ -128,9 +129,9 @@ with open(fullpath_csv, "w") as myfile:
         eta_min = eta_ls[k]
         eta_max = eta_ls[k+1]
         eta_range = [eta_min, eta_max]
+        eta_key = f"eta_bin={eta_range}"
 
-        eta_key_str = f"eta_bin_left_edge={eta_min}"
-        equal_entry_binedge_dict[eta_key_str] = {}
+        equal_entry_binedge_dict[eta_key] = {}
 
         # Column names.
         col_str  = (
@@ -145,9 +146,9 @@ with open(fullpath_csv, "w") as myfile:
             pT_min = pT_ls[count]
             pT_max = pT_ls[count+1]
             pT_range = [pT_min, pT_max]
+            pT_key = f"pT_bin={pT_range}"
 
-            pT_key_str = "pT_bin_left_edge={}".format(pT_min)
-            equal_entry_binedge_dict[eta_key_str][pT_key_str] = {}
+            equal_entry_binedge_dict[eta_key][pT_key] = {}
             # No restriction on q*d0.
             all_masks_DY = vaex_apply_masks(  vdf_concat_MC_2017_DY,   eta_range, pT_range, qd0_limits, massZ_minmax_DY,   dR_max)
             all_masks_Jpsi = vaex_apply_masks(vdf_concat_MC_2017_Jpsi, eta_range, pT_range, qd0_limits, massZ_minmax_Jpsi, dR_max)
@@ -199,9 +200,9 @@ with open(fullpath_csv, "w") as myfile:
                                             algo=algo)
 
             # Append to dict.
-            equal_entry_binedge_dict[eta_key_str][pT_key_str]["equalentry_qd0ls_DY"] = equalentry_binedge_ls_DY
-            equal_entry_binedge_dict[eta_key_str][pT_key_str]["equalentry_qd0ls_Jpsi"] = equalentry_binedge_ls_Jpsi
-            equal_entry_binedge_dict[eta_key_str][pT_key_str]["equalentry_qd0ls_DY+Jpsi"] = equalentry_binedge_ls_comb
+            equal_entry_binedge_dict[eta_key][pT_key]["equalentry_qd0ls_DY"] = equalentry_binedge_ls_DY
+            equal_entry_binedge_dict[eta_key][pT_key]["equalentry_qd0ls_Jpsi"] = equalentry_binedge_ls_Jpsi
+            equal_entry_binedge_dict[eta_key][pT_key]["equalentry_qd0ls_DY+Jpsi"] = equalentry_binedge_ls_comb
 
             n_muons_DY = len(qd0_arr_sel_DY)
             n_muons_Jpsi = len(qd0_arr_sel_Jpsi)
@@ -226,7 +227,7 @@ with open(fullpath_csv, "w") as myfile:
 print(f"[INFO] q*d0 bin edge info written to csv file:\n{fullpath_csv}")
 
 with open(fullpath_pickle,'wb') as output:
-    pickle.dump(equal_entry_binedge_dict, output, pickle.HIGHEST_PROTOCOL)
+    pickle.dump(equal_entry_binedge_dict, output, protocol=2)
 print(f"[INFO] eta, pT, q*d0 bin dict written to pickle file:\n{fullpath_pickle}\n")
 
 total_muons_original = vdf_concat_MC_2017_DY.count() + vdf_concat_MC_2017_Jpsi.count()

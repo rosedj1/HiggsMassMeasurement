@@ -52,8 +52,7 @@ vdf_concat_MC_2017_DY = prepare_vaex_df(vdf_MC_2017_DY)
 vdf_concat_MC_2017_Jpsi = prepare_vaex_df(vdf_MC_2017_Jpsi)
 
 # Dictionary which contains equal-entry q*d0 bin edges.
-# inpath_3Dbins_pickle_dict = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pkl_and_csv/fullscan_individ_and_comb_samples_12regwith2000perreg__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
-inpath_3Dbins_pickle_dict = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pkl_and_csv/20200525_fullstats_12regwith2000perreg__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
+inpath_3Dbins_pickle_dict = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pkl_and_csv/20200526_quarterstats_12regwith2000perreg__0p0_eta_0p4__5p0_pT_1000p0_GeV.pkl"
 
 #-----Below is a big boy. -----#
 # inpath_3Dbins_pickle_dict = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/find_best_binning__eta_pT_qd0/equalentry_qd0_binedges__20_regions_max__atleast1000entriesperregion__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
@@ -148,7 +147,7 @@ for k in range(len(eta_ls)-1):
     eta_range = [eta_min, eta_max]
     print(f"eta loop k={k}")
 
-    eta_key = "eta_bin_left_edge={}".format(eta_min)
+    eta_key = f"eta_bin={eta_range}"
     data_dict[eta_key] = {}
 
     # Within 1 eta region, scan the pT regions. 
@@ -158,7 +157,7 @@ for k in range(len(eta_ls)-1):
         pT_range = [pT_min, pT_max]
         print(f"pT loop j={j}")
 
-        pT_key = "pT_bin_left_edge={}".format(pT_min)
+        pT_key = f"pT_bin={pT_range}"
         data_dict[eta_key][pT_key] = {}
 
         # Get all equal-entry qd0 bin edges and acquire kinem data. 
@@ -166,21 +165,24 @@ for k in range(len(eta_ls)-1):
         # own qd0 ls: DY, J/psi, DY+J/psi
         # Also remember that the lengths of the different qd0 ls may differ!
         qd0_dict = equalentry_binedge_dict[eta_key][pT_key]
-        
+        # Key is like: "equalentry_qd0ls_DY+Jpsi"
+        # Val is like: [qd0_bin_1, qd0_bin_2, ...]
+
         for sample, qd0_ls in qd0_dict.items():
             sample_mod = sample.strip("equalentry_qd0ls_")
             data_dict[eta_key][pT_key][sample_mod] = {}
             if sample_mod not in data_dict["sample_mod_ls"]:
                 data_dict["sample_mod_ls"].append(sample_mod) 
-            print("#" + "-"*10 + "#\n")
+            print("\n#----------#")
             print(f"Running over {sample_mod} with qd0_ls:\n{qd0_ls}")
+            data_dict[eta_key][pT_key][sample_mod]["qd0_ls"] = qd0_ls
 
             for count in range(len(qd0_ls)-1):
                 qd0_min = qd0_ls[count]
                 qd0_max = qd0_ls[count+1]
                 qd0_range = [qd0_min, qd0_max]
 
-                qd0_key = "qd0_bin_left_edge={}".format(qd0_min)
+                qd0_key = f"qd0_bin={qd0_range}"
                 data_dict[eta_key][pT_key][sample_mod][qd0_key] = {}
 
                 if (verbose):

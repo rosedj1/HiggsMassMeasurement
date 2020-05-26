@@ -13,8 +13,6 @@ import pickle
 import matplotlib.pyplot as plt
 import numpy as np
 plt.style.use("cmsstyle_plot")
-sys.path.append('/Users/Jake/HiggsMassMeasurement/')
-sys.path.append('/Users/Jake/HiggsMassMeasurement/d0_Studies/')
 
 from d0_Utils.d0_cls import KinBin3DOrganizer, GraphLineKinBin3D
 from d0_Utils.d0_dicts import label_LaTeX_dict, color_dict
