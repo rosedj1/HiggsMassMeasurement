@@ -3,11 +3,11 @@ import math
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
+# import matplotlib.pyplot as plt
+# import matplotlib.ticker as ticker
 
-from matplotlib.backends.backend_pdf import PdfPages
-from PyUtils.Utils_Physics import perc_diff
+# from matplotlib.backends.backend_pdf import PdfPages
+from Utils_Python.Utils_Physics import perc_diff
 
 def get_subset_mask(x_vals, x_min, x_max):
     """
@@ -115,7 +115,31 @@ def calc_ymin_for_legend(n_graphs, text_height=0.042):
     delta_y = text_height*n_graphs
     return 0.9 - delta_y # When you do TCanvas(), it puts the top axis at y = 0.9.
 
-            
+def find_bin_edges_of_value(val, bin_edge_arr):
+    """
+    Return the neighboring bin edges where:
+    this_bin_edge < val < next_bin_edge
+    
+    Notes:
+      - bin_edge_arr should be a sorted array [least -> greatest]    
+    """
+    try:
+        # Hacks, bruh.
+        next_bin_edge = bin_edge_arr[val < bin_edge_arr][0]   # Bool array before slice, e.g.: [0, 0, 1, ... , 1, 1]
+        this_bin_edge = bin_edge_arr[val > bin_edge_arr][-1]  # Bool array before slice, e.g.: [1, 1, 0, ... , 0, 0]
+    except IndexError:
+        this_bin_edge = next_bin_edge = None
+#         # val is either larger or smaller than all elements in bin_edge_arr. 
+#         # Figure out which it is and set next_bin_edge = this_bin_edge = min or max.
+#         if all(val > bin_edge_arr):
+#             this_bin_edge = next_bin_edge = bin_edge_arr[-1]
+#         elif all(val < bin_edge_arr):
+#             this_bin_edge = next_bin_edge = bin_edge_arr[0]
+#         else:
+#             raise ValueError("Something is seriously wrong here... Maybe this fn is broken?")
+    
+    return this_bin_edge, next_bin_edge
+
 def make_kinem_subplot(lep, ax, data, x_limits, x_bins, x_label, y_label, y_max=-1, log_scale=False):
     """
     MAY BE DEPRECATED.

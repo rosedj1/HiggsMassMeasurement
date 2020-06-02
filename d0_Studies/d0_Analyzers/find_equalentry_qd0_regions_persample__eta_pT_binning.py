@@ -19,7 +19,7 @@
 #   Make sure to check all the parameters in "User Parameters".
 #   Should be used with Python 3.X.
 # Author:  Jake Rosenzweig
-# Updated: 2020-05-25
+# Updated: 2020-05-31
 """
 import os
 import sys
@@ -29,12 +29,12 @@ import argparse
 
 import numpy as np
 
-from vaex_Utils.vaex_dataframes import (vdf_MC_2017_DY, vdf_MC_2017_Jpsi, vdf_MC_2017_DY,
-                                        prepare_vaex_df, vaex_apply_masks)
+from Utils_vaex.vaex_fns import prepare_vaex_df, vaex_apply_masks
+from Samples.sample_info import MC_2017_DY_hdf5, MC_2017_Jpsi_hdf5
 from d0_Utils.d0_fns import find_equal_hist_regions_unbinned
 from d0_Studies.kinematic_bins import (equal_entry_bin_edges_eta_mod1_wholenum,
                                         bin_edges_pT_sevenfifths_to1000GeV_wholenum)
-from PyUtils.Utils_Files import makeDirs, make_str_title_friendly, check_overwrite      
+from Utils_Python.Utils_Files import makeDirs, make_str_title_friendly, check_overwrite      
 
 
 # def ParseOption():
@@ -51,11 +51,6 @@ from PyUtils.Utils_Files import makeDirs, make_str_title_friendly, check_overwri
 #---------------------------#
 #----- User Parameters -----#
 #---------------------------#
-# Samples:
-vdf_concat_MC_2017_DY = prepare_vaex_df(vdf_MC_2017_DY)
-vdf_concat_MC_2017_Jpsi = prepare_vaex_df(vdf_MC_2017_Jpsi)
-
-# outdir = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/find_best_binning__eta_pT_qd0/"
 # Where to save pkl and csv files.
 outdir = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pkl_and_csv/"
 
@@ -63,21 +58,25 @@ outdir = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pkl_and_csv/"
 # overwrite = args.overwrite
 # verbose = args.verbose
 # filename_base = "20200526_fullstats"
-filename_base = "20200526_test01_shrink_legend_font"
+filename_base = "20200531_fullstats_sameasFilippodeltaRcut"
 overwrite = False
 verbose = True
 
 # Binning.
-eta_ls = equal_entry_bin_edges_eta_mod1_wholenum[:2]
-pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum[:5]
-# eta_ls = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
-# pT_ls = [5.0, 7.0, 10.0, 14.0, 20.0, 27.0, 38.0]
+eta_ls = equal_entry_bin_edges_eta_mod1_wholenum
+pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum
+# eta_ls = [0.0,2.4]
+# pT_ls = [5.0, 200.0]
 qd0_limits = [-0.015, 0.015]
 
 r = 12  # Number of regions to split each q*d0 region into. 
 algo = ("at_least", 3000)
 
-dR_max = 0.008
+# Selections per sample.
+# dR_max = 0.008
+dR_max_DY = 0.002
+dR_max_Jpsi = 0.005
+
 massZ_minmax_DY = [60, 120]
 massZ_minmax_Jpsi = [2.9, 3.3]
 
@@ -150,16 +149,13 @@ with open(fullpath_csv, "w") as myfile:
 
             equal_entry_binedge_dict[eta_key][pT_key] = {}
             # No restriction on q*d0.
-            all_masks_DY = vaex_apply_masks(  vdf_concat_MC_2017_DY,   eta_range, pT_range, qd0_limits, massZ_minmax_DY,   dR_max)
-            all_masks_Jpsi = vaex_apply_masks(vdf_concat_MC_2017_Jpsi, eta_range, pT_range, qd0_limits, massZ_minmax_Jpsi, dR_max)
+            all_masks_DY   = vaex_apply_masks(MC_2017_DY_hdf5.vdf_prepped,   eta_range, pT_range, qd0_limits, massZ_minmax_DY,   dR_max_DY)
+            all_masks_Jpsi = vaex_apply_masks(MC_2017_Jpsi_hdf5.vdf_prepped, eta_range, pT_range, qd0_limits, massZ_minmax_Jpsi, dR_max_Jpsi)
 
             n_tot_DY = all_masks_DY.count()
             n_tot_Jpsi = all_masks_Jpsi.count()
             n_sel_DY = all_masks_DY.sum()
             n_sel_Jpsi = all_masks_Jpsi.sum()
-            # A couple of checks.
-            assert vdf_concat_MC_2017_DY.count() == n_tot_DY
-            assert vdf_concat_MC_2017_Jpsi.count() == n_tot_Jpsi
 
             if (verbose):
                 print(f"pT_loop_count: {count}/{max_count-1}")
@@ -172,8 +168,8 @@ with open(fullpath_csv, "w") as myfile:
                 print(f"Jpsi events after selection: {n_sel_Jpsi} (eff. = {n_sel_Jpsi/float(n_tot_Jpsi)*100.:.4f})%")
 
             # Get ALL q*d0 values.
-            qd0_arr_DY = vdf_concat_MC_2017_DY.evaluate("qd0BS")  # These are numpy arrays.
-            qd0_arr_Jpsi = vdf_concat_MC_2017_Jpsi.evaluate("qd0BS")
+            qd0_arr_DY = MC_2017_DY_hdf5.vdf_prepped.evaluate("qd0BS")  # These are numpy arrays.
+            qd0_arr_Jpsi = MC_2017_Jpsi_hdf5.vdf_prepped.evaluate("qd0BS")
 
             # Remember this is within just one (eta, pT) region.
             qd0_arr_sel_DY = qd0_arr_DY[all_masks_DY.values]
@@ -230,7 +226,7 @@ with open(fullpath_pickle,'wb') as output:
     pickle.dump(equal_entry_binedge_dict, output, protocol=2)
 print(f"[INFO] eta, pT, q*d0 bin dict written to pickle file:\n{fullpath_pickle}\n")
 
-total_muons_original = vdf_concat_MC_2017_DY.count() + vdf_concat_MC_2017_Jpsi.count()
+total_muons_original = MC_2017_DY_hdf5.vdf_prepped.count() + MC_2017_Jpsi_hdf5.vdf_prepped.count()
 perc = total_entries / float(total_muons_original) * 100.
 print(
     f"Total muons found before selections: {total_muons_original}\n"

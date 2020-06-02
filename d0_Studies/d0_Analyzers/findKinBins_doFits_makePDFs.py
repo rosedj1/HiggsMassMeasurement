@@ -1,5 +1,3 @@
-# FIXME: confusion between sample_name and abbr and sample_name
-
 """
 # PURPOSE: 
 #   Save the delta_pT/pT data for each (eta, pT, q*d0) cube. 
@@ -53,45 +51,42 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
 # Local imports.
-from vaex_Utils.vaex_dataframes import (vdf_MC_2017_DY, vdf_MC_2017_Jpsi, vdf_MC_2016_DY,
-                                        prepare_vaex_df, vaex_apply_masks)
+from Utils_vaex.vaex_fns import prepare_vaex_df, vaex_apply_masks
+from Samples.sample_info import MC_2017_DY_hdf5, MC_2017_Jpsi_hdf5
 from d0_Studies.kinematic_bins import (equal_entry_bin_edges_eta_mod1)
 from d0_Utils.d0_dicts import label_LaTeX_dict
 from d0_Utils.d0_fns import make_binning_array, print_header_message
 from d0_Utils.d0_cls import KinBin3D
 
-from PyUtils.Utils_Physics import perc_diff
-from PyUtils.Utils_Files import makeDirs, make_str_title_friendly, check_overwrite
-from PyUtils.Utils_Plotting import hist_y_label, make_1D_dist, ncolsrows_from_nplots, get_stats_1Dhist
-from PyUtils.Utils_StatsAndFits import iterative_fit_gaus, iterative_fit_gaus_unbinned
+from Utils_Python.Utils_Physics import perc_diff
+from Utils_Python.Utils_Files import makeDirs, make_str_title_friendly, check_overwrite
+from Utils_Python.Utils_Plotting import hist_y_label, make_1D_dist, ncolsrows_from_nplots, get_stats_1Dhist
+from Utils_Python.Utils_StatsAndFits import iterative_fit_gaus, iterative_fit_gaus_unbinned
 
-def ParseOption():
-    parser = argparse.ArgumentParser(description='submit all')
-    parser.add_argument('--pklfilename', dest='filename_base', type=str, help='') 
-    parser.add_argument('--verbose', dest='verbose', type=int, default=1, help='')
-    parser.add_argument('--overwrite', dest='overwrite', type=int, default=0, help='')  
+# def ParseOption():
+#     parser = argparse.ArgumentParser(description='submit all')
+#     parser.add_argument('--pklfilename', dest='filename_base', type=str, help='') 
+#     parser.add_argument('--verbose', dest='verbose', type=int, default=1, help='')
+#     parser.add_argument('--overwrite', dest='overwrite', type=int, default=0, help='')  
     
-    args = parser.parse_args()                                                                                         
-    return args          
+#     args = parser.parse_args()                                                                                         
+#     return args          
                                                                                                          
 # args = ParseOption()          
 
 #---------------------------#
 #----- User Parameters -----#
 #---------------------------#
-# Load muon data (samples with muons treated "individually")
-vdf_concat_MC_2017_DY = prepare_vaex_df(vdf_MC_2017_DY)
-vdf_concat_MC_2017_Jpsi = prepare_vaex_df(vdf_MC_2017_Jpsi)
-
 # Dictionary which contains equal-entry q*d0 bin edges.
-inpath_equalentry_pickl_dict = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pkl_and_csv/20200526_fullstats_12regwith3000perreg__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
+# inpath_equalentry_pickl_dict = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pkl_and_csv/20200526_fullstats_BA_OL_EC_12regwith3000perreg__0p0_eta_2p4__5p0_pT_200p0_GeV.pkl"
+inpath_equalentry_pickl_dict = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pkl_and_csv/20200531_fullstats_sameasFilippodeltaRcut_12regwith3000perreg__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
 
 # Outgoing dirs. 
 outdir_plots = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/Plots/hists_dpToverpT/"
 outdir_kinbin_pkl = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pkl_and_csv/kinbins/"
 
 # Filename of outdict is automatic.
-overwrite = True
+overwrite = False
 verbose = True
 skip_bad_fit = True
 do_unbinned_fit = True
@@ -104,8 +99,10 @@ kinem = "delta_pToverGenpT"
 x_bin_info = [-0.35, 0.35, 0.0035]
 x_zoom_range = [-0.40, 0.40]
 
-# Cuts to make.
-dR_max = 0.008
+# Selections per sample.
+# dR_max = 0.008
+dR_max_DY = 0.002
+dR_max_Jpsi = 0.005
 massZ_minmax_DY = [60, 120]
 massZ_minmax_Jpsi = [2.9, 3.3]
 
@@ -216,32 +213,33 @@ print(
 #---------------------------------#
 #----- Unpack kinematic data -----#
 #---------------------------------#
-eta_arr_DY     = vdf_concat_MC_2017_DY.evaluate("eta")
-eta_arr_Jpsi   = vdf_concat_MC_2017_Jpsi.evaluate("eta")
-pT_arr_DY      = vdf_concat_MC_2017_DY.evaluate("pT")
-pT_arr_Jpsi    = vdf_concat_MC_2017_Jpsi.evaluate("pT")
-qd0_arr_DY     = vdf_concat_MC_2017_DY.evaluate("qd0BS")
-qd0_arr_Jpsi   = vdf_concat_MC_2017_Jpsi.evaluate("qd0BS")
-massZ_arr_DY   = vdf_concat_MC_2017_DY.evaluate("massZ")
-massZ_arr_Jpsi = vdf_concat_MC_2017_Jpsi.evaluate("massZ")
-dR_arr_DY      = vdf_concat_MC_2017_DY.evaluate("delta_R")
-dR_arr_Jpsi    = vdf_concat_MC_2017_Jpsi.evaluate("delta_R")
+
+eta_arr_DY     = MC_2017_DY_hdf5.vdf_prepped.evaluate("eta")
+eta_arr_Jpsi   = MC_2017_Jpsi_hdf5.vdf_prepped.evaluate("eta")
+pT_arr_DY      = MC_2017_DY_hdf5.vdf_prepped.evaluate("pT")
+pT_arr_Jpsi    = MC_2017_Jpsi_hdf5.vdf_prepped.evaluate("pT")
+qd0_arr_DY     = MC_2017_DY_hdf5.vdf_prepped.evaluate("qd0BS")
+qd0_arr_Jpsi   = MC_2017_Jpsi_hdf5.vdf_prepped.evaluate("qd0BS")
+massZ_arr_DY   = MC_2017_DY_hdf5.vdf_prepped.evaluate("massZ")
+massZ_arr_Jpsi = MC_2017_Jpsi_hdf5.vdf_prepped.evaluate("massZ")
+dR_arr_DY      = MC_2017_DY_hdf5.vdf_prepped.evaluate("delta_R")
+dR_arr_Jpsi    = MC_2017_Jpsi_hdf5.vdf_prepped.evaluate("delta_R")
 
 # Prep the masks that don't change. 
 mask_massZ_DY   = (massZ_min_DY < massZ_arr_DY) & (massZ_arr_DY < massZ_max_DY)
 mask_massZ_Jpsi = (massZ_min_Jpsi < massZ_arr_Jpsi) & (massZ_arr_Jpsi < massZ_max_Jpsi)
-mask_dR_DY   = (dR_arr_DY < dR_max)
-mask_dR_Jpsi = (dR_arr_Jpsi < dR_max)
+mask_dR_DY   = (dR_arr_DY < dR_max_DY)
+mask_dR_Jpsi = (dR_arr_Jpsi < dR_max_Jpsi)
 
 # Kinematic to be plotted in each KinBin3D.
 # Should not contain 1 or 2. 
 # Acceptable values found in prepare_vaex_df().
-kinem_arr_DY_dpToverGenpT = vdf_concat_MC_2017_DY.evaluate("delta_pToverGenpT")
-kinem_arr_DY_pT = vdf_concat_MC_2017_DY.evaluate("pT")
-kinem_arr_DY_qd0 =  vdf_concat_MC_2017_DY.evaluate("qd0BS")
-kinem_arr_Jpsi_dpToverGenpT = vdf_concat_MC_2017_Jpsi.evaluate("delta_pToverGenpT")
-kinem_arr_Jpsi_pT = vdf_concat_MC_2017_Jpsi.evaluate("pT")
-kinem_arr_Jpsi_qd0 =  vdf_concat_MC_2017_Jpsi.evaluate("qd0BS")
+kinem_arr_DY_dpToverGenpT = MC_2017_DY_hdf5.vdf_prepped.evaluate("delta_pToverGenpT")
+kinem_arr_DY_pT = MC_2017_DY_hdf5.vdf_prepped.evaluate("pT")
+kinem_arr_DY_qd0 =  MC_2017_DY_hdf5.vdf_prepped.evaluate("qd0BS")
+kinem_arr_Jpsi_dpToverGenpT = MC_2017_Jpsi_hdf5.vdf_prepped.evaluate("delta_pToverGenpT")
+kinem_arr_Jpsi_pT = MC_2017_Jpsi_hdf5.vdf_prepped.evaluate("pT")
+kinem_arr_Jpsi_qd0 =  MC_2017_Jpsi_hdf5.vdf_prepped.evaluate("qd0BS")
 
 #----------------#
 #----- Main -----#
@@ -407,11 +405,10 @@ for sample_name in sample_name_ls:
                     cuts  = r"$%.2f < \left| \eta^{\mathrm{REC}} \right| < %.2f$," % (eta_min, eta_max) + "\n"
                     cuts += r"$%.1f <$ %s $< %.1f$ GeV," % (pT_min, p_str_latex, pT_max) + "\n"
                     cuts += r"$%.4f < q(\mu)*d_{0}^{\mathrm{%s}} < %.4f$, " % (qd0_min, "BS", qd0_max) + "\n"
-                    cuts += r"$\Delta R < %.3f$, " % (dR_max)
                     if "DY" in sample_name:
-                        cuts += "\n" + r"$%.1f < m_{Z} < %.1f$ GeV,  " % (massZ_min_DY, massZ_max_DY)
+                        cuts += "\n" + r"$%.1f < m_{Z} < %.1f$ GeV,  $\Delta R < %.3f$" % (massZ_min_DY, massZ_max_DY, dR_max_DY)
                     if "Jpsi" in sample_name:
-                        cuts += "\n" + r"$%.1f < m_{J/\psi} < %.1f$ GeV" % (massZ_min_Jpsi, massZ_max_Jpsi)
+                        cuts += "\n" + r"$%.1f < m_{J/\psi} < %.1f$ GeV,  $\Delta R < %.3f$" % (massZ_min_Jpsi, massZ_max_Jpsi, dR_max_Jpsi)
                     if (verbose): print("cuts str:\n",cuts)
 
                     # Make sure that everyone agrees on the number of muons:
@@ -530,7 +527,7 @@ print("[INFO] KinBin3D dict written to pickle file:\n{}\n".format(fullpath_kinbi
 
 t_prog_end = time.perf_counter()
 print(f"[INFO] Total time taken: {t_prog_end - t_prog_start} sec.")
-# total_muons_original = vdf_concat_MC_2017_DY.count() + vdf_concat_MC_2017_Jpsi.count()
+# total_muons_original = MC_2017_DY_hdf5.vdf_prepped.count() + MC_2017_Jpsi_hdf5.vdf_prepped.count()
 # total_muons_found = total_num_muons_DY + total_num_muons_Jpsi
 # perdif = perc_diff(total_muons_found, total_muons_original)
 # print(f"Total muons in files: {total_muons_original}")

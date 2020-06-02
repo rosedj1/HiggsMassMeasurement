@@ -19,6 +19,19 @@ color_dict = {
     13:'turquoise',
 }
 
+color_dict_RooFit = {
+    1:600,#,'kBlue',
+    2:632,#'kRed',
+    3:416,#'kGreen',
+    4:616,#'kMagenta',
+    5:800,#'kOrange',
+    6:432,#'kCyan',
+    7:880,#'kViolet',
+    8:840,#'kTeal',
+    9:900,#'kPink',
+    10:920,#'kGray',
+}
+
 label_LaTeX_dict = {
     "pT1"  : {"label":r"$p_{T1}^{\mathrm{REC}}$", 
               "independent_label":r"$p_{T}^{\mathrm{REC}}$", 

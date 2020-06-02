@@ -1,15 +1,8 @@
 """
-A file to store vaex functions and filepaths.
+Vaex functions.
 """
 import vaex  # The holy grail.
 import numpy as np
-
-# vdf_MC_2016_DY = vaex.open("/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/NTuples/MC/2016/MC_2016_DY.hdf5")
-# vdf_MC_2017_DY = vaex.open("/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/NTuples/MC/2017/MC_2017_DY.hdf5")
-# vdf_MC_2017_Jpsi = vaex.open("/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/NTuples/MC/2017/MC_2017_Jpsi.hdf5")
-vdf_MC_2016_DY = vaex.open("/ufrc/avery/rosedj1/HiggsMassMeasurement/Samples/MC_2016/MC_2016_DY.hdf5")
-vdf_MC_2017_DY = vaex.open("/ufrc/avery/rosedj1/HiggsMassMeasurement/Samples/MC_2017/MC_2017_DY.hdf5")
-vdf_MC_2017_Jpsi = vaex.open("/ufrc/avery/rosedj1/HiggsMassMeasurement/Samples/MC_2017/MC_2017_Jpsi.hdf5")
 
 def df_drop_cols(df, col_keep_ls, inplace=True):
     import pandas
@@ -87,7 +80,6 @@ def prepare_vaex_df(vdf):
     # -pi < delta_phi < pi
     # vdf_concat['delta_phi'] = dphi_ser = vdf_concat.apply(calc_dphi, (phi_rec_ser, phi_gen_ser))  # Good!
     vdf_concat['delta_phi'] = dphi_ser = phi_rec_ser - phi_gen_ser  # Good!
-    # vdf_concat['delta_R'] = dR_ser = vdf_concat.apply(calc_dR, (deta_ser, dphi_ser))
     vdf_concat['delta_R'] = dR_ser = np.sqrt(deta_ser**2 + dphi_ser**2)
     vdf_concat['delta_pT'] = dpT = pT_rec_ser - pT_gen_ser  # Good!
     vdf_concat['delta_pToverGenpT'] = dpTratioGen = dpT / pT_gen_ser  # Good!
@@ -116,6 +108,11 @@ def vaex_apply_masks(vdf, eta_minmax, pT_minmax, qd0_minmax, massZ_minmax, dR_ma
         )
     print(cut_str + "\n")
     
+    print(f"eta_minmax: {eta_minmax}")
+    print(f"pT_minmax:  {pT_minmax}")
+    print(f"qd0_minmax: {qd0_minmax}")
+    print(f"massZ_minmax: {massZ_minmax}")
+    print(f"dR_max: {dR_max}")
     mask_eta = (eta_minmax[0] < vdf["eta"].abs()) & (vdf["eta"].abs() < eta_minmax[1])
     mask_pT = (pT_minmax[0] < vdf["pT"]) & (vdf["pT"] < pT_minmax[1])
     mask_qd0 = (qd0_minmax[0] < vdf["qd0BS"]) & (vdf["qd0BS"] < qd0_minmax[1])

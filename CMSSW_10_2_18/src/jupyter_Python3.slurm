@@ -3,7 +3,7 @@
 #SBATCH --output=notebook_jupyter_python3_%j.log
 #SBATCH --ntasks=1
 #SBATCH --mem=16gb
-#SBATCH --time=06:00:00
+#SBATCH --time=08:00:00
 date;hostname;pwd
  
 module add jupyter
@@ -13,6 +13,9 @@ eval `scramv1 runtime -sh`
 cd /ufrc/avery/rosedj1/HiggsMassMeasurement/
 
 ml python3
+#ml conda
+#conda init bash
+#conda activate my_root_env
 
 source setup.sh
 

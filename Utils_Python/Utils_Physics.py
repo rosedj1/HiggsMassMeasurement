@@ -67,3 +67,33 @@ def perc_diff(num, ref):
         Reference number. Goes in the denominator.
     """
     return (num - ref) / ref * 100.
+
+# FIXME: Below is not yet tested.
+class Particle:
+    def __init__(self):
+        pass
+    
+class Muon(Particle):
+    def __init__(self, ID):
+        self.ID = ID
+        self.charge = self.charge_from_ID(ID)
+    
+    def SetPtEtaPhiMass(self, pT, eta, phi, mass):
+        self.pT = pT
+        self.eta = eta
+        self.phi = phi
+        self.mass = mass
+        
+    def SetGENPtEtaPhiMass(self, gpT, geta, gphi, gmass):
+        self.gen_pT = gpT
+        self.gen_eta = geta
+        self.gen_phi = gphi
+        self.gen_mass = gmass
+                           
+    def charge_from_ID(self, ID):
+        if ID == 13:
+            return -1 
+        elif ID == -13: 
+            return +1 
+        else:
+            raise TypeError("Based on the ID ({}), this is not a muon!".format(ID))

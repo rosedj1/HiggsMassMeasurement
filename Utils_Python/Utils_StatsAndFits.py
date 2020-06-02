@@ -4,7 +4,7 @@ from scipy.optimize import curve_fit, OptimizeWarning
 from d0_Utils.d0_fns import centers_of_binning_array, get_subset_mask, print_header_message
 from d0_Utils.d0_dicts import color_dict, label_LaTeX_dict
 
-from PyUtils.Utils_Plotting import make_stats_legend_for_gaus_fit
+from Utils_Python.Utils_Plotting import make_stats_legend_for_gaus_fit
 #--- Fitting Functions ---#
 def linear_func(x, b, m):
     """
@@ -495,60 +495,6 @@ def iterative_fit_gaus_unbinned(num_iters, data,
             ax.legend(loc="upper right")
         
     return stats_dict, ax
-
-def unbinned_gaus_fit_RooFit(data):
-    import ROOT
-    ROOT.RooMsgService.instance().setStreamStatus(1,False)
-    """
-    Do a Gaussian fit on unbinned data. 
-    Returns the best-fit Gaus parameters [mu, mu_err, sigma, sigma_err].
-    
-    Notes:
-      Since unbinned data don't have a "y-value" (i.e. a bin height),
-      then there is no need for a scaling coeff factor in the Gaussian. 
-    """
-    x_min = data.min()
-    x_max = data.max()
-    x_avg = data.mean()
-    x_std = data.std()
-    
-    # Make and fill a TTree with unbinned data.
-    tree = ROOT.TTree("tree","tree")
-    x = np.zeros(1,dtype=float)
-    tree.Branch("x",x,'x/D')
-    for i in range(len(data)):
-        x[0] = data[i]
-        tree.Fill()
-
-#     c = ROOT.TCanvas()
-#     c.Draw()
-    
-    x = ROOT.RooRealVar("x","x", x_min, x_max)
-    mean = ROOT.RooRealVar("mean","Mean of Gaussian", x_avg, x_min, x_max)
-    sigma = ROOT.RooRealVar("sigma","Width of Gaussian", x_std, 0, 999999)
-    gauss = ROOT.RooGaussian("gauss","gauss(x,mean,sigma)", x, mean, sigma)
-
-    dataset = ROOT.RooDataSet("dataset", "dataset", tree, ROOT.RooArgSet(x))
-
-#     xframe = x.frame()
-#     dataset.plotOn(xframe, ROOT.RooLinkedList())
-#     gauss.plotOn(xframe)
-#     xframe.Draw("same")
-    
-#     leg_text  = "#splitline{#mu = %.3f #pm %.3f}" % (mean.getVal(),  mean.getError())
-#     leg_text += "{#sigma = %.3f #pm %.3f}" % (sigma.getVal(),  sigma.getError())
-    
-#     leg = ROOT.TLegend(0.03, 0.80, 0.20, 0.9)
-#     leg.AddEntry("gauss", leg_text, "lep")
-#     leg.Draw("same")
-
-    # Find and fill the mean and sigma variables.
-    result = gauss.fitTo(dataset, ROOT.RooFit.PrintLevel(-1))
-    
-    fit_stats_ls = [mean.getVal(), mean.getError(),
-                    sigma.getVal(), sigma.getError()]
-    
-    return fit_stats_ls
 
 #--------------------------------------#
 #----- Error propagation formulae -----#

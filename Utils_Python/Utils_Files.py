@@ -45,11 +45,11 @@ def check_overwrite(outfile, overwrite=False):
         err_msg += "To write over the file, set overwrite=True.\n"
         raise RuntimeError(err_msg)
     
-def make_str_title_friendly(cut_str, keep_whitespace=False):
-    title = title.replace('-13','muPlus')
+def make_str_title_friendly(str_, keep_whitespace=False):
+    title = str_.replace('-13','muPlus')
     title = title.replace('+13','muMinus')
-    title = cut_str.replace('&&','_')
-    title = cut_str.replace('&','_')
+    title = title.replace('&&','_')
+    title = title.replace('&','_')
     title = title.replace('<','_lt_')
     title = title.replace('>','_gt_')
     if not (keep_whitespace): 

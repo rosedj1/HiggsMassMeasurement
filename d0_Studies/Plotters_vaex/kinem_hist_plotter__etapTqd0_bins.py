@@ -16,24 +16,13 @@ import os
 import sys
 import math
 import time
-sys.path.append('/Users/Jake/HiggsMassMeasurement/')
-sys.path.append('/Users/Jake/HiggsMassMeasurement/d0_Studies/')
 
 import numpy as np
 import matplotlib.pyplot as plt
 
 from vaex_Utils.vaex_dataframes import (vdf_MC_2017_DY, vdf_MC_2017_Jpsi, vdf_MC_2017_DY,
                                         prepare_vaex_df, vaex_apply_masks)
-from d0_Studies.kinematic_bins import (equal_entry_bin_edges_eta_mod1,
-                                        equal_entry_bin_edges_eta_mod2,
-                                        equal_entry_bin_edges_eta_mod1_wholenum,
-                                        equal_entry_bin_edges_pT_sevenfifths_to1000GeV,
-                                        bin_edges_pT_sevenfifths_to1000GeV_wholenum,
-                                        binedges_qd0_equalentry_smallest_qd0RMS,
-                                        binedges_qd0_equalentry_smallest_qd0RMS_clipped,
-                                        binedges_qd0_tracker_res,
-                                        binedges_qd0_tracker_res_mod
-                                        )
+from d0_Studies.kinematic_bins import (equal_entry_bin_edges_eta_mod1)
 from d0_Utils.d0_dicts import label_LaTeX_dict
 from d0_Utils.d0_fns import make_binning_array, print_header_message
 

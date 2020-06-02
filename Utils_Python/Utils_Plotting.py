@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from matplotlib.colors import ListedColormap
 
-from PyUtils.Utils_Files import makeDirs, make_str_title_friendly
+from Utils_Python.Utils_Files import makeDirs, make_str_title_friendly
 from d0_Utils.d0_fns import account_for_underoverflow_entries
 
 def change_cmap_bkg_to_white(colormap, n=256):
