@@ -499,11 +499,33 @@ def iterative_fit_gaus_unbinned(num_iters, data,
 #--------------------------------------#
 #----- Error propagation formulae -----#
 #--------------------------------------#
+def prop_err_x_plus_y(x, y, dx, dy):
+    """
+    Return the sum of two numbers (z = x + y) and the 
+    corresponding uncertainty (dz), depending on (x, y, dx, dy).
+
+    The error propagation formula is:
+        (dz)^2 = (dz/dx)^2 * (dx)^2 + (dz/dy)^2 * (dy)^2 + 2 * dz/dx * dz/dy * dx*dy
+        but we will ignore the final cross-term (correlation factor).
+            Newton says: 
+            dz/dx = 1
+            dz/dy = 1
+        So:
+            dz = sqrt( (dx)^2 + (dy)^2 )
+    """
+    x = np.array(x, dtype=float)
+    y = np.array(y, dtype=float)
+    dx = np.array(dx, dtype=float)
+    dy = np.array(dy, dtype=float)
+    
+    z = x + y
+    dz = np.sqrt(dx**2 + dy**2)
+    return z, dz
+
 def prop_err_x_div_y(x, y, dx, dy):
     """
     Return the ratio of two numbers (r = x/y) and the 
     corresponding uncertainty (dr), depending on (x, y, dx, dy).
-    by  from x (numerator) and y (denominator).
 
     The error propagation formula is:
         (dr)^2 = (dr/dx)^2 * (dx)^2 + (dr/dy)^2 * (dy)^2 + 2 * dr/dx * dr/dy * dx*dy
@@ -524,3 +546,16 @@ def prop_err_x_div_y(x, y, dx, dy):
     r = x / y
     dr = np.sqrt((dx / y)**2 + (x / y**2 * dy)**2)
     return r, dr
+
+def Andrey_prop_err_on_dsigoversig(sig1, sig2, sig_err1, sig_err2):
+    """
+    Returns the error on (sig2 - sig1) / sig1.
+    """
+    sig1 = np.array(sig1, dtype=float)
+    sig2 = np.array(sig2, dtype=float)
+    sig_err1 = np.array(sig_err1, dtype=float)
+    sig_err2 = np.array(sig_err2, dtype=float)
+    
+    relsig1 = sig_err1 / sig1
+    relsig2 = sig_err2 / sig2
+    return (sig2 / sig1) * np.sqrt(relsig1**2 + relsig2**2)

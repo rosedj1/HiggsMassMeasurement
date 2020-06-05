@@ -17,8 +17,6 @@
 
 import sys
 import os
-sys.path.append('/Users/Jake/HiggsMassMeasurement/')
-sys.path.append('/Users/Jake/HiggsMassMeasurement/d0_Studies/')
 
 import matplotlib.pyplot as plt
 import numpy as np

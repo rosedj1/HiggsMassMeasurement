@@ -11,7 +11,6 @@ from Utils_Python.Plot_Styles_ROOT.tdrstyle_official import fixOverlay, setTDRSt
 from Utils_ROOT.ROOT_StatsAndFits import RooFit_iterative_gaus_fit, RooFit_gaus_fit_unbinned_from_TTree
 from Utils_ROOT.ROOT_fns import fill_m2mu_hist
 
-# from d0_Studies.d0_Utils.d0_dicts import color_dict_RooFit
 from d0_Studies.d0_Utils.d0_fns import calc_num_bins
 #-----------------------#
 #----- User Params -----#
