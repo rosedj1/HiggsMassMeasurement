@@ -46,7 +46,7 @@ def save_plots_to_outpath(save_plot=False, outpath="", file_name="DEFAULT_NAME",
             plt.savefig(fullpath + '.png')
             if (verbose): print(f"Figure saved at: {fullpath + '.png'}")
 
-def make_1D_dist(ax, data, x_limits, x_bins, x_label, y_label, title, y_max=-1, log_scale=False):
+def make_1D_dist(ax, data, x_limits, x_bin_edges, x_label, y_label, title, y_max=-1, log_scale=False):
     """
     Draw a kinematic distribution (e.g. eta1, gen_phi2, etc.) to an axes object in a figure.
     This function plots under/overflow bins depending on if there are hist values
@@ -68,7 +68,7 @@ def make_1D_dist(ax, data, x_limits, x_bins, x_label, y_label, title, y_max=-1, 
     x_limits : 2-element list
         A list of the x-axis range to be plotted: 
         x_limits=[x-min, x-max]
-    x_bins : array-like 
+    x_bin_edges : array-like 
         Array of bin edges. Should be of length = len(n_bins)+1.
     x_label : str
         Label for x-axis.
@@ -105,13 +105,13 @@ def make_1D_dist(ax, data, x_limits, x_bins, x_label, y_label, title, y_max=-1, 
     ax.grid(False)
 
     # Return the same length of data, just clip it (under/overflow bins).             
-    mod_data = account_for_underoverflow_entries(data, x_limits[0], x_limits[1], x_bins)
+    mod_data = account_for_underoverflow_entries(data, x_limits[0], x_limits[1], x_bin_edges)
                                 
     if (log_scale): ax.set_yscale('log')
         
     stats = get_stats_1Dhist(data)
     label_legend = make_stats_legend_for_1dhist(stats)
-    bin_vals, bin_edges, _ = ax.hist(mod_data, bins=x_bins, label=label_legend, histtype='step', color='b')
+    bin_vals, bin_edges, _ = ax.hist(mod_data, bins=x_bin_edges, label=label_legend, histtype='step', color='b')
     ax.legend(loc='upper right', framealpha=1.0)#, fontsize=textsize_legend)
     ax.set_xlim(x_limits)
     if y_max == -1:

@@ -40,6 +40,188 @@ def gaussian_func(x, coeff, mu, sigma):#, normalize=False):
     
     return coeff * np.exp(expon)
 
+def crystal_ball_func(x, coeff, alpha, n, mu, sigma, normalize=False):
+    """
+    FIXME: 
+      [ ] DEPRECATED - NEEDS TO BE SYNCHED UP WITH crystal_ball_doublesided_func
+      [ ] Doesn't work with arrays yet.
+
+    Calculate the y-value for a given x-value along a Crystal Ball function. 
+    A Crystal Ball function is a Gaussian Core combined with a left power-law tail.
+    
+    Parameters
+    ----------
+    x : float
+        Independent variable.
+    alpha : float
+        Describes where the Gaussian-to-power-law switch takes place. 
+    n : float
+        The power of the power-law function.
+        The greatest n is, the more of a tail there will be.
+    mu : float
+        The mean of the Gaussian core.
+    sigma : float
+        The stdev of the Gaussian core. 
+    
+    For reference, here is ROOT's docstring for the Crystal Ball function:
+    
+    Double_t RooCBShape::evaluate() const {
+       Double_t t = (m-m0)/sigma;
+       if (alpha < 0) t = -t;
+
+       Double_t absAlpha = fabs((Double_t)alpha);
+
+       if (t >= -absAlpha) {
+         return exp(-0.5*t*t);
+       }
+       else {
+         Double_t a =  TMath::Power(n/absAlpha,n)*exp(-0.5*absAlpha*absAlpha);
+         Double_t b= n/absAlpha - absAlpha;
+
+         return a/TMath::Power(b - t, n);
+       }
+     }
+     https://root.cern.ch/doc/master/RooCBShape_8cxx_source.html
+    """
+    # Follow Wikipedia: https://en.wikipedia.org/wiki/Crystal_Ball_function
+#     C = 
+#     if (normalize):
+#         coeff = 1 / np.sqrt( 2 * np.pi) / sigma  
+#         return
+    if (alpha < 0):
+        raise ValueError("alpha should not be negative")
+        
+    dev = (x - mu) / sigma
+    
+    if dev > -1*alpha:
+        return coeff * np.exp(-0.5 * dev * dev )
+    
+    else:
+        absalpha = abs(alpha)
+    
+        A = (n / absalpha)**n * np.exp(-0.5 * absalpha * absalpha)
+        B = (n / absalpha) - absalpha
+        
+        return coeff * A * (B - dev)**(-n)
+
+def crystal_ball_doublesided_func(x_arr, coeff, alphaL, nL, alphaR, nR, mu, sigma):
+    """
+    Return an array of double-sided Crystal Ball (DSCB) y-vals for each x-val in an array.
+    A DSCB is a Gaussian Core "stitched together" with a left power-law tail and right power-law tail.
+    
+    Parameters
+    ----------
+    x_arr : array
+        Independent variable.
+    alphaL : float
+        Describes where the Gaussian-to-LEFT-tail-power-law switch takes place. 
+        Gives the number of standard deviations when the switch happens.
+    nL : float
+        The power of the power-law function.
+        The greatest n is, the more of a tail there will be.
+    alphaR : float
+        Describes where the Gaussian-to-RIGHT-tail-power-law switch takes place. 
+        Gives the number of standard deviations when the switch happens.
+    nR : float
+        The power of the power-law function.
+        The greatest n is, the more of a tail there will be.
+    mu : float
+        The mean of the Gaussian core.
+    sigma : float
+        The stdev of the Gaussian core. 
+    
+    For reference, here is ROOT's docstring for the Crystal Ball function:
+    
+    Double_t RooCBShape::evaluate() const {
+       Double_t t = (m-m0)/sigma;
+       if (alpha < 0) t = -t;
+
+       Double_t absAlpha = fabs((Double_t)alpha);
+
+       if (t >= -absAlpha) {
+         return exp(-0.5*t*t);
+       }
+       else {
+         Double_t a =  TMath::Power(n/absAlpha,n)*exp(-0.5*absAlpha*absAlpha);
+         Double_t b= n/absAlpha - absAlpha;
+
+         return a/TMath::Power(b - t, n);
+       }
+     }
+     https://root.cern.ch/doc/master/RooCBShape_8cxx_source.html
+    """
+    # Follow Wikipedia: https://en.wikipedia.org/wiki/Crystal_Ball_function
+    if (alphaL < 0) or (alphaR < 0):
+        raise ValueError("alphaL or alphaR should not be negative")
+        
+    # Make array of relative deviations.
+    dev = (x_arr - mu) / sigma
+
+    # Use a Gaussian, if: -alphaL <= dev <= alphaR.
+    gaus_reg = (dev >= -1*alphaL) & (dev <= alphaR)  # Makes a bool array.
+    gaus_val = coeff * np.exp(-0.5 * dev * dev )
+    y_vals = np.where(gaus_reg, gaus_val, x_arr)
+    
+    # Use a left tail power-law, if: dev < -alphaL.
+    left_reg = (dev < -1*alphaL)
+    absalphaL = abs(alphaL)
+    A = (nL / absalphaL)**nL * np.exp(-0.5 * absalphaL * absalphaL)
+    B = (nL / absalphaL) - absalphaL
+    left_val = coeff * A * (B - (x_arr-mu)/sigma)**(-nL)
+    y_vals = np.where(left_reg, left_val, y_vals)
+
+    # Use a right tail power-law, if: dev > alphaR.
+    right_reg = (dev > alphaR)
+    absalphaR = abs(alphaR)
+    A = (nR / absalphaR)**nR * np.exp(-0.5 * absalphaR * absalphaR)
+    B = (nR / absalphaR) - absalphaR
+    right_val = coeff * A * (B + (x_arr-mu)/sigma)**(-nR)
+    y_vals = np.where(right_reg, right_val, y_vals)
+        
+    # Make sure all of the x_arr values got transformed.
+    # Possible bug if x_arr == 0 == y?
+    assert all([a != b for a,b in zip(x_arr,y_vals)])
+    
+    return y_vals
+        
+def exp_gaus_exp_func(x, kL, kR, mu, sigma):
+    """
+    Calculate the y-value for a given x-value along exp-Gaus-exp function. 
+    This function is a Gaussian Core stitched together with a left exponential tail
+    and a right exponential tail.
+    
+    A UF postdoc, Souvdik Das, along with Jaco Konigsberg invented this function.
+    
+    Parameters
+    ----------
+    x : float
+        Independent variable.
+    kL : float
+        Describes the exponential decay of the left tail.
+    kR : float
+        Describes the exponential decay of the right tail.
+    mu : float
+        The mean of the Gaussian core.
+    sigma : float
+        The stdev of the Gaussian core. 
+        
+    https://arxiv.org/pdf/1603.08591.pdf
+    """
+    dev = (x - mu) / sigma
+    
+    if (dev <= -kL):
+        exponent = 0.5 * kL**2 + kL * dev
+        return np.exp(exponent)
+    elif (-kL < dev) and (dev <= kR):
+        return np.exp(-0.5 * dev * dev)
+    elif (kR < dev):
+        return np.exp(0.5 * kR**2 - kR * dev)
+    else:
+        raise ValueError("The value for `dev` did not fall into any required ranges.")
+
+#----------------#
+#----- FITS -----#
+#----------------#
 def fit_with_line(x_vals, y_vals, 
                   guess_params=[0,1], 
                   param_bounds=([-np.inf,-np.inf], [np.inf,np.inf]),
@@ -81,7 +263,6 @@ def fit_with_line(x_vals, y_vals,
 
     return popt, popt_err, pcov
 
-
 def fit_with_gaussian(x_vals, y_vals, 
                       guess_params=[1,0,1], 
                       param_bounds=([0,-np.inf,-np.inf], [np.inf,np.inf,np.inf]),
@@ -119,6 +300,61 @@ def fit_with_gaussian(x_vals, y_vals,
     
     popt_err = np.sqrt(np.diag(pcov))
 
+    return popt, popt_err, pcov
+
+# tmp imports
+from scipy.optimize import curve_fit
+
+def fit_with_crystal_ball_doublesided(x_vals, y_vals, 
+                      guess_params=[1,1,1,1,1,0,1], 
+                      param_bounds=([0,0,0,0,0,0,0], 
+#                           [-np.inf,-np.inf,-np.inf,-np.inf,-np.inf,-np.inf,-np.inf],
+                                    [np.inf,np.inf,np.inf,np.inf,np.inf,np.inf,np.inf]),
+                      absolute_sigma=True):
+    """
+    x, coeff, alphaL, nL, alphaR, nR, mu, sigma
+    Fit a double-sided crystal ball curve to a set of data. 
+    Returns the best (coeff, alphaL, nL, alphaR, nR, mu, sigma) which fit the data.
+    
+    Parameters
+    ----------
+    x_vals : array-like
+        The x values of the data. 
+    y_vals : array-like
+        The y values of the data.
+    guess_params : array-like
+        Initial guess for the parameters of the fitted DSCB.: [coeff, alphaL, nL, alphaR, nR, mu, sigma].
+        Putting guess values can speed up fit time and can make fits converge where they would otherwise fail.
+    param_bounds : 2-tuple of lists
+        First element of tuple is a list of the minimum-allowed values for each parameter.
+        Second element of tuple is a list of the maximum-allowed values.
+        Each list should have length == number of parameters
+    absolute_sigma : bool
+        I think this ensures that sigma > 0, but this has not been verified.
+        Check the scipy docs instead.
+        
+    Returns
+    -------
+    popt : 7-element array
+        The optimized parameters of the fitted DSCB.
+        From the scipy.optimize.curve_fit docstring:
+            "Optimal values for the parameters so that the sum of the squared residuals of f(xdata, *popt) - ydata is minimized."
+    popt_err : 7-element array 
+        The uncertainties on the optimized parameters.
+    pcov : 2d array
+        The covariance of popt.
+        From the scipy.optimize.curve_fit docstring:
+            "To compute one standard deviation errors on the parameters use perr = np.sqrt(np.diag(pcov))"
+    """
+    popt, pcov = curve_fit(crystal_ball_doublesided_func, x_vals, y_vals, p0=guess_params, bounds=param_bounds)
+    
+    # FIXME: For some strange reason, sigma can turn out to be negative...
+    # Turns out SciPy already has an optional parameter to fix this!
+    # ...still getting negative sigma values... so take abs().
+    popt[6] = np.abs(popt[6])
+    
+    popt_err = np.sqrt(np.diag(pcov))
+    
     return popt, popt_err, pcov
 
 def iterative_fit_gaus(iterations, bin_edges, bin_vals, 
