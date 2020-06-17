@@ -13,6 +13,7 @@ eval `scramv1 runtime -sh`
 cd /ufrc/avery/rosedj1/HiggsMassMeasurement/
 
 ml python3
+ml texlive  # This lets us have LaTeX font in Matplotlib plots.
 #ml conda
 #conda init bash
 #conda activate my_root_env

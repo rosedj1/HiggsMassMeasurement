@@ -46,7 +46,8 @@ def save_plots_to_outpath(save_plot=False, outpath="", file_name="DEFAULT_NAME",
             plt.savefig(fullpath + '.png')
             if (verbose): print(f"Figure saved at: {fullpath + '.png'}")
 
-def make_1D_dist(ax, data, x_limits, x_bin_edges, x_label, y_label, title, y_max=-1, log_scale=False):
+def make_1D_dist(ax, data, x_limits, x_bin_edges, x_label, y_label, title, extra_leg_text=None,
+                 y_max=-1, log_scale=False, color=None, leg_loc=None):
     """
     Draw a kinematic distribution (e.g. eta1, gen_phi2, etc.) to an axes object in a figure.
     This function plots under/overflow bins depending on if there are hist values
@@ -94,10 +95,6 @@ def make_1D_dist(ax, data, x_limits, x_bin_edges, x_label, y_label, title, y_max
         A 5-element list of the statistics of the ORIGINAL data 
         (i.e. data NOT put into under/overflow bins).
     """
-#    textsize_legend = 9
-#    textsize_axislabels = 12
-#    textsize_title = 12
-            
     ax.set_xlabel(x_label)#, fontsize=textsize_axislabels)
     ax.set_ylabel(y_label)#, fontsize=textsize_axislabels)
     ax.set_title(title)#, fontsize=textsize_title)
@@ -106,13 +103,20 @@ def make_1D_dist(ax, data, x_limits, x_bin_edges, x_label, y_label, title, y_max
 
     # Return the same length of data, just clip it (under/overflow bins).             
     mod_data = account_for_underoverflow_entries(data, x_limits[0], x_limits[1], x_bin_edges)
-                                
-    if (log_scale): ax.set_yscale('log')
-        
+    
+    if (log_scale): 
+        ax.set_yscale('log')
+    if color is None:
+        color = 'b'
+    if leg_loc is None:
+        leg_loc = 'upper right'
+    
     stats = get_stats_1Dhist(data)
     label_legend = make_stats_legend_for_1dhist(stats)
-    bin_vals, bin_edges, _ = ax.hist(mod_data, bins=x_bin_edges, label=label_legend, histtype='step', color='b')
-    ax.legend(loc='upper right', framealpha=1.0)#, fontsize=textsize_legend)
+    if extra_leg_text is not None:
+        label_legend = extra_leg_text + "\n" + label_legend
+    bin_vals, bin_edges, _ = ax.hist(mod_data, bins=x_bin_edges, label=label_legend, histtype='step', color=color)
+    ax.legend(loc=leg_loc, framealpha=1.0)#, fontsize=textsize_legend)
     ax.set_xlim(x_limits)
     if y_max == -1:
         # Default y_max.
@@ -228,8 +232,8 @@ def make_stats_legend_for_1dhist(stats_ls):
     stdev_err = stats_ls[4]
 
     leg_label  = "Entries = {}".format(n) + "\n"
-    leg_label += "Mean = {:.2E}".format(mean) + r" $\pm$ " + "{:.2E}".format(mean_err) + "\n"
-    leg_label += "Std Dev = {:.2E}".format(stdev) + r" $\pm$ " + "{:.2E}".format(stdev_err)
+    leg_label += "Mean = {:.4f}".format(mean) + r" $\pm$ " + "{:.4f}".format(mean_err) + "\n"
+    leg_label += "Std Dev = {:.4f}".format(stdev) + r" $\pm$ " + "{:.4f}".format(stdev_err)
 
     return leg_label
 

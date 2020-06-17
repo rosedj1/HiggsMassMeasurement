@@ -111,8 +111,11 @@ def crystal_ball_doublesided_func(x_arr, coeff, alphaL, nL, alphaR, nR, mu, sigm
     
     Parameters
     ----------
-    x_arr : array
+    x_arr : list or array-like
         Independent variable.
+    coeff : float
+        Scaling coefficient for the entire function. 
+        Usually has a value around the peak of the DSCB.
     alphaL : float
         Describes where the Gaussian-to-LEFT-tail-power-law switch takes place. 
         Gives the number of standard deviations when the switch happens.
@@ -150,6 +153,8 @@ def crystal_ball_doublesided_func(x_arr, coeff, alphaL, nL, alphaR, nR, mu, sigm
      }
      https://root.cern.ch/doc/master/RooCBShape_8cxx_source.html
     """
+    x_arr = np.array(x_arr)
+
     # Follow Wikipedia: https://en.wikipedia.org/wiki/Crystal_Ball_function
     if (alphaL < 0) or (alphaR < 0):
         raise ValueError("alphaL or alphaR should not be negative")
@@ -165,17 +170,17 @@ def crystal_ball_doublesided_func(x_arr, coeff, alphaL, nL, alphaR, nR, mu, sigm
     # Use a left tail power-law, if: dev < -alphaL.
     left_reg = (dev < -1*alphaL)
     absalphaL = abs(alphaL)
-    A = (nL / absalphaL)**nL * np.exp(-0.5 * absalphaL * absalphaL)
-    B = (nL / absalphaL) - absalphaL
-    left_val = coeff * A * (B - (x_arr-mu)/sigma)**(-nL)
+    AL = (nL / absalphaL)**nL * np.exp(-0.5 * absalphaL * absalphaL)
+    BL = (nL / absalphaL) - absalphaL
+    left_val = coeff * AL * (BL - dev)**(-nL)
     y_vals = np.where(left_reg, left_val, y_vals)
 
     # Use a right tail power-law, if: dev > alphaR.
     right_reg = (dev > alphaR)
     absalphaR = abs(alphaR)
-    A = (nR / absalphaR)**nR * np.exp(-0.5 * absalphaR * absalphaR)
-    B = (nR / absalphaR) - absalphaR
-    right_val = coeff * A * (B + (x_arr-mu)/sigma)**(-nR)
+    AR = (nR / absalphaR)**nR * np.exp(-0.5 * absalphaR * absalphaR)
+    BR = (nR / absalphaR) - absalphaR
+    right_val = coeff * AR * (BR + dev)**(-nR)
     y_vals = np.where(right_reg, right_val, y_vals)
         
     # Make sure all of the x_arr values got transformed.
@@ -184,7 +189,7 @@ def crystal_ball_doublesided_func(x_arr, coeff, alphaL, nL, alphaR, nR, mu, sigm
     
     return y_vals
         
-def exp_gaus_exp_func(x, kL, kR, mu, sigma):
+def exp_gaus_exp_func(x_arr, coeff, kL, kR, mu, sigma):
     """
     Calculate the y-value for a given x-value along exp-Gaus-exp function. 
     This function is a Gaussian Core stitched together with a left exponential tail
@@ -194,8 +199,9 @@ def exp_gaus_exp_func(x, kL, kR, mu, sigma):
     
     Parameters
     ----------
-    x : float
-        Independent variable.
+    x_arr : list or array-like, float
+        Array of x-vals for which this function will be evaluated.
+        The independent variable.
     kL : float
         Describes the exponential decay of the left tail.
     kR : float
@@ -207,17 +213,39 @@ def exp_gaus_exp_func(x, kL, kR, mu, sigma):
         
     https://arxiv.org/pdf/1603.08591.pdf
     """
-    dev = (x - mu) / sigma
+    x_arr = np.array(x_arr)
+
+    if (kL < 0) or (kR < 0):
+        raise ValueError("kL or kR should not be negative")
+        
+    # Make array of relative deviations.
+    dev = (x_arr - mu) / sigma
+
+    # Use a Gaussian, if: -kL < dev <= kR.
+    gaus_reg = (-kL < dev) & (dev <= kR)  # Makes a bool array.
+    gaus_val = coeff * np.exp(-0.5 * dev * dev )
+    # gaus_val = np.exp(-0.5 * dev * dev)
+    y_vals = np.where(gaus_reg, gaus_val, x_arr)
     
-    if (dev <= -kL):
-        exponent = 0.5 * kL**2 + kL * dev
-        return np.exp(exponent)
-    elif (-kL < dev) and (dev <= kR):
-        return np.exp(-0.5 * dev * dev)
-    elif (kR < dev):
-        return np.exp(0.5 * kR**2 - kR * dev)
-    else:
-        raise ValueError("The value for `dev` did not fall into any required ranges.")
+    # Use a left tail power-law, if: dev <= -kL.
+    left_reg = (dev <= -kL)
+    left_exp = 0.5 * kL**2 + kL * dev
+    left_val = coeff * np.exp(left_exp)
+    # left_val = np.exp(left_exp)
+    y_vals = np.where(left_reg, left_val, y_vals)
+
+    # Use a right tail power-law, if: dev < -alphaL.
+    right_reg = (kR < dev)
+    right_exp = 0.5 * kR**2 - kR * dev
+    right_val = coeff * np.exp(right_exp)
+    # right_val = np.exp(right_exp)
+    y_vals = np.where(right_reg, right_val, y_vals)
+
+    # Make sure all of the x_arr values got transformed.
+    # Possible bug if x_arr == 0 == y?
+    assert all([a != b for a,b in zip(x_arr,y_vals)])
+
+    return y_vals
 
 #----------------#
 #----- FITS -----#
@@ -318,11 +346,11 @@ def fit_with_crystal_ball_doublesided(x_vals, y_vals,
     
     Parameters
     ----------
-    x_vals : array-like
+    x_vals : list or array-like
         The x values of the data. 
-    y_vals : array-like
+    y_vals : list or array-like
         The y values of the data.
-    guess_params : array-like
+    guess_params : list or array-like
         Initial guess for the parameters of the fitted DSCB.: [coeff, alphaL, nL, alphaR, nR, mu, sigma].
         Putting guess values can speed up fit time and can make fits converge where they would otherwise fail.
     param_bounds : 2-tuple of lists
@@ -352,6 +380,56 @@ def fit_with_crystal_ball_doublesided(x_vals, y_vals,
     # Turns out SciPy already has an optional parameter to fix this!
     # ...still getting negative sigma values... so take abs().
     popt[6] = np.abs(popt[6])
+    
+    popt_err = np.sqrt(np.diag(pcov))
+    
+    return popt, popt_err, pcov
+
+def fit_with_exp_gaus_exp(x_vals, y_vals, 
+                      guess_params=[1,1,1,0,1], 
+                      param_bounds=([0,0,0,0,0], 
+                                    [np.inf,np.inf,np.inf,np.inf,np.inf]),
+                      absolute_sigma=True):
+    """
+    Fit an exp-gaus-exp curve to a set of data. 
+    Returns the best (kL, kR, mu, sigma) which fit the data.
+    
+    Parameters
+    ----------
+    x_vals : list or array-like
+        The x values of the data. 
+    y_vals : list or array-like
+        The y values of the data.
+    guess_params : list or array-like
+        Initial guess for the parameters of the fitted ExpGausExp.: [kL, kR, mu, sigma].
+        Putting guess values can speed up fit time and can make fits converge where they would otherwise fail.
+    param_bounds : 2-tuple of lists
+        First element of tuple is a list of the minimum-allowed values for each parameter.
+        Second element of tuple is a list of the maximum-allowed values.
+        Each list should have length == number of parameters
+    absolute_sigma : bool
+        I think this ensures that sigma > 0, but this has not been verified.
+        Check the scipy docs instead.
+        
+    Returns
+    -------
+    popt : 4-element array
+        The optimized parameters of the fitted ExpGausExp.
+        From the scipy.optimize.curve_fit docstring:
+            "Optimal values for the parameters so that the sum of the squared residuals of f(xdata, *popt) - ydata is minimized."
+    popt_err : 4-element array 
+        The uncertainties on the optimized parameters.
+    pcov : 2d array
+        The covariance of popt.
+        From the scipy.optimize.curve_fit docstring:
+            "To compute one standard deviation errors on the parameters use perr = np.sqrt(np.diag(pcov))"
+    """
+    popt, pcov = curve_fit(exp_gaus_exp_func, x_vals, y_vals, p0=guess_params, bounds=param_bounds)
+    
+    # FIXME: For some strange reason, sigma can turn out to be negative...
+    # Turns out SciPy already has an optional parameter to fix this!
+    # ...still getting negative sigma values... so take abs().
+    popt[4] = np.abs(popt[4])
     
     popt_err = np.sqrt(np.diag(pcov))
     
@@ -779,7 +857,10 @@ def prop_err_x_div_y(x, y, dx, dy):
     dx = np.array(dx, dtype=float)
     dy = np.array(dy, dtype=float)
     
-    r = x / y
+    undef = np.ones_like(x) * np.inf
+    # Where denom is not 0, do the division. Elsewhere put inf.
+    r = np.true_divide(x, y, out=undef, where=y!=0)
+    # r = x / y
     dr = np.sqrt((dx / y)**2 + (x / y**2 * dy)**2)
     return r, dr
 

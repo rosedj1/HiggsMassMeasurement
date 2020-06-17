@@ -5,6 +5,27 @@ from Utils_Python.Utils_Selections import Selector
 from Utils_Python.Utils_Physics import calc_dphi, calc_dR  
 from d0_Studies.d0_Utils.d0_fns import find_bin_edges_of_value, correct_muon_pT, calc_num_bins, print_header_message
 
+def get_bin_centers_from_TH1(hist):
+    """Return a list of the centers of each bin."""
+    n_bins = hist.GetNbinsX()
+    return [hist.GetBinCenter(x) for x in range(1, n_bins+1)]
+
+def get_bin_vals_from_TH1(hist): 
+    """Return a list of the values in each bin."""
+    n_bins = hist.GetNbinsX()
+    return [hist.GetBinContent(x) for x in range(1,n_bins+1)]
+    
+def get_bin_edges_from_TH1(hist):
+    """
+    Return a list of bin edges from a TH1. 
+    If the TH1 has N bins, then len(edge_ls) == N + 1.
+    """
+    n_bins = hist.GetNbinsX()
+    edge_ls = [hist.GetBinLowEdge(x) for x in range(1,n_bins+1)]
+    rightmost_edge = hist.GetBinLowEdge(n_bins) + hist.GetBinWidth(n_bins)
+    edge_ls.append(rightmost_edge)
+    return edge_ls
+
 def skip_black_yellow_fit_line_colors(count):
         """
         Skip black and yellow fit lines:

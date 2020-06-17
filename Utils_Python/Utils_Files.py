@@ -18,12 +18,14 @@ def copyFile(inDir,fileName,outDir):
         copy2(inDir+fileName, outDir+fileName)
 
 ##______________________________________________
-def makeDirs(dir_):                       
+def makeDirs(dir_, verbose=True):                       
     """
     If the directory (dir_) does not exist, then make it. 
     Makes directories recursively.
     """
-    if not os.path.exists(dir_):          
+    if not os.path.exists(dir_):
+        if (verbose):
+            print(f"[INFO] Directory not found. Creating {dir_}.")    
         os.makedirs(os.path.abspath(dir_))
 
 ##__________________________________________________________________||
@@ -41,8 +43,11 @@ def check_overwrite(outfile, overwrite=False):
     Raises an error if outfile exists and overwrite == False. 
     """
     if os.path.exists(outfile) and not (overwrite):
-        err_msg = "Not allowed to overwrite file:\n{}\n(since it already exists!)".format(outfile)
-        err_msg += "To write over the file, set overwrite=True.\n"
+        err_msg = (
+            f"Not allowed to overwrite file since it already exists"
+            f"\n{outfile}\n"
+            f"To write over this file, set overwrite = True.\n"
+            )
         raise RuntimeError(err_msg)
     
 def make_str_title_friendly(str_, keep_whitespace=False):

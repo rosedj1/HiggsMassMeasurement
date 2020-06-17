@@ -3,8 +3,8 @@ PURPOSE:
   This code opens up one of Filippo's ggF files on HPG T2,
   selects m4mu events which satisfy the desired selections, 
   and makes a m4mu histogram. 
-  The individual data are saved to a TTree and the m4mu hist
-  is saved to a '.root' file.
+  This hist is saved to a '.root' file along with the 
+  individual data in a TTree.
 
 NOTES: This code will rewrite over outfile_path.
 """
@@ -20,7 +20,7 @@ outfile_path = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/root_files/M
 
 n_evts = -1
 
-overwrite = True
+overwrite = False
 #----- Automatons -----#
 check_overwrite(outfile_path, overwrite)
 
@@ -72,6 +72,19 @@ def get_skimmed_rec_ID_ls(evt):
     return [ID_rec_ls[ndx] for ndx in indices_rec]
 
 def get_4mu_ndcs_rec(evt):
+    """Returns a list of 
+    
+    The index of lep_genindex tells which rec lepton matches which gen.
+    
+    Example:
+        GENlep_pt = [27.4, 9.0, 28.7, 18.1]  # gen pTs
+        lep_pt = [27.4, 27.3, 18.2, 8.8]  # rec pTs
+        
+        Use lep_genindex = [0,2,3,1] to find which gen matches which rec. 
+            0th element is 0 : lep_pt[0] matches GENlep_pt[0]
+            1st element is 2 : lep_pt[1] matches GENlep_pt[2]
+            2nd element is 3 : lep_pt[2] matches GENlep_pt[3]
+            3rd element is 1 : lep_pt[3] matches GENlep_pt[1]"""
     indices_gen = get_4mu_ndcs_gen(evt)
     lep_genindex_ls = list(evt.lep_genindex)
     return [lep_genindex_ls.index(ndx) for ndx in indices_gen]
@@ -83,6 +96,26 @@ def get_4mu_ndcs_gen(evt):
     """
     return [ndx for ndx in evt.lep_genindex if ndx != -1]
 
+def sanity_check(evt):
+    """
+    Takes a 4mu event, which has passed_Higgs_selections:
+      * 105 < m4mu < 140 GeV
+      * passedFullSelection == True
+      * finalState == True
+      
+    Will raise an error if the kinematics of reco or gen look strange.
+    """
+    # Make sure most kinematic vectors all have the same length. 
+    # All rec vectors are of same length; all gen vectors are of same length.
+    equal_len_kinem_vec(evt)
+    
+    # Check that gen 4mu and rec 4mu match in IDs. 
+    skimmed_ID_gen_ls = get_skimmed_gen_ID_ls(evt)
+    skimmed_ID_rec_ls = get_skimmed_rec_ID_ls(evt)
+#     print("skimmed_ID_gen_ls:", skimmed_ID_gen_ls)
+#     print("skimmed_ID_rec_ls:", skimmed_ID_rec_ls)
+    check_IDs(skimmed_ID_gen_ls, skimmed_ID_rec_ls)
+    
 all_evts = t.GetEntries()
 if n_evts == -1:
     n_evts = all_evts
@@ -128,20 +161,24 @@ for ct,x in enumerate(range(n_evts)):
         continue
     
 #     sanity_check(t)
+    # Event is good. Do analysis.
     good_evts_adhoc += 1
     
-    # Now prepare the muons from this good event.
+    # Get indices
     rec_ncds_ls = get_4mu_ndcs_rec(t)
+    gen_ncds_ls = get_4mu_ndcs_gen(t)
     
-    index_mu1 = rec_ncds_ls[0]
-    index_mu2 = rec_ncds_ls[1]
-    index_mu3 = rec_ncds_ls[2]
-    index_mu4 = rec_ncds_ls[3]
+
+
+    index_rec_mu1 = rec_ncds_ls[0]
+    index_rec_mu2 = rec_ncds_ls[1]
+    index_rec_mu3 = rec_ncds_ls[2]
+    index_rec_mu4 = rec_ncds_ls[3]
     
-    mu1 = ROOT.Math.PtEtaPhiMVector(t.lep_pt[index_mu1], t.lep_eta[index_mu1], t.lep_phi[index_mu1], t.lep_mass[index_mu1])
-    mu2 = ROOT.Math.PtEtaPhiMVector(t.lep_pt[index_mu2], t.lep_eta[index_mu2], t.lep_phi[index_mu2], t.lep_mass[index_mu2])
-    mu3 = ROOT.Math.PtEtaPhiMVector(t.lep_pt[index_mu3], t.lep_eta[index_mu3], t.lep_phi[index_mu3], t.lep_mass[index_mu3])
-    mu4 = ROOT.Math.PtEtaPhiMVector(t.lep_pt[index_mu4], t.lep_eta[index_mu4], t.lep_phi[index_mu4], t.lep_mass[index_mu4])
+    mu1 = ROOT.Math.PtEtaPhiMVector(t.lep_pt[index_rec_mu1], t.lep_eta[index_rec_mu1], t.lep_phi[index_rec_mu1], t.lep_mass[index_rec_mu1])
+    mu2 = ROOT.Math.PtEtaPhiMVector(t.lep_pt[index_rec_mu2], t.lep_eta[index_rec_mu2], t.lep_phi[index_rec_mu2], t.lep_mass[index_rec_mu2])
+    mu3 = ROOT.Math.PtEtaPhiMVector(t.lep_pt[index_rec_mu3], t.lep_eta[index_rec_mu3], t.lep_phi[index_rec_mu3], t.lep_mass[index_rec_mu3])
+    mu4 = ROOT.Math.PtEtaPhiMVector(t.lep_pt[index_rec_mu4], t.lep_eta[index_rec_mu4], t.lep_phi[index_rec_mu4], t.lep_mass[index_rec_mu4])
     
     m4mu = calc_Hmass(mu1, mu2, mu3, mu4)
     ptr[0] = m4mu

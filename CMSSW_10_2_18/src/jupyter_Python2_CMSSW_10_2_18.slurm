@@ -2,8 +2,8 @@
 #SBATCH --job-name=jupyter_python2
 #SBATCH --output=notebook_jupyter_python2_%j.log
 #SBATCH --ntasks=1
-#SBATCH --mem=16gb
-#SBATCH --time=04:00:00
+#SBATCH --mem=4gb
+#SBATCH --time=02:00:00
 date;hostname;pwd
  
 module add jupyter

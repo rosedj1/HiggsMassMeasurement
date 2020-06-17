@@ -49,13 +49,23 @@ def correct_muon_pT(eta, pT, q, d0,
                     pT_corr_factor_dict, 
                     eta_binedge_ls, pT_binedge_ls,
                     verbose=False):
-    
+    """
+    Use the eta, pT, q, and d0 of a reco muon to determine its corrected pT.
+
+    Parameters
+    ----------
+    FIXME: [ ] Finish doc string.
+    """
     eta_min, eta_max = find_bin_edges_of_value(abs(eta), np.array(eta_binedge_ls))
     pT_min,  pT_max  = find_bin_edges_of_value(pT,       np.array(pT_binedge_ls))
     
     slope, interc = get_pT_corr_factors(pT_corr_factor_dict, eta_min, eta_max, pT_min, pT_max)
     
     delta_pT = pT * (interc + slope * q * d0)
+    rel_pT = delta_pT / pT
+    if (rel_pT > 0.05):
+        msg = "[WARNING] delta_pT ({}) > 5%".format(rel_pT) 
+        print(msg)
     pT_corr = pT - delta_pT
     
     if (verbose):
@@ -64,11 +74,12 @@ def correct_muon_pT(eta, pT, q, d0,
         print("  pT  = {}".format(pT))
         print("  q   = {}".format(q))
         print("  d0  = {}".format(d0))
-        print("eta bin: [{}, {}]".format(eta_min, eta_max))
-        print(" pT bin: [{}, {}]".format(pT_min, pT_max))
-        print("slope:", slope)
-        print("interc:", interc)
-        print("pT_corr = pT - delta_pT: {} = {} - {}".format(pT_corr, pT, delta_pT))
+        print("  eta bin: [{}, {}]".format(eta_min, eta_max))
+        print("  pT bin:  [{}, {}]".format(pT_min, pT_max))
+        print("  slope:  {}".format(slope))
+        print("  interc: {}".format(interc))
+        print("  delta_pT: {}".format(delta_pT))
+        print("  pT - delta_pT = pT_corr : {} - {} = {}\n".format(pT, delta_pT, pT_corr))
     
     return pT_corr
     
@@ -255,7 +266,13 @@ def find_bin_edges_of_value(val, bin_edge_arr):
         lt_arr = bin_edge_arr[val >= bin_edge_arr]  # Bool array before slice, e.g.: [1, 1, 0, ... , 0, 0]
         this_bin_edge = lt_arr[-1]
     except IndexError:
-        this_bin_edge = next_bin_edge = None
+        # Most likely that the val is less than min or greater than max of bin_edge_arr.
+        if (val < min(bin_edge_arr)) or (val > max(bin_edge_arr)):
+            this_bin_edge = next_bin_edge = None
+            print(f"Tried putting {val} into {bin_edge_arr}")
+        else:
+            msg = "val ({}) could not be placed in or next to bin_edge_arr:\n{}".format(bin_edge_arr)
+            raise ValueError(msg)
     
     return this_bin_edge, next_bin_edge
 
