@@ -316,7 +316,7 @@ def RooFit_gaus_fit_unbinned_from_TTree(tree, canv, fit_range=None, count=1):
 #     c = ROOT.TCanvas()
 #     c.Draw()
     
-    x = ROOT.RooRealVar("x","x", x_min, x_max)
+    x = ROOT.RooRealVar("x","The Independent Variable", x_min, x_max)
     mean = ROOT.RooRealVar("mean","Mean of Gaussian", x_avg, x_min, x_max)
     sigma = ROOT.RooRealVar("sigma","Width of Gaussian", x_std, 0, 999999)
     gauss = ROOT.RooGaussian("gauss","gauss(x,mean,sigma)", x, mean, sigma)
