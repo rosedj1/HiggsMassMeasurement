@@ -1,10 +1,11 @@
-## Reading root files with vaex
+## Reading '.root' Files with Vaex
+
 I have not been able to convert root files directly into 
 hdf5 files that are readable by vaex. 
 The closest I came was using the shell command `root2hdf5`
 (after doing `cmsenv`). Vaex was able to read the **.hdf5** file in, but the
 resulting vaex DataFrame essentially had a single column 
-called "passedEvents". I wasn't able to parse any of it.
+called "`passedEvents`". I wasn't able to parse any of it.
 
 Instead, I have discovered two options to convert a **.root** file
 into a vaex-readable **.hdf5** file. Let's call the Options (A) and (B):
@@ -14,11 +15,10 @@ into a vaex-readable **.hdf5** file. Let's call the Options (A) and (B):
         (1)      (2)                 (3)               (4)
         
 **Pros:** 
-- The npz is relatively light-weight. 
+- If you go the `.npz` route (keep reading), the `.npz` is relatively light-weight. 
   
 **Cons:** 
-- You will have to store a huge DF in local 
-memory during steps (3) and (4).
+- You will have to store a huge DF in RAM during steps (3) and (4).
 
 (1) Convert root file to array (yikes).
 ```python
@@ -87,7 +87,7 @@ import vaex
 vdf = vaex.from_csv("bigass_file.csv")
 ```
 
-Finally, do step (5) above.
+Finally, do step (4) above.
 
 ----------
 

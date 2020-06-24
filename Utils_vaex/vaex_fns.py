@@ -5,7 +5,6 @@ import vaex  # The holy grail.
 import numpy as np
 
 def df_drop_cols(df, col_keep_ls, inplace=True):
-    import pandas
     """
     Drop all columns in a vaex or pandas DataFrame (df) 
     that are NOT specified in the given list (col_keep_ls).
@@ -19,7 +18,12 @@ def df_drop_cols(df, col_keep_ls, inplace=True):
     inplace : bool
         If True, then permanently drop the columns from df. 
     """
-    if isinstance(df, vaex.hdf5.dataset.Hdf5MemoryMapped):
+    import pandas
+    
+    vdf_mem_map = isinstance(df, vaex.hdf5.dataset.Hdf5MemoryMapped)
+    vdf_df_arr = isinstance(df, vaex.dataframe.DataFrameArrays)
+
+    if (vdf_mem_map) or (vdf_df_arr):
         all_col_names = set(df.column_names)
     elif isinstance(df, pandas.core.frame.DataFrame):
         all_col_names = set(df.columns)
@@ -28,7 +32,7 @@ def df_drop_cols(df, col_keep_ls, inplace=True):
     col_drop_set = all_col_names - col_keep_set
     
     for col in col_drop_set:
-        if isinstance(df, vaex.hdf5.dataset.Hdf5MemoryMapped):
+        if (vdf_mem_map) or (vdf_df_arr):
             df.drop(col, inplace=inplace)
         elif isinstance(df, pandas.core.frame.DataFrame):
             df.drop(col, axis=1, inplace=inplace)
@@ -97,8 +101,8 @@ def prepare_vaex_df(vdf):
     
     return vdf_concat
 
-def vaex_apply_masks(vdf, eta_minmax, pT_minmax, qd0_minmax, massZ_minmax, dR_max):
-    print("Applying the following cuts to the VDF:")
+def vaex_apply_masks(vdf, eta_minmax, pT_minmax, qd0_minmax, massZ_minmax, dR_max, verbose=False):
+    
     cut_str  = (
         f'{eta_minmax[0]} < vdf["eta"].abs()) & (vdf["eta"].abs() < {eta_minmax[1]})\n'
         f'{pT_minmax[0]} < vdf["pT"]) & (vdf["pT"] < {pT_minmax[1]})\n'
@@ -106,13 +110,14 @@ def vaex_apply_masks(vdf, eta_minmax, pT_minmax, qd0_minmax, massZ_minmax, dR_ma
         f'{massZ_minmax[0]} < vdf["massZ"]) & (vdf["massZ"] < {massZ_minmax[1]})\n'
         f'vdf["delta_R"] < {dR_max})'
         )
-    print(cut_str + "\n")
-    
-    print(f"eta_minmax: {eta_minmax}")
-    print(f"pT_minmax:  {pT_minmax}")
-    print(f"qd0_minmax: {qd0_minmax}")
-    print(f"massZ_minmax: {massZ_minmax}")
-    print(f"dR_max: {dR_max}")
+    if (verbose):
+        print("Applying the following cuts to the VDF:")
+        print(cut_str + "\n")
+        print(f"eta_minmax: {eta_minmax}")
+        print(f"pT_minmax:  {pT_minmax}")
+        print(f"qd0_minmax: {qd0_minmax}")
+        print(f"massZ_minmax: {massZ_minmax}")
+        print(f"dR_max: {dR_max}")
     mask_eta = (eta_minmax[0] < vdf["eta"].abs()) & (vdf["eta"].abs() < eta_minmax[1])
     mask_pT = (pT_minmax[0] < vdf["pT"]) & (vdf["pT"] < pT_minmax[1])
     mask_qd0 = (qd0_minmax[0] < vdf["qd0BS"]) & (vdf["qd0BS"] < qd0_minmax[1])

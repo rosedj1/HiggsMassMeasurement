@@ -47,7 +47,7 @@ def save_plots_to_outpath(save_plot=False, outpath="", file_name="DEFAULT_NAME",
             if (verbose): print(f"Figure saved at: {fullpath + '.png'}")
 
 def make_1D_dist(ax, data, x_limits, x_bin_edges, x_label, y_label, title, extra_leg_text=None,
-                 y_max=-1, log_scale=False, color=None, leg_loc=None):
+                 y_max=-1, log_scale=False, color=None, leg_loc=None, display="float"):
     """
     Draw a kinematic distribution (e.g. eta1, gen_phi2, etc.) to an axes object in a figure.
     This function plots under/overflow bins depending on if there are hist values
@@ -112,7 +112,7 @@ def make_1D_dist(ax, data, x_limits, x_bin_edges, x_label, y_label, title, extra
         leg_loc = 'upper right'
     
     stats = get_stats_1Dhist(data)
-    label_legend = make_stats_legend_for_1dhist(stats)
+    label_legend = make_stats_legend_for_1dhist(stats, display=display)
     if extra_leg_text is not None:
         label_legend = extra_leg_text + "\n" + label_legend
     bin_vals, bin_edges, _ = ax.hist(mod_data, bins=x_bin_edges, label=label_legend, histtype='step', color=color)
@@ -205,7 +205,7 @@ def get_stats_2Dhist(x_data, y_data):
 
     return stats
 
-def make_stats_legend_for_1dhist(stats_ls):
+def make_stats_legend_for_1dhist(stats_ls, display="float"):
     """
     Create a legend label that displays the statistics of a 1D histogram. 
     
@@ -219,7 +219,10 @@ def make_stats_legend_for_1dhist(stats_ls):
         stats_ls[2] -> standard error on the mean of data
         stats_ls[3] -> standard deviation of data
         stats_ls[4] -> standard error on the stdev of data
-    
+    display : str, optional
+        "float" : E.g., 0.0415
+        "sci"   : E.g., 4.15E-2
+
     Returns
     -------
     leg_label : str
@@ -231,9 +234,14 @@ def make_stats_legend_for_1dhist(stats_ls):
     stdev = stats_ls[3]
     stdev_err = stats_ls[4]
 
-    leg_label  = "Entries = {}".format(n) + "\n"
-    leg_label += "Mean = {:.4f}".format(mean) + r" $\pm$ " + "{:.4f}".format(mean_err) + "\n"
-    leg_label += "Std Dev = {:.4f}".format(stdev) + r" $\pm$ " + "{:.4f}".format(stdev_err)
+    if (display in "float"):
+        leg_label  = f"Entries = {n}" + "\n"
+        leg_label += f"Mean = {mean:.4f}" + r" $\pm$ " + f"{mean_err:.4f}" + "\n"
+        leg_label += f"Std Dev = {stdev:.4f}" + r" $\pm$ " + f"{stdev_err:.4f}"
+    elif (display in "sci"):
+        leg_label  = f"Entries = {n}" + "\n"
+        leg_label += f"Mean = {mean:.4E}" + r" $\pm$ " + f"{mean_err:.4E}" + "\n"
+        leg_label += f"Std Dev = {stdev:.4E}" + r" $\pm$ " + f"{stdev_err:.4E}"
 
     return leg_label
 

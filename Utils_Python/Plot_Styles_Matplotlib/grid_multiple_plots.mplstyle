@@ -31,3 +31,6 @@ image.cmap   : rainbow           ## A colormap name, gray etc...
 errorbar.capsize : 1.5             ## length of end cap on error bars in pixels
 hist.bins : 50                   ## The default number of histogram bins.
 savefig.format      : pdf      ## png, ps, pdf, svg
+
+#font.family  : serif #sans-serif
+#font.serif   : Times New Roman

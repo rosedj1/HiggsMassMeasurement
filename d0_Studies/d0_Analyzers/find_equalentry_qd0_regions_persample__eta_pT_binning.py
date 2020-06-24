@@ -5,7 +5,7 @@
 #   Choose the q*d0 values which split the q*d0 distribution 
 #   up into `r` equal-entry regions (r is chosen by the User).
 #   Bin edges of equal-entry regions are recorded in a .csv file, 
-#   and a dictionary saved in a .pkl file.
+#   and a dictionary is saved in a .pkl file.
 # Syntax:  
 #   python script.py > output.txt  (recommended)
 #   python script.py 
@@ -19,7 +19,7 @@
 #   Make sure to check all the parameters in "User Parameters".
 #   Should be used with Python 3.X.
 # Author:  Jake Rosenzweig
-# Updated: 2020-05-31
+# Updated: 2020-06-23
 """
 import os
 import sys
@@ -30,7 +30,7 @@ import argparse
 import numpy as np
 
 from Utils_vaex.vaex_fns import prepare_vaex_df, vaex_apply_masks
-from Samples.sample_info import MC_2017_DY_hdf5, MC_2017_Jpsi_hdf5
+from Samples.sample_info import MC_2018_DY_hdf5, MC_2018_Jpsi_hdf5 #MC_2017_DY_hdf5, MC_2017_Jpsi_hdf5
 from d0_Utils.d0_fns import find_equal_hist_regions_unbinned
 from d0_Studies.kinematic_bins import (equal_entry_bin_edges_eta_mod1_wholenum,
                                         bin_edges_pT_sevenfifths_to1000GeV_wholenum)
@@ -57,8 +57,8 @@ outdir = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pkl_and_csv/"
 # filename_base = args.filename_base
 # overwrite = args.overwrite
 # verbose = args.verbose
-# filename_base = "20200526_fullstats"
-filename_base = "20200531_fullstats_sameasFilippodeltaRcut"
+# filename_base = "20200623_fullstats_sameasFilippodeltaRcut"
+filename_base = "20200623_test01"
 overwrite = False
 verbose = True
 
