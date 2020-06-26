@@ -1,9 +1,10 @@
 """
 # PURPOSE: 
-#    This script makes 1 PDF of qd0 distributions. 
-#    It can probably easily accomodate other kinematic variables, like dpT/pT.
+#  This script makes 1 PDF of qd0 distributions. 
+#  It can probably easily loop over kinematic variables for plotting, like dpT/pT.
+#  But that feature is not yet implemented. 
 # NOTES: 
-#    
+#  Each page of the PDF will show 
 # 
 """
 import time

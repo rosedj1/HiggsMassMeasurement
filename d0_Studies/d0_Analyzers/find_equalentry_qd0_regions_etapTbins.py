@@ -19,7 +19,7 @@
 #   Make sure to check all the parameters in "User Parameters".
 #   Should be used with Python 3.X.
 # Author:  Jake Rosenzweig
-# Updated: 2020-06-23
+# Updated: 2020-06-24
 """
 import os
 import sys
@@ -29,13 +29,12 @@ import argparse
 
 import numpy as np
 
-from Utils_vaex.vaex_fns import prepare_vaex_df, vaex_apply_masks
-from Samples.sample_info import MC_2018_DY_hdf5, MC_2018_Jpsi_hdf5 #MC_2017_DY_hdf5, MC_2017_Jpsi_hdf5
+from Utils_vaex.vaex_fns import vaex_apply_masks, prepare_vaex_df
+from Samples.sample_info import Sample
 from d0_Utils.d0_fns import find_equal_hist_regions_unbinned
-from d0_Studies.kinematic_bins import (equal_entry_bin_edges_eta_mod1_wholenum,
-                                        bin_edges_pT_sevenfifths_to1000GeV_wholenum)
+from d0_Studies.KinBin_Info.kinematic_bins import (equal_entry_bin_edges_eta_mod1_wholenum,
+                                                   bin_edges_pT_sevenfifths_to1000GeV_wholenum)
 from Utils_Python.Utils_Files import makeDirs, make_str_title_friendly, check_overwrite      
-
 
 # def ParseOption():
 #     parser = argparse.ArgumentParser(description='submit all')
@@ -58,16 +57,20 @@ outdir = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pkl_and_csv/"
 # overwrite = args.overwrite
 # verbose = args.verbose
 # filename_base = "20200623_fullstats_sameasFilippodeltaRcut"
-filename_base = "20200623_test01"
+filename_base = "20200624_fullstats_MC2018JpsiDY"
+# sample_ls = [
+#     Sample("MC", "2017", "Jpsi", "hdf5"),
+#     Sample("MC", "2017", "DY", "hdf5"),
+# ]   
+MC_2018_Jpsi_hdf5 = Sample("MC", "2018", "Jpsi", "hdf5")
+MC_2018_DY_hdf5 = Sample("MC", "2018", "DY", "hdf5")
 overwrite = False
 verbose = True
 
 # Binning.
 eta_ls = equal_entry_bin_edges_eta_mod1_wholenum
 pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum
-# eta_ls = [0.0,2.4]
-# pT_ls = [5.0, 200.0]
-qd0_limits = [-0.015, 0.015]
+qd0_limits = [-0.02, 0.02]
 
 r = 12  # Number of regions to split each q*d0 region into. 
 algo = ("at_least", 3000)
@@ -149,8 +152,8 @@ with open(fullpath_csv, "w") as myfile:
 
             equal_entry_binedge_dict[eta_key][pT_key] = {}
             # No restriction on q*d0.
-            all_masks_DY   = vaex_apply_masks(MC_2017_DY_hdf5.vdf_prepped,   eta_range, pT_range, qd0_limits, massZ_minmax_DY,   dR_max_DY)
-            all_masks_Jpsi = vaex_apply_masks(MC_2017_Jpsi_hdf5.vdf_prepped, eta_range, pT_range, qd0_limits, massZ_minmax_Jpsi, dR_max_Jpsi)
+            all_masks_DY   = vaex_apply_masks(MC_2018_DY_hdf5.vdf_prepped,   eta_range, pT_range, qd0_limits, massZ_minmax_DY,   dR_max_DY)
+            all_masks_Jpsi = vaex_apply_masks(MC_2018_Jpsi_hdf5.vdf_prepped, eta_range, pT_range, qd0_limits, massZ_minmax_Jpsi, dR_max_Jpsi)
 
             n_tot_DY = all_masks_DY.count()
             n_tot_Jpsi = all_masks_Jpsi.count()
@@ -168,8 +171,8 @@ with open(fullpath_csv, "w") as myfile:
                 print(f"Jpsi events after selection: {n_sel_Jpsi} (eff. = {n_sel_Jpsi/float(n_tot_Jpsi)*100.:.4f})%")
 
             # Get ALL q*d0 values.
-            qd0_arr_DY = MC_2017_DY_hdf5.vdf_prepped.evaluate("qd0BS")  # These are numpy arrays.
-            qd0_arr_Jpsi = MC_2017_Jpsi_hdf5.vdf_prepped.evaluate("qd0BS")
+            qd0_arr_DY = MC_2018_DY_hdf5.vdf_prepped.evaluate("qd0BS")  # These are numpy arrays.
+            qd0_arr_Jpsi = MC_2018_Jpsi_hdf5.vdf_prepped.evaluate("qd0BS")
 
             # Remember this is within just one (eta, pT) region.
             qd0_arr_sel_DY = qd0_arr_DY[all_masks_DY.values]
@@ -226,7 +229,7 @@ with open(fullpath_pickle,'wb') as output:
     pickle.dump(equal_entry_binedge_dict, output, protocol=2)
 print(f"[INFO] eta, pT, q*d0 bin dict written to pickle file:\n{fullpath_pickle}\n")
 
-total_muons_original = MC_2017_DY_hdf5.vdf_prepped.count() + MC_2017_Jpsi_hdf5.vdf_prepped.count()
+total_muons_original = MC_2018_DY_hdf5.vdf_prepped.count() + MC_2018_Jpsi_hdf5.vdf_prepped.count()
 perc = total_entries / float(total_muons_original) * 100.
 print(
     f"Total muons found before selections: {total_muons_original}\n"

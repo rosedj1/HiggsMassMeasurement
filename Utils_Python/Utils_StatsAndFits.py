@@ -1,10 +1,13 @@
 import warnings
 import numpy as np
 from scipy.optimize import curve_fit, OptimizeWarning
+
+# Local imports. 
 from d0_Utils.d0_fns import centers_of_binning_array, get_subset_mask, print_header_message
 from d0_Utils.d0_dicts import color_dict, label_LaTeX_dict
-
+from Utils_ROOT.ROOT_StatsAndFits import RooFit_gaus_fit_unbinned
 from Utils_Python.Utils_Plotting import make_stats_legend_for_gaus_fit
+
 #--- Fitting Functions ---#
 def linear_func(x, b, m):
     """
@@ -739,7 +742,7 @@ def iterative_fit_gaus_unbinned(num_iters, data,
             
         # Do unbinned fit.
         trimmed_data = data[(x_min <= data) & (data <= x_max)]
-        stats_ls = unbinned_gaus_fit_RooFit(trimmed_data)
+        stats_ls = RooFit_gaus_fit_unbinned(trimmed_data)
         
         bestfit_mean = stats_ls[0]
         bestfit_mean_err = stats_ls[1]

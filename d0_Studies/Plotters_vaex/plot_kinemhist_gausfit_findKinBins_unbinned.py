@@ -1,4 +1,6 @@
 """
+# WARNING: This script has most likely been superceded by "findKinBins_doFits_makePDFs.py"
+#   Do a comparison before deleting this script. -- Jake, 2020-06-24
 # PURPOSE: 
 #   Make PDFs of any kinematic distribution (e.g., delta_pT/pT), 
 #   in specified eta, pT, and q*d0 bins.
@@ -18,9 +20,8 @@
 #     time elapsed ~6 hrs. This is ~8.5 plots/min.
 # SYNTAX:  python script.py
 # AUTHOR:  Jake Rosenzweig
-# UPDATED: 2020-05-22
+# UPDATED: 2020-06-24
 """
-
 import os
 import sys
 import math
@@ -32,9 +33,9 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
 # Local imports.
-from vaex_Utils.vaex_dataframes import (vdf_MC_2017_DY, vdf_MC_2017_Jpsi, vdf_MC_2016_DY,
-                                        prepare_vaex_df, vaex_apply_masks)
-from d0_Studies.kinematic_bins import (equal_entry_bin_edges_eta_mod1,
+from Utils_vaex.vaex_fns import vaex_apply_masks, prepare_vaex_df
+from Samples.sample_info import Sample
+from d0_Studies.KinBin_Info.kinematic_bins (equal_entry_bin_edges_eta_mod1,
                                         equal_entry_bin_edges_eta_mod2,
                                         equal_entry_bin_edges_eta_mod1_wholenum,
                                         equal_entry_bin_edges_pT_sevenfifths_to1000GeV,
@@ -57,8 +58,10 @@ from Utils_Python.Utils_StatsAndFits import iterative_fit_gaus, iterative_fit_ga
 #----- User Parameters -----#
 #---------------------------#
 # Samples with muons treated "individually":
-vdf_concat_MC_2017_DY = prepare_vaex_df(vdf_MC_2017_DY)
-vdf_concat_MC_2017_Jpsi = prepare_vaex_df(vdf_MC_2017_Jpsi)
+vdf_concat_MC_2018_Jpsi = Sample("MC", "2018", "Jpsi", "hdf5").vdf_prepped
+vdf_concat_MC_2018_DY = Sample("MC", "2018", "DY", "hdf5").vdf_prepped
+# vdf_concat_MC_2018_DY = #prepare_vaex_df(vdf_MC_2017_DY)
+# vdf_concat_MC_2018_Jpsi = #prepare_vaex_df(vdf_MC_2017_Jpsi)
 
 # Dictionary which contains equal-entry q*d0 bin edges.
 # !!!!! FIXME: Substitute this with sys.argv[1] or the other one. 
@@ -68,21 +71,27 @@ vdf_concat_MC_2017_Jpsi = prepare_vaex_df(vdf_MC_2017_Jpsi)
 # inpath_3Dbins_pickle_dict = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/find_best_binning__eta_pT_qd0/Test02_fullscan_06reg_dpToverGenpTsqred__1p4_eta_1p6__30p0_pT_50p0_GeV.pkl"
 # inpath_3Dbins_pickle_dict = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/find_best_binning__eta_pT_qd0/fullscan_12reg_3000perreg__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
 # inpath_3Dbins_pickle_dict = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/Pickles/fullscan_12reg_3000perreg__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
-inpath_3Dbins_pickle_dict = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/Pickles/Test02_fullscan_06reg_dpToverGenpTsqred__1p4_eta_1p6__30p0_pT_50p0_GeV.pkl"
+# inpath_3Dbins_pickle_dict = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/Pickles/Test02_fullscan_06reg_dpToverGenpTsqred__1p4_eta_1p6__30p0_pT_50p0_GeV.pkl"
 
+#--- Delete below:
+inpath_3Dbins_pickle_dict = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pkl_and_csv/20200624_MC2018JpsiDY_test01_6regwith3000perreg__0p0_eta_0p4__5p0_pT_1000p0_GeV.pkl"
+#--- Delete above:
+
+# 20200604: run below
+# inpath_3Dbins_pickle_dict = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pkl_and_csv/20200624_fullstats_MC2018JpsiDY_6regwith3000perreg__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
 
 #-----Below is a big boy. -----#
 # inpath_3Dbins_pickle_dict = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/find_best_binning__eta_pT_qd0/equalentry_qd0_binedges__20_regions_max__atleast1000entriesperregion__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
 # outdir_plots = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/hists_dpToverpT/MC/2017/"
-outdir_plots = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/Plots/hists_dpToverpT/"
+outdir_plots = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/plots/hists_dpToverpT/"
 # outdir_kinbin_pkl = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/kinbin3D_pkls/"
-outdir_kinbin_pkl = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/Pickles/kinbins/"
+outdir_kinbin_pkl = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pkl_and_csv/kinbins/"
 
 # filename_base = "realtest01_MC2017DYandJpsi_fullscan__autodetect_qd0_regions"
 # filename_base = "fullpath_fullscan_12reg"
-filename_base = "testscan_06reg_test01"
+filename_base = "20200624_testscan_06reg_test01"
 write_to_pickle = True
-overwrite = True
+overwrite = False
 verbose = True
 skip_bad_fit = True
 do_unbinned_fit = True  # If false, will default to binned fit.
@@ -91,8 +100,8 @@ iter_gaus = (True, 5)
 # Binning.
 # eta_ls = equal_entry_bin_edges_eta_mod1_wholenum
 # pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum
-eta_ls = [1.4, 1.6]
-pT_ls = [30.0, 40.0, 50.0]
+eta_ls = [0.0, 0.4]
+pT_ls = [20.0, 27.0, 38.0, 50.0]
 
 # Kinematic to be plotted on all histograms. 
 # Should not contain 1 or 2. 
@@ -102,7 +111,8 @@ x_bin_info = [-0.3, 0.3, 0.003]
 x_zoom_range = [-0.35, 0.35]
 
 # Cuts to make.
-dR_max = 0.008
+dR_max_DY = 0.002
+dR_max_Jpsi = 0.005
 massZ_minmax_DY = [60, 120]
 massZ_minmax_Jpsi = [2.9, 3.3]
 
@@ -170,21 +180,21 @@ print("|eta| regions: {}\n".format(np.round(eta_ls, decimals=2)))
 print("pT regions: {}\n".format(np.round(pT_ls, decimals=2)))
 
 # Unpack kinematic data.
-eta_arr_DY = vdf_concat_MC_2017_DY.evaluate("eta")
-pT_arr_DY = vdf_concat_MC_2017_DY.evaluate("pT")
-qd0_arr_DY = vdf_concat_MC_2017_DY.evaluate("qd0BS")
-massZ_arr_DY = vdf_concat_MC_2017_DY.evaluate("massZ")
-dR_arr_DY = vdf_concat_MC_2017_DY.evaluate("delta_R")
+eta_arr_DY = vdf_concat_MC_2018_DY.evaluate("eta")
+pT_arr_DY = vdf_concat_MC_2018_DY.evaluate("pT")
+qd0_arr_DY = vdf_concat_MC_2018_DY.evaluate("qd0BS")
+massZ_arr_DY = vdf_concat_MC_2018_DY.evaluate("massZ")
+dR_arr_DY = vdf_concat_MC_2018_DY.evaluate("delta_R")
 
-eta_arr_Jpsi = vdf_concat_MC_2017_Jpsi.evaluate("eta")
-pT_arr_Jpsi = vdf_concat_MC_2017_Jpsi.evaluate("pT")
-qd0_arr_Jpsi = vdf_concat_MC_2017_Jpsi.evaluate("qd0BS")
-massZ_arr_Jpsi = vdf_concat_MC_2017_Jpsi.evaluate("massZ")
-dR_arr_Jpsi = vdf_concat_MC_2017_Jpsi.evaluate("delta_R")
+eta_arr_Jpsi = vdf_concat_MC_2018_Jpsi.evaluate("eta")
+pT_arr_Jpsi = vdf_concat_MC_2018_Jpsi.evaluate("pT")
+qd0_arr_Jpsi = vdf_concat_MC_2018_Jpsi.evaluate("qd0BS")
+massZ_arr_Jpsi = vdf_concat_MC_2018_Jpsi.evaluate("massZ")
+dR_arr_Jpsi = vdf_concat_MC_2018_Jpsi.evaluate("delta_R")
 
 # Kinematic to be plotted in each KinBin3D.
-kinem_arr_DY = vdf_concat_MC_2017_DY.evaluate(kinem)
-kinem_arr_Jpsi = vdf_concat_MC_2017_Jpsi.evaluate(kinem)
+kinem_arr_DY = vdf_concat_MC_2018_DY.evaluate(kinem)
+kinem_arr_Jpsi = vdf_concat_MC_2018_Jpsi.evaluate(kinem)
 #----------------#
 #----- Main -----#
 #----------------#
@@ -246,9 +256,10 @@ for k in range(len(eta_ls)-1):
                 cuts  = r"$%.2f < \left| \eta^{\mathrm{REC}} \right| < %.2f$," % (eta_min, eta_max) + "\n"
                 cuts += r"$%.1f <$ %s $< %.1f$ GeV," % (pT_min, p_str_latex, pT_max) + "\n"
                 cuts += r"$%.4f < q(\mu)*d_{0}^{\mathrm{%s}} < %.4f$, " % (qd0_min, "BS", qd0_max) + "\n"
-                cuts += r"$\Delta R < %.3f$, " % (dR_max) + "\n"
-                cuts += r"$%.1f < m_{Z} < %.1f$ GeV,  " % (massZ_min_DY, massZ_max_DY) + "\n"
-                cuts += r"$%.1f < m_{J/\psi} < %.1f$ GeV" % (massZ_min_Jpsi, massZ_max_Jpsi)
+                cuts += r"$%.1f < m_{J/\psi} < %.1f$ GeV,  " % (massZ_min_Jpsi, massZ_max_Jpsi)
+                cuts += r"$\Delta R < %.3f$" % (dR_max_Jpsi) + "\n"
+                cuts += r"$%.1f < m_{Z} < %.1f$ GeV,  " % (massZ_min_DY, massZ_max_DY)
+                cuts += r"$\Delta R < %.3f$" % (dR_max_DY)
                 print("cuts str,",cuts)
                 
                 # At this point, vdf_concat_MC_2017_X definitely has full entries.
@@ -258,21 +269,22 @@ for k in range(len(eta_ls)-1):
                 print("pT_range",pT_range)
                 print("qd0_range",qd0_range)
                 print("For DY: massZ_minmax_DY",massZ_minmax_DY)
+                print("dR_max_DY",dR_max_DY)
                 print("For Jpsi: massZ_minmax_Jpsi",massZ_minmax_Jpsi)
-                print("dR_max",dR_max)
+                print("dR_max_Jpsi",dR_max_Jpsi)
 
                 # Prepare masks.
                 mask_eta_DY = (eta_min < np.abs(eta_arr_DY)) & (np.abs(eta_arr_DY) < eta_max)
                 mask_pT_DY = (pT_min < pT_arr_DY) & (pT_arr_DY < pT_max)
                 mask_qd0_DY = (qd0_min < qd0_arr_DY) & (qd0_arr_DY < qd0_max)
                 mask_massZ_DY = (massZ_min_DY < massZ_arr_DY) & (massZ_arr_DY < massZ_max_DY)
-                mask_dR_DY = (dR_arr_DY < dR_max)
+                mask_dR_DY = (dR_arr_DY < dR_max_DY)
 
                 mask_eta_Jpsi = (eta_min < np.abs(eta_arr_Jpsi)) & (np.abs(eta_arr_Jpsi) < eta_max)
                 mask_pT_Jpsi = (pT_min < pT_arr_Jpsi) & (pT_arr_Jpsi < pT_max)
                 mask_qd0_Jpsi = (qd0_min < qd0_arr_Jpsi) & (qd0_arr_Jpsi < qd0_max)
                 mask_massZ_Jpsi = (massZ_min_Jpsi < massZ_arr_Jpsi) & (massZ_arr_Jpsi < massZ_max_Jpsi)
-                mask_dR_Jpsi = (dR_arr_Jpsi < dR_max)
+                mask_dR_Jpsi = (dR_arr_Jpsi < dR_max_Jpsi)
 
                 all_masks_DY = mask_eta_DY & mask_pT_DY & mask_qd0_DY & mask_massZ_DY & mask_dR_DY
                 all_masks_Jpsi = mask_eta_Jpsi & mask_pT_Jpsi & mask_qd0_Jpsi & mask_massZ_Jpsi & mask_dR_Jpsi
@@ -314,8 +326,8 @@ for k in range(len(eta_ls)-1):
                 total_entries += n_entries_this3Dcube
                 print("total_entries cumulative,",total_entries,"\n")
 
-                # selected_DY_arr   = vdf_concat_MC_2017_DY.evaluate(  kinem,selection=all_masks_DY)
-                # selected_Jpsi_arr = vdf_concat_MC_2017_Jpsi.evaluate(kinem,selection=all_masks_Jpsi)
+                # selected_DY_arr   = vdf_concat_MC_2018_DY.evaluate(  kinem,selection=all_masks_DY)
+                # selected_Jpsi_arr = vdf_concat_MC_2018_Jpsi.evaluate(kinem,selection=all_masks_Jpsi)
                 
                 # data = np.concatenate((selected_DY_arr, selected_Jpsi_arr))
                 data = np.concatenate((selected_muons_DY, selected_muons_Jpsi))
@@ -412,10 +424,10 @@ print("All PDFs created.")
 
 if (write_to_pickle):
     with open(fullpath_kinbin_ls_pkl,'wb') as output:
-        pickle.dump(kinbin3D_ls, output, pickle.HIGHEST_PROTOCOL)
+        pickle.dump(kinbin3D_ls, output, protocol=2)
     print("[INFO] KinBin3D list written to pickle file:\n{}\n".format(fullpath_kinbin_ls_pkl))
     
-total_muons_original = vdf_concat_MC_2017_DY.count() + vdf_concat_MC_2017_Jpsi.count()
+total_muons_original = vdf_concat_MC_2018_DY.count() + vdf_concat_MC_2018_Jpsi.count()
 print("Total muons: {}".format(total_muons_original))
 perdif = perc_diff(total_entries, total_muons_original)
 print("Total muons found across all bins: {} (perc. diff. = {:.2f}%)".format(total_entries, perdif))

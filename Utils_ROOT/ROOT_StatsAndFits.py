@@ -1,10 +1,67 @@
 import ROOT
+import numpy as np
+from array import array
 
 from Utils_Python.Plot_Styles_ROOT.tdrstyle_official import fixOverlay
 from Utils_ROOT.ROOT_Plotting import Root_Hist_GetLastBinRightEdge
 from Utils_ROOT.ROOT_fns import skip_black_yellow_fit_line_colors
 
 from d0_Studies.d0_Utils.d0_dicts import color_dict_RooFit
+
+def RooFit_gaus_fit_unbinned(data, verbose=False):
+    """
+    Perform an unbinned Gaussian fit to some data.
+    Return a list of the best-fit parameters: [mean, mean_err, sigma, sigma_err].
+
+    Parameters
+    ----------
+    data : list or array-like
+        The data to be fit.
+    
+    Returns
+    -------
+    fit_stats_ls : 4-element list
+        The best-fit parameters from the fit: [mean, mean_err, sigma, sigma_err] 
+    """
+    data = np.array(data)
+    
+    min_ = data.min()
+    max_ = data.max()
+    avg_ = data.mean()
+    std_ = data.std()
+    
+    x = ROOT.RooRealVar("x","x", min_, max_)
+    mean = ROOT.RooRealVar("mean","Mean of Gaussian", avg_, min_, max_)
+    sigma = ROOT.RooRealVar("sigma","Width of Gaussian", std_, 0, 1000)
+    gauss = ROOT.RooGaussian("gauss","gauss(x,mean,sigma)", x, mean, sigma)
+
+    # Make RooDataSet.
+    ptr = array('f', [0.])
+    tree = ROOT.TTree("tree", "tree")
+    tree.Branch("x", ptr, "x/F")
+    for val in data:
+        ptr[0] = val
+        tree.Fill()
+    rds = ROOT.RooDataSet("rds","dataset from tree", tree, ROOT.RooArgSet(x))
+    
+    # Modify fit range, if needed.
+#     if fit_range is None:
+#         fit_x_min = x_min
+#         fit_x_max = x_max
+#     else:
+#         fit_x_min = fit_range[0]
+#         fit_x_max = fit_range[1]
+        
+    # Find and fill the mean and sigma variables.
+    if (verbose):
+        result = gauss.fitTo(rds)
+    else:
+        result = gauss.fitTo(rds, ROOT.RooFit.PrintLevel(-1))
+#                          ROOT.RooFit.Range(fit_x_min, fit_x_max), 
+        
+    fit_stats_ls = [mean.getVal(), mean.getError(), sigma.getVal(), sigma.getError()]
+
+    return fit_stats_ls
 
 def RooFit_gaus_fit_hist_binned(hist, x_roofit, xframe, fit_range=None, count=1, 
                                 draw_stats=False, line_color=None, marker_color=None):
@@ -22,7 +79,7 @@ def RooFit_gaus_fit_hist_binned(hist, x_roofit, xframe, fit_range=None, count=1,
         Canvas on which histogram will be painted.
     fit_range : 2-element list, optional
         [fit_x_min, fit_x_max]
-        If None, then full x-axis range will be used. 
+        If None, then full x-axis range will be used.
     count : int, optional
         Used to position the fit stats labels on the plot. 
         Also used to color the fit lines. 

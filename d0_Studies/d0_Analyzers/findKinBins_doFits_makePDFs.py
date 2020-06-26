@@ -35,7 +35,7 @@
 #   User should check User Parameters.
 # SYNTAX:  python script.py
 # AUTHOR:  Jake Rosenzweig
-# UPDATED: 2020-05-26
+# UPDATED: 2020-06-24
 """
 import time
 t_prog_start = time.perf_counter()
@@ -52,8 +52,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 # Local imports.
 from Utils_vaex.vaex_fns import prepare_vaex_df, vaex_apply_masks
-from Samples.sample_info import MC_2017_DY_hdf5, MC_2017_Jpsi_hdf5
-from d0_Studies.kinematic_bins import (equal_entry_bin_edges_eta_mod1)
+from Samples.sample_info import Sample
 from d0_Utils.d0_dicts import label_LaTeX_dict
 from d0_Utils.d0_fns import make_binning_array, print_header_message
 from d0_Utils.d0_cls import KinBin3D
@@ -62,7 +61,6 @@ from Utils_Python.Utils_Physics import perc_diff
 from Utils_Python.Utils_Files import makeDirs, make_str_title_friendly, check_overwrite
 from Utils_Python.Utils_Plotting import hist_y_label, make_1D_dist, ncolsrows_from_nplots, get_stats_1Dhist
 from Utils_Python.Utils_StatsAndFits import iterative_fit_gaus, iterative_fit_gaus_unbinned
-
 # def ParseOption():
 #     parser = argparse.ArgumentParser(description='submit all')
 #     parser.add_argument('--pklfilename', dest='filename_base', type=str, help='') 
@@ -79,11 +77,16 @@ from Utils_Python.Utils_StatsAndFits import iterative_fit_gaus, iterative_fit_ga
 #---------------------------#
 # Dictionary which contains equal-entry q*d0 bin edges.
 # inpath_equalentry_pickl_dict = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pkl_and_csv/20200526_fullstats_BA_OL_EC_12regwith3000perreg__0p0_eta_2p4__5p0_pT_200p0_GeV.pkl"
-inpath_equalentry_pickl_dict = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pkl_and_csv/20200531_fullstats_sameasFilippodeltaRcut_12regwith3000perreg__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
+# inpath_equalentry_pickl_dict = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pkl_and_csv/20200531_fullstats_sameasFilippodeltaRcut_12regwith3000perreg__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
+# inpath_equalentry_pickl_dict = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pkl_and_csv/20200624_MC2018JpsiDY_test01_6regwith3000perreg__0p0_eta_0p4__5p0_pT_1000p0_GeV.pkl"
+inpath_equalentry_pickl_dict = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pkl_and_csv/20200624_fullstats_MC2018JpsiDY_12regwith3000perreg__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
 
 # Outgoing dirs. 
 outdir_plots = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/Plots/hists_dpToverpT/"
 outdir_kinbin_pkl = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pkl_and_csv/kinbins/"
+
+MC_2018_Jpsi_hdf5 = Sample("MC", "2018", "Jpsi", "hdf5")
+MC_2018_DY_hdf5 = Sample("MC", "2018", "DY", "hdf5")
 
 # Filename of outdict is automatic.
 overwrite = False
@@ -96,8 +99,8 @@ iter_gaus = (True, 5)
 # Should not contain 1 or 2. 
 # Acceptable values found in prepare_vaex_df().
 kinem = "delta_pToverGenpT"  
-x_bin_info = [-0.35, 0.35, 0.0035]
-x_zoom_range = [-0.40, 0.40]
+x_bin_info = [-0.35, 0.35, 0.0025]
+x_zoom_range = [-0.35, 0.35]
 
 # Selections per sample.
 # dR_max = 0.008
@@ -164,13 +167,15 @@ massZ_max_DY = massZ_minmax_DY[1]
 massZ_min_Jpsi = massZ_minmax_Jpsi[0]
 massZ_max_Jpsi = massZ_minmax_Jpsi[1]
 
-total_num_muons_DY = total_num_muons_Jpsi = total_entries = 0
+total_num_muons_DY = 0
+total_num_muons_Jpsi = 0
+total_entries = 0
 kinbin3D_ls_OLD = []  # Probably deprecate this.
 kinbin_dict = {
     "all_eta_bins" : eta_ls,
     "all_pT_bins" : pT_ls,
     "sample_name_ls" : sample_name_ls,
-    # "binninginfo_xbins_binwidth" : (x_bins, bin_width),
+    # "binninginfo_xbins_binwidth" : (x_bin_edges, bin_width),
 }
 
 #---------------------#
@@ -178,7 +183,7 @@ kinbin_dict = {
 #---------------------#
 ROOT.RooMsgService.instance().setStreamStatus(1,False)
 
-x_bins, bin_width = make_binning_array(x_bin_info)
+x_bin_edges, bin_width = make_binning_array(x_bin_info)
 
 def get_grid_info(qd0_ls):
     """ Determine grid size per page. Return grid info."""
@@ -213,17 +218,16 @@ print(
 #---------------------------------#
 #----- Unpack kinematic data -----#
 #---------------------------------#
-
-eta_arr_DY     = MC_2017_DY_hdf5.vdf_prepped.evaluate("eta")
-eta_arr_Jpsi   = MC_2017_Jpsi_hdf5.vdf_prepped.evaluate("eta")
-pT_arr_DY      = MC_2017_DY_hdf5.vdf_prepped.evaluate("pT")
-pT_arr_Jpsi    = MC_2017_Jpsi_hdf5.vdf_prepped.evaluate("pT")
-qd0_arr_DY     = MC_2017_DY_hdf5.vdf_prepped.evaluate("qd0BS")
-qd0_arr_Jpsi   = MC_2017_Jpsi_hdf5.vdf_prepped.evaluate("qd0BS")
-massZ_arr_DY   = MC_2017_DY_hdf5.vdf_prepped.evaluate("massZ")
-massZ_arr_Jpsi = MC_2017_Jpsi_hdf5.vdf_prepped.evaluate("massZ")
-dR_arr_DY      = MC_2017_DY_hdf5.vdf_prepped.evaluate("delta_R")
-dR_arr_Jpsi    = MC_2017_Jpsi_hdf5.vdf_prepped.evaluate("delta_R")
+eta_arr_DY     = MC_2018_DY_hdf5.vdf_prepped.evaluate("eta")
+eta_arr_Jpsi   = MC_2018_Jpsi_hdf5.vdf_prepped.evaluate("eta")
+pT_arr_DY      = MC_2018_DY_hdf5.vdf_prepped.evaluate("pT")
+pT_arr_Jpsi    = MC_2018_Jpsi_hdf5.vdf_prepped.evaluate("pT")
+qd0_arr_DY     = MC_2018_DY_hdf5.vdf_prepped.evaluate("qd0BS")
+qd0_arr_Jpsi   = MC_2018_Jpsi_hdf5.vdf_prepped.evaluate("qd0BS")
+massZ_arr_DY   = MC_2018_DY_hdf5.vdf_prepped.evaluate("massZ")
+massZ_arr_Jpsi = MC_2018_Jpsi_hdf5.vdf_prepped.evaluate("massZ")
+dR_arr_DY      = MC_2018_DY_hdf5.vdf_prepped.evaluate("delta_R")
+dR_arr_Jpsi    = MC_2018_Jpsi_hdf5.vdf_prepped.evaluate("delta_R")
 
 # Prep the masks that don't change. 
 mask_massZ_DY   = (massZ_min_DY < massZ_arr_DY) & (massZ_arr_DY < massZ_max_DY)
@@ -234,12 +238,12 @@ mask_dR_Jpsi = (dR_arr_Jpsi < dR_max_Jpsi)
 # Kinematic to be plotted in each KinBin3D.
 # Should not contain 1 or 2. 
 # Acceptable values found in prepare_vaex_df().
-kinem_arr_DY_dpToverGenpT = MC_2017_DY_hdf5.vdf_prepped.evaluate("delta_pToverGenpT")
-kinem_arr_DY_pT = MC_2017_DY_hdf5.vdf_prepped.evaluate("pT")
-kinem_arr_DY_qd0 =  MC_2017_DY_hdf5.vdf_prepped.evaluate("qd0BS")
-kinem_arr_Jpsi_dpToverGenpT = MC_2017_Jpsi_hdf5.vdf_prepped.evaluate("delta_pToverGenpT")
-kinem_arr_Jpsi_pT = MC_2017_Jpsi_hdf5.vdf_prepped.evaluate("pT")
-kinem_arr_Jpsi_qd0 =  MC_2017_Jpsi_hdf5.vdf_prepped.evaluate("qd0BS")
+kinem_arr_DY_dpToverGenpT = MC_2018_DY_hdf5.vdf_prepped.evaluate("delta_pToverGenpT")
+kinem_arr_DY_pT = MC_2018_DY_hdf5.vdf_prepped.evaluate("pT")
+kinem_arr_DY_qd0 =  MC_2018_DY_hdf5.vdf_prepped.evaluate("qd0BS")
+kinem_arr_Jpsi_dpToverGenpT = MC_2018_Jpsi_hdf5.vdf_prepped.evaluate("delta_pToverGenpT")
+kinem_arr_Jpsi_pT = MC_2018_Jpsi_hdf5.vdf_prepped.evaluate("pT")
+kinem_arr_Jpsi_qd0 =  MC_2018_Jpsi_hdf5.vdf_prepped.evaluate("qd0BS")
 
 #----------------#
 #----- Main -----#
@@ -258,9 +262,9 @@ for sample_name in sample_name_ls:
         # For each eta range, make a pdf. 
         filename_base = filename.split("__")[0]
         extra  = (
-            f"__{sample_name}"
-            f"__{eta_min:.1f}_eta_{eta_max:.1f}"
-            f"__{min(pT_ls):.1f}_pT_{max(pT_ls):.1f}_GeV"
+            f"_{sample_name}2018"
+            f"_{eta_min:.1f}_eta_{eta_max:.1f}"
+            f"_{min(pT_ls):.1f}_pT_{max(pT_ls):.1f}_GeV"
         )
         extra = make_str_title_friendly(extra)
         extra += ".pdf"
@@ -405,10 +409,10 @@ for sample_name in sample_name_ls:
                     cuts  = r"$%.2f < \left| \eta^{\mathrm{REC}} \right| < %.2f$," % (eta_min, eta_max) + "\n"
                     cuts += r"$%.1f <$ %s $< %.1f$ GeV," % (pT_min, p_str_latex, pT_max) + "\n"
                     cuts += r"$%.4f < q(\mu)*d_{0}^{\mathrm{%s}} < %.4f$, " % (qd0_min, "BS", qd0_max) + "\n"
-                    if "DY" in sample_name:
-                        cuts += "\n" + r"$%.1f < m_{Z} < %.1f$ GeV,  $\Delta R < %.3f$" % (massZ_min_DY, massZ_max_DY, dR_max_DY)
                     if "Jpsi" in sample_name:
                         cuts += "\n" + r"$%.1f < m_{J/\psi} < %.1f$ GeV,  $\Delta R < %.3f$" % (massZ_min_Jpsi, massZ_max_Jpsi, dR_max_Jpsi)
+                    if "DY" in sample_name:
+                        cuts += "\n" + r"$%.1f < m_{Z} < %.1f$ GeV,  $\Delta R < %.3f$" % (massZ_min_DY, massZ_max_DY, dR_max_DY)
                     if (verbose): print("cuts str:\n",cuts)
 
                     # Make sure that everyone agrees on the number of muons:
@@ -421,12 +425,12 @@ for sample_name in sample_name_ls:
                                                         ax=ax, 
                                                         data=data,
                                                         x_limits=x_zoom_range,
-                                                        x_bins=x_bins, 
+                                                        x_bin_edges=x_bin_edges, 
                                                         x_label=x_label, 
                                                         y_label=y_label,
                                                         title="",
                                                         y_max=-1,
-                                                        log_scale=False)
+                                                        log_scale=False, color=None, leg_loc=None, display="sci")
                     print(f"stats_binned ls: {stats_binned}")
                     ax.text(0.025, 0.78, cuts, horizontalalignment='left', verticalalignment='center', 
                     transform=ax.transAxes, bbox=dict(boxstyle='square', facecolor='white', alpha=0.9))
@@ -527,7 +531,7 @@ print("[INFO] KinBin3D dict written to pickle file:\n{}\n".format(fullpath_kinbi
 
 t_prog_end = time.perf_counter()
 print(f"[INFO] Total time taken: {t_prog_end - t_prog_start} sec.")
-# total_muons_original = MC_2017_DY_hdf5.vdf_prepped.count() + MC_2017_Jpsi_hdf5.vdf_prepped.count()
+# total_muons_original = MC_2018_DY_hdf5.vdf_prepped.count() + MC_2018_Jpsi_hdf5.vdf_prepped.count()
 # total_muons_found = total_num_muons_DY + total_num_muons_Jpsi
 # perdif = perc_diff(total_muons_found, total_muons_original)
 # print(f"Total muons in files: {total_muons_original}")
