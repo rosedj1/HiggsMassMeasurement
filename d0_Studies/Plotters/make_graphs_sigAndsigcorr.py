@@ -14,19 +14,18 @@ from Utils_Python.Utils_StatsAndFits import Andrey_prop_err_on_dsigoversig
 from Utils_Python.Utils_Files import makeDirs, check_overwrite, make_str_title_friendly
 from d0_Utils.d0_fns import calc_x_err_bins_from_bin_edges, print_header_message
 #----- Main -----#
-inpath_pkl = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pkl_and_csv/Testing/20200604_combinesamples_applycorr_fastvers_fullstats_2p00sigmas__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
+inpath_pkl = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/KinBin_Info/20200709_MC2017_combinesamples_applycorr_fullstats_2p00sigmas__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
 with open(inpath_pkl, "rb") as f:
     dpToverpT_comb_stats_dict = pickle.load(f)
 
 outdir_pdf = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/plots/sigma_itergaus_pTcorr/"
-# filename = "sigmacorr_vs_sigma_applypTcorr_fixedyscale_logx_nomarkers"
-filename = "testagain"
-
+filename = "20200709_finalplots_sigmacorrafterpTcorr"
+year = "2017"
 overwrite = False
 set_log_x = True
 y_limits_mainplot = [0.005, 0.053]
 
-eta_ls = [0.0, 0.2]#, 0.4, 0.6, 0.8, 1.0, 1.25, 1.5, 1.75, 2.0, 2.1, 2.2, 2.3, 2.4]
+eta_ls = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.25, 1.5, 1.75, 2.0, 2.1, 2.2, 2.3, 2.4]
 pT_ls  = [5.0, 7.0, 10.0, 14.0, 20.0, 27.0, 38.0, 50.0, 75.0, 100.0, 150.0, 200.0, 1000.0]
 
 color_sigma = "blue"
@@ -36,9 +35,9 @@ capsize = 1
 errlw = markererrw = 0.50
 
 # Include all 
-sample_str = r"$J/\psi$, \Upsilon, DY"
+sample_str = r"$J/\psi$, DY"
 #----- Automatons -----#
-plt.style.use("/home/rosedj1/.config/matplotlib/mpl_configdir/stylelib/cmsstyle_plot.mplstyle")
+plt.style.use("/ufrc/avery/rosedj1/HiggsMassMeasurement/Utils_Python/Plot_Styles_Matplotlib/cmsstyle_plot.mplstyle")
 
 suffix   = (
     f"__{min(eta_ls):.1f}eta{max(eta_ls):.1f}"
@@ -46,7 +45,7 @@ suffix   = (
 )
 suffix = make_str_title_friendly(suffix)
 
-outpath_pdf = os.path.join(outdir_pdf, f"{filename}{suffix}.pdf")
+outpath_pdf = os.path.join(outdir_pdf, f"MC{year}_{filename}{suffix}.pdf")
 check_overwrite(outpath_pdf, overwrite)
 
 def get_stats_info(eta_bin, pT_bin, stats_dict, stat, hist_type):
@@ -99,7 +98,6 @@ with PdfPages(outpath_pdf) as pdf:
         gs = gridspec.GridSpec(2, 1, height_ratios=[2.5, 1], hspace=0.11) # Allow for axes of various sizes
         ax = fig.add_subplot(gs[0]) # Build first axis with aspect ratio gs[0]
 
-        # ax.text(1500,10**3,"{:.1f}% Retention".format(float(np.shape(btag)[0])/float(np.shape(reco_data['jet_bTagScore'])[0])*100),weight='bold',fontsize=12)
         x_min = bins.min()
         x_max = bins.max()
         x_err_low, x_err_high = calc_x_err_bins_from_bin_edges(bins)
@@ -122,11 +120,11 @@ with PdfPages(outpath_pdf) as pdf:
                     capsize=capsize, fmt=markerstyle, elinewidth=errlw, mew=markererrw)
         #                    mec=color_sigma_corr,
 
-        ax.set_ylabel(r'$\sigma$ from iterated Gaus. [GeV]')
+        ax.set_ylabel(r'$%s$' % str_sigma)
         
-        title_str  = r"Improvement of $\sigma(\Deltap_T/p_T)$: " 
-        title_str += r"$ %.1f < \left|\eta\right| < %.1f$" % (eta_bin[0], eta_bin[1]) + "\n" 
-        title_str += r"(by correcting $p_{T,\mu}$ from MC 2017 %s samples)" % sample_str
+        title_str  = r"Improvement of $%s$ from $\mathrm{p_{T,\mu}}$ corrections:" % str_sigma + "\n" 
+        title_str += r"$ %.1f < \left|\eta\right| < %.1f$  " % (eta_bin[0], eta_bin[1])
+        title_str += r"(%s %s MC)" % (year, sample_str)
         
         ax.set_title(title_str)
         ax.legend(loc="upper left", framealpha=1)
@@ -150,13 +148,14 @@ with PdfPages(outpath_pdf) as pdf:
         if (set_log_x):
             ax_ratio.set_xscale('log')
         ax_ratio.set_xlim([x_min, x_max])
-        ax_ratio.set_xlabel(r'$p_T$ bin edges [GeV]')
+        ax_ratio.set_xlabel(r'$\mathrm{p_T}$ bin edges [GeV]')
         ax_ratio.set_ylabel(r'$\frac{\sigma^{\mathrm{corr.}} - \sigma}{\sigma}$')
 
-        ax_ratio.set_ylim([-0.2,0.2])
+        ax_ratio.set_ylim([-0.25,0.25])
         ax_ratio.axhline(y=0, xmin=-0.1, xmax=1.1, color='k', lw=0.7)#, marker=None)
 
         ax.xaxis.set_major_formatter(plt.NullFormatter())
+        ax_ratio.grid(b=None)
         pdf.savefig()
         plt.clf()
     # End eta_bin loop.

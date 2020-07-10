@@ -59,16 +59,20 @@ def correct_muon_pT(eta, pT, q, d0,
     eta_min, eta_max = find_bin_edges_of_value(abs(eta), np.array(eta_binedge_ls))
     pT_min,  pT_max  = find_bin_edges_of_value(pT,       np.array(pT_binedge_ls))
     
-    slope, interc = get_pT_corr_factors(pT_corr_factor_dict, eta_min, eta_max, pT_min, pT_max)
+    if all([x is not None for x in [eta_min, eta_max, pT_min, pT_max]]):
+        slope, interc = get_pT_corr_factors(pT_corr_factor_dict, eta_min, eta_max, pT_min, pT_max)
+        delta_pT = pT * (interc + slope * q * d0)
+    else:
+        slope, interc = None, None
+        delta_pT = 0
     
-    delta_pT = pT * (interc + slope * q * d0)
-    rel_pT = delta_pT / pT
-    if (rel_pT > 0.05):
-        msg = "[WARNING] delta_pT ({}) > 5%".format(rel_pT) 
-        print(msg)
     pT_corr = pT - delta_pT
     
     if (verbose):
+        rel_pT = delta_pT / pT
+        if (rel_pT > 0.05):
+            print(f"[WARNING] delta_pT ({rel_pT}) > 5%")
+
         print("This muon's info:")
         print("  eta = {}".format(eta))
         print("  pT  = {}".format(pT))

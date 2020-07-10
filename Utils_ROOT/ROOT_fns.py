@@ -708,7 +708,7 @@ def fill_dict_of_dpToverpT_hists(tree, hist_dict, hist_type,
             if (verbose):
                 info = "  eta_bin=[{}, {}], pT_bin=[{}, {}]".format(binedge_min_eta, binedge_max_eta, binedge_min_pT, binedge_max_pT)
                 print("  muon {} belongs to: {}".format(count, info))
-                print("  passed_dR_and_m2l = {}".format(passed_dR_and_m2l))
+                print("  passed_dR_and_m2l = {}".format(mu.passed_dR_and_m2l))
                 print("            outside = {}".format(outside))
 
             if (outside): 

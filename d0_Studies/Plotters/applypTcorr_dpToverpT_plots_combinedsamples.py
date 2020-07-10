@@ -13,7 +13,7 @@
 #   Example key of hist_dict = "h_0.0eta0.2_27.0pT38.0_Jpsi_dpToverpT"
 # Syntax  : python <script>.py
 # Author  : Jake Rosenzweig
-# Updated : 2020-06-04
+# Updated : 2020-07-09
 """
 import os
 import pickle
@@ -36,18 +36,18 @@ from d0_Studies.d0_Utils.d0_fns import calc_num_bins, print_header_message
 #-----------------------#
 #----- User Params -----#
 #-----------------------#
-infile_path_MC_2017_DY = "/ufrc/avery/rosedj1/HiggsMassMeasurement/Samples/MC_2017/MC_2017_DY.root"
-infile_path_MC_2017_Jpsi = "/ufrc/avery/rosedj1/HiggsMassMeasurement/Samples/MC_2017/MC_2017_Jpsi.root"
-infile_path_MC_2017_Upsilon = "/ufrc/avery/rosedj1/HiggsMassMeasurement/Samples/MC_2017/MC_2017_Upsilon.root"
+infile_path_MC_DY = "/ufrc/avery/rosedj1/HiggsMassMeasurement/Samples/MC_2018/MC_2018_DY.root"
+infile_path_MC_Jpsi = "/ufrc/avery/rosedj1/HiggsMassMeasurement/Samples/MC_2018/MC_2018_Jpsi.root"
+# infile_path_MC_Upsilon = "/ufrc/avery/rosedj1/HiggsMassMeasurement/Samples/MC_2017/MC_2017_Upsilon.root"
 
-infile_path_pkl = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/KinBin_Info/d0_pT_corrfactors_0p0eta2p4__5p0pT1000p0.pkl"
+infile_path_pkl = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/KinBin_Info/MC2018_d0_pT_corrfactors_0p0eta2p4_5p0pT1000p0.pkl"
 
 outdir_pkl = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pkl_and_csv/Testing/"
 outdir_plots = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/plots/hists_dpToverpT/different_etapT_bins/"
 
-filename = "20200604_combinesamples_applycorr_fastvers_fullstats"
+filename = "20200709_combinesamples_applycorr_fullstats"
 overwrite = False
-
+year = "2018"
 n_evts = -1
 verbose = False
 
@@ -68,7 +68,8 @@ color_after_corr = ROOT.kRed
 # For some dumb reason, I've programmed it 
 # to explicitly go "Jpsi", "Upsilon"...
 # Due to the zip()!!!
-sample_ls = ["Jpsi","Upsilon","DY","combined"]
+# sample_ls = ["Jpsi","Upsilon","DY","combined"]
+sample_ls = ["Jpsi","DY","combined"]
 
 # Note: To apply pT correction factors, 
 # you must have a hist_type that contains "corr".
@@ -89,11 +90,11 @@ show_plots_to_screen = False
 
 # Only need to configure this if you introduce new samples,
 # or change file paths. 
-f_Jpsi = TFile.Open(infile_path_MC_2017_Jpsi)
+f_Jpsi = TFile.Open(infile_path_MC_Jpsi)
 t_Jpsi = f_Jpsi.Get("passedEvents")
-f_Upsilon = TFile.Open(infile_path_MC_2017_Upsilon)
-t_Upsilon = f_Upsilon.Get("passedEvents")
-f_DY = TFile.Open(infile_path_MC_2017_DY)
+# f_Upsilon = TFile.Open(infile_path_MC_Upsilon)
+# t_Upsilon = f_Upsilon.Get("passedEvents")
+f_DY = TFile.Open(infile_path_MC_DY)
 t_DY = f_DY.Get("passedEvents")
 sample_dict = {
     # "bin_info" is deprecated.
@@ -106,7 +107,7 @@ sample_dict = {
     "Upsilon" : {"bin_info"   :  {"dpToverpT"      : bin_info_dpToverpT,
                                   "dpToverpTcorr"  : bin_info_dpToverpT},
                   "fancy_font" : {"ROOT" : "#Upsilon", "LaTeX" : r'$\Upsilon$'},
-                  "tree"       : t_Upsilon,
+                #   "tree"       : t_Upsilon,
                 },
     "DY"      : {"bin_info"   :  {"dpToverpT"      : bin_info_dpToverpT,
                                   "dpToverpTcorr"  : bin_info_dpToverpT},
@@ -146,7 +147,7 @@ full_extra = (
 )
 full_extra = make_str_title_friendly(full_extra)
 
-fullfilename = filename + full_extra
+fullfilename = f"{filename}_{year}_{full_extra}"
 
 fullpath_pkl = os.path.join(outdir_pkl, fullfilename + ".pkl")
 for samp in sample_ls:
@@ -368,7 +369,7 @@ for h,h_corr in zip(HD.hist_dict.values(), HD_corr.hist_dict.values()):
     # Pretty up the plots.
     latex_str = sample_dict[HD.sample]["fancy_font"]["ROOT"]
     title_str = (
-        f"MC 2017 {latex_str}    binning=("
+        f"MC {year} {latex_str}    binning=("
         f"{h_name_parts[0]:.1f} < #left|#eta#right| < {h_name_parts[1]:.1f}    "
         )
     title_str += r"%.1f < p_{T} < %.1f GeV), " % (h_name_parts[2], h_name_parts[3])

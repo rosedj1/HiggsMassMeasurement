@@ -3,13 +3,15 @@
 
 // using namespace RooFit;
 
-void DSCB_fit(Bool_t draw = false) {
+void DSCB_fit(TString infilename = "", Bool_t draw = false) {
 
 if (!draw) gROOT->SetBatch();  // Do not draw plots to screen.
 
 // Open the file and set the TTree. 
-TString infilename = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/root_files/m4mu_withcorr_MC_2017_ggF_fullstats_pTlt200.root";
-TString outpath_file = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/Plots/m4mu_DSCB_fits/test_04.pdf";
+if (infilename != "") {
+    TString infilename = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/root_files/m4mu_withcorr_MC2017_ggF_fullstats_pTlt200_synchwithFilippo.root";
+}
+TString outpath_file = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/Plots/m4mu_DSCB_fits/MC2018_ggF.pdf";
 TFile* infile = TFile::Open(infilename);
 
 TTree* tree;
@@ -84,7 +86,7 @@ RooMyPDF_DSCB DSCB_corr("DSCB_corr", "DSCB_corr", m4mu_corr, Mean_corr, Sigma_co
 TCanvas *c_MC = new TCanvas("c_MC", "c_MC", 800, 600);
 c_MC->SetFrameFillColor(0);
 // c_MC->cd(1)->SetBottomMargin(0.2);
-// 	c_MC->SetLogy();
+// c_MC->SetLogy();
 
 TString title = "MC 2017, Double-Sided CB Fit (Unbinned)";
 RooPlot* xframe = m4mu.frame(RooFit::Title(title));

@@ -25,7 +25,6 @@ For this analysis I used
 
 1. Make dpT/pT vs. qd0 graphs.
 
-
 `python plot_dpToverpT_vs_d0q_graph_binning_eta.py`
 
 - Produces 1 PDF: 
@@ -35,3 +34,16 @@ All lines have constant eta bin and all pT ranges. has 1 graph of
 1. Retrieve pT correction factors and store in pickled dict.
 
 `python /ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/Plotters/makegraph_dpToverpTvsqd0_getpTcorrfactors.py`
+
+1. Apply pT corrections to muons in Higgs sample. 
+Fit a double-sided Crystal Ball (DSCB) function
+   
+`root -l DSCB_fit.C`
+
+### Using the pT correction factors on dimuon samples
+
+1. First run the script: `d0_Studies/Plotters/applypTcorr_dpToverpT_plots_combinedsamples.py`
+
+   - Produces a pickled dictionary :
+   `d0_Studies/pkl_and_csv/Testing/20200709_MC2017_combinesamples_applycorr_fullstats_2p00sigmas__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl`
+   - Works on only 1 year at a time. 

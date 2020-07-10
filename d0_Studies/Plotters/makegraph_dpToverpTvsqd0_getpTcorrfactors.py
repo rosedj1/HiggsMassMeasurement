@@ -13,7 +13,7 @@
 #   User can specify to scale y-axis by 1/avg(pT) of each cube
 #   by setting: scale_by_1divpT = True
 # AUTHOR: Jake Rosenzweig
-# UPDATED: 2020-06-25
+# UPDATED: 2020-06-26
 """
 import os
 import pickle
@@ -132,12 +132,9 @@ def write_param_dict(outpath_txt, outpath_plots, best_params_dict):
     with open(outpath_txt, "a") as f:
         f.write(f"From {outpath_plots}\n\n")
         f.write("qd0_params_dict = {\n")
-
         for key,val in best_params_dict.items():
-            f.write(f"    {key} : {val},\n")
-
+            f.write(f"    '{key}' : {val},\n")
         f.write("}")
-        f.close()
         print(f"Best-fit param dictionary put into '.txt' file:\n{outpath_txt}")
 
 if __name__ == "__main__":
