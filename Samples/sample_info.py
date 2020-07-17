@@ -6,13 +6,13 @@ infile_path_data_dict = {
     # Key must be: "{data_type}_{year}_{name}_{extension}"
     "MC_2016_DY_hdf5"      : "/ufrc/avery/rosedj1/HiggsMassMeasurement/Samples/MC_2016/MC_2016_DY.hdf5",
     "MC_2017_DY_hdf5"      : "/ufrc/avery/rosedj1/HiggsMassMeasurement/Samples/MC_2017/MC_2017_DY.hdf5",
-    "MC_2018_DY_hdf5"      : "/ufrc/avery/rosedj1/HiggsMassMeasurement/Samples/MC_2018/MC_2018_DY.hdf5",
 
     "MC_2017_Jpsi_hdf5"    : "/ufrc/avery/rosedj1/HiggsMassMeasurement/Samples/MC_2017/MC_2017_Jpsi.hdf5",
     "MC_2017_Jpsi_root"    : "/ufrc/avery/rosedj1/HiggsMassMeasurement/Samples/MC_2017/MC_2017_Jpsi.root",
-    "MC_2018_Jpsi_hdf5"    : "/ufrc/avery/rosedj1/HiggsMassMeasurement/Samples/MC_2018/MC_2018_Jpsi.hdf5",
-
     "MC_2017_Upsilon_root" : "/ufrc/avery/rosedj1/HiggsMassMeasurement/Samples/MC_2017/MC_2017_Upsilon.root",
+
+    "MC_2018_DY_hdf5"      : "/ufrc/avery/rosedj1/HiggsMassMeasurement/Samples/MC_2018/MC_2018_DY.hdf5",
+    "MC_2018_Jpsi_hdf5"    : "/ufrc/avery/rosedj1/HiggsMassMeasurement/Samples/MC_2018/MC_2018_Jpsi.hdf5",
 }
 
 sample_info_dict = {

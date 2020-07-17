@@ -652,13 +652,11 @@ def iterative_fit_gaus(iterations, bin_edges, bin_vals,
         
     return stats_dict, ax
 
-
 def iterative_fit_gaus_unbinned(num_iters, data,
                                 bin_edges=[], 
                                 bin_vals=[],
                                 num_sigmas=2,
-                                ax=None, draw_on_axes=True, verbose=True):
-                                                                        
+                                ax=None, draw_on_axes=True, framealpha=1.0, verbose=True):
     """
     Fit a Gaussian pdf to the core of an unbinned distribution of data. 
     Do this iteratively to improve the fit of the core, 
@@ -731,12 +729,12 @@ def iterative_fit_gaus_unbinned(num_iters, data,
         if count == 1:
             # x_min = data.min()
             # x_max = data.max()
-            x_min = data.mean() - num_sigmas * data.std()
-            x_max = data.mean() + num_sigmas * data.std()
+            x_min = data.mean() - num_sigmas * abs(data.std())
+            x_max = data.mean() + num_sigmas * abs(data.std())
         elif count > 1:
             # Use the num_sigmas, previous fit sigma, and mean, to determine next fit range. 
-            x_min = bestfit_mean - num_sigmas * bestfit_stdev
-            x_max = bestfit_mean + num_sigmas * bestfit_stdev
+            x_min = bestfit_mean - num_sigmas * abs(bestfit_stdev)
+            x_max = bestfit_mean + num_sigmas * abs(bestfit_stdev)
         else: 
             raise ValueError("[ERROR] Invalid value for `count`.")
             
@@ -809,7 +807,7 @@ def iterative_fit_gaus_unbinned(num_iters, data,
             # Plot the Gaussian curve across its optimal x-range.
             ax.plot(gaus_vals_x, gaus_vals_y, 
                     color=color_dict[count], label=leg_label_fit, linestyle='-', marker="")
-            ax.legend(loc="upper right")
+            ax.legend(loc="upper right", framealpha=framealpha)
         
     return stats_dict, ax
 

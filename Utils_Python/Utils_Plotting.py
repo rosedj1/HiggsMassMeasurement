@@ -47,7 +47,7 @@ def save_plots_to_outpath(save_plot=False, outpath="", file_name="DEFAULT_NAME",
             if (verbose): print(f"Figure saved at: {fullpath + '.png'}")
 
 def make_1D_dist(ax, data, x_limits, x_bin_edges, x_label, y_label, title, extra_leg_text=None,
-                 y_max=-1, log_scale=False, color=None, leg_loc=None, display="float"):
+                 y_max=-1, log_scale=False, color=None, leg_loc=None, framealpha=1.0, display="float"):
     """
     Draw a kinematic distribution (e.g. eta1, gen_phi2, etc.) to an axes object in a figure.
     This function plots under/overflow bins depending on if there are hist values
@@ -116,7 +116,7 @@ def make_1D_dist(ax, data, x_limits, x_bin_edges, x_label, y_label, title, extra
     if extra_leg_text is not None:
         label_legend = extra_leg_text + "\n" + label_legend
     bin_vals, bin_edges, _ = ax.hist(mod_data, bins=x_bin_edges, label=label_legend, histtype='step', color=color)
-    ax.legend(loc=leg_loc, framealpha=1.0)#, fontsize=textsize_legend)
+    ax.legend(loc=leg_loc, framealpha=framealpha)#, fontsize=textsize_legend)
     ax.set_xlim(x_limits)
     if y_max == -1:
         # Default y_max.
