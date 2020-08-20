@@ -55,6 +55,11 @@ def correct_muon_pT(eta, pT, q, d0,
     Parameters
     ----------
     FIXME: [ ] Finish doc string.
+
+    Returns
+    -------
+    pT_corr : float
+        The corrected pT (not the shift!), based on the kinematics of the muon. 
     """
     eta_min, eta_max = find_bin_edges_of_value(abs(eta), np.array(eta_binedge_ls))
     pT_min,  pT_max  = find_bin_edges_of_value(pT,       np.array(pT_binedge_ls))

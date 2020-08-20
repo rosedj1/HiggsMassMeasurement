@@ -60,7 +60,7 @@ def crystal_ball_func(x, coeff, alpha, n, mu, sigma, normalize=False):
         Describes where the Gaussian-to-power-law switch takes place. 
     n : float
         The power of the power-law function.
-        The greatest n is, the more of a tail there will be.
+        The greater n is, the more of a tail there will be.
     mu : float
         The mean of the Gaussian core.
     sigma : float
@@ -124,13 +124,13 @@ def crystal_ball_doublesided_func(x_arr, coeff, alphaL, nL, alphaR, nR, mu, sigm
         Gives the number of standard deviations when the switch happens.
     nL : float
         The power of the power-law function.
-        The greatest n is, the more of a tail there will be.
+        The greater n is, the more of a tail there will be.
     alphaR : float
         Describes where the Gaussian-to-RIGHT-tail-power-law switch takes place. 
         Gives the number of standard deviations when the switch happens.
     nR : float
         The power of the power-law function.
-        The greatest n is, the more of a tail there will be.
+        The greater n is, the more of a tail there will be.
     mu : float
         The mean of the Gaussian core.
     sigma : float

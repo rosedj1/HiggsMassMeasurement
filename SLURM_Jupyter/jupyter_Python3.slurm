@@ -8,9 +8,9 @@ date;hostname;pwd
  
 module add jupyter
 
-cd /ufrc/avery/rosedj1/HiggsMassMeasurement/CMSSW_10_2_18/src/
+cd /blue/avery/rosedj1/HiggsMassMeasurement/CMSSW_10_2_18/src/
 eval `scramv1 runtime -sh`
-cd /ufrc/avery/rosedj1/HiggsMassMeasurement/
+cd /blue/avery/rosedj1/HiggsMassMeasurement/
 
 ml python3
 ml texlive  # This lets us have LaTeX font in Matplotlib plots.

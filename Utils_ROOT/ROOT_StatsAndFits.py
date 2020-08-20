@@ -1,4 +1,5 @@
 import ROOT
+import ROOT as r
 import numpy as np
 from array import array
 
@@ -279,6 +280,141 @@ def RooFit_iterative_gaus_fit(data, x_roofit, xframe, iters, fit_range=None, num
     }
         
     return fit_stats_dict 
+
+def get_BWxCBplusExp_fit_stats(mean, sigma, alpha, n, tau, fsig):
+    """
+    Return a dict which stores the best-fit parameters and errors.
+    
+    Parameters
+    ----------
+    mean : float
+        Mean of Gaussian core of Crystal Ball.
+    sigma : float 
+        Sigma of Gaussian core of Crystal Ball.
+    alpha : float
+        Describes where the Gaussian-to-left-tail-power-law switch takes place. 
+        Gives the number of standard deviations when the switch happens.
+    n : float
+        The power of the power-law function.
+        The greater n is, the more of a tail there will be.
+    tau : float 
+        The exponential decay rate. 
+    fsig : float
+        The normalizing coefficient in front of the BWxCB:
+        fsig * BWxCB + [%] * bkg
+    """
+    fit_stats_dict = {
+        "mean" : mean.getVal(), 
+        "mean_err" : mean.getError(),
+        "sigma" : sigma.getVal(),
+        "sigma_err" : sigma.getError(),
+        "alpha" : alpha.getVal(), 
+        "alpha_err" : alpha.getError(),
+        "n" : n.getVal(), 
+        "n_err" : n.getError(),
+        "tau" : tau.getVal(), 
+        "tau_err" : tau.getError(),
+        "fsig" : fsig.getVal(), 
+        "fsig_err" : fsig.getError(),
+    }
+    return fit_stats_dict
+
+def RooFit_CBxBWplusExp_fit_binned(hist, x_lim, fit_range=None, show_params=True, params_box=[0.2, 0.4, 0.85], 
+                                   linecolor=r.kBlue, markercolor=r.kBlue):
+    """
+    Fit a histogram with a Breit-Wigner function convoluted with a Crystal Ball function
+    while adding an exponential background function.
+    
+    NOTE: The BW parameters are fixed at the PDG values: 
+        BW_MEAN_PDG = 91.19
+        BW_SIGMA_PDG = 2.44
+
+    Parameters
+    ----------
+    hist : ROOT.TH1
+        The histogram already filled with data.
+    x_lim : 2-element list
+        The x-axis range to view the hist. [x_fit_min, x_fit_max]
+    fit_range : 2-element list, optional
+        [x_fit_min, x_fit_max]
+    show_params : bool, optional
+        If True, show the parameters in a box on the x_frame. 
+    params_box : 3-element list, optional
+        The coordinates of the fit parameters box.
+        [x_left_side, x_right_side, y_top]  # as a fraction of canvas width.
+    linecolor :
+        
+    Returns
+    -------
+    x_frame : ROOT.RooRealVar.frame
+        The frame object which holds the plots. 
+        Can be drawn to a TCanvas.
+    """
+#     ROOT.RooMsgService.instance().setStreamStatus(1,False)
+
+    BW_MEAN_PDG = 91.19
+    BW_SIGMA_PDG = 2.44
+    
+    x_min = x_lim[0]
+    x_max = x_lim[1]
+    
+    x = r.RooRealVar("x", "Mass (GeV/c^{2})", x_min, x_max)
+    h_Zboson = r.RooDataHist("h_Zboson", "h_Zboson", r.RooArgList(x), hist)
+    
+    # Prepare the fit model.
+    ## BW
+    BW_mean_DY = r.RooRealVar("BW_mean_DY", "BW_mean_DY", BW_MEAN_PDG)
+    BW_sigma_DY = r.RooRealVar("BW_sigma_DY", "BW_sigma_DY", BW_SIGMA_PDG)
+    BW_DY = r.RooBreitWigner("BW_DY", "BW_DY", x, BW_mean_DY, BW_sigma_DY)
+    
+    ## CB
+    Mean = r.RooRealVar("Mean", "Mean", 0.0, -5.0, 5.0)
+    Sigma = r.RooRealVar("Sigma", "Sigma", 1, 0.0, 10.0)
+    CB_alpha = r.RooRealVar("CB_alpha", "CB_alpha", 1, 0., 10)
+    CB_exp = r.RooRealVar("CB_exp", "CB_exp", 5, 0., 30)
+    CB = r.RooCBShape("CB", "CB", x, Mean, Sigma, CB_alpha, CB_exp)
+    
+    ## expo
+    tau = r.RooRealVar("tau", "tau", 0, -1, 1)
+    bkg = r.RooExponential("bkg","bkg", x, tau)
+    fsig = r.RooRealVar("fsig","signal fraction", 0.7, 0.5, 1.2)
+    
+    # Combine models.
+    BWxCB = r.RooFFTConvPdf("BWxCB","BWxCB", x, BW_DY, CB)
+    Final_DY = r.RooAddPdf("Final_DY","Final_DY", r.RooArgList(BWxCB, bkg), r.RooArgList(fsig))
+
+    # Plot the data and the fit.
+    xframe = x.frame(r.RooFit.Title("BW x CB + exp"))
+    h_Zboson.plotOn(xframe, r.RooFit.MarkerColor(markercolor))
+    # h_Zboson_corr.plotOn(xframe, r.RooFit.LineColor(r.kGreen+2))
+    
+    # Draw the BWxCB.
+    if fit_range is None:
+        Final_DY.fitTo(h_Zboson)
+    else:
+        Final_DY.fitTo(h_Zboson, r.RooFit.Range(fit_range[0], fit_range[1]))
+    Final_DY.plotOn(xframe, r.RooFit.LineColor(linecolor),
+                            r.RooFit.MarkerColor(markercolor),
+                            r.RooFit.MarkerSize(0.05))
+    # Draw the bkg.
+    Final_DY.plotOn(xframe, r.RooFit.Components("bkg"), 
+                            r.RooFit.LineColor(r.kBlue), 
+                            r.RooFit.LineStyle(r.kDashed))
+    if (show_params):
+        Final_DY.paramOn(xframe, r.RooFit.Layout(*params_box))
+    xframe.getAttText().SetTextSize(0.025)
+    xframe.getAttText().SetTextColor(linecolor)
+    # xframe.getAttText().SetTextColor(color_line_corr)
+
+#     leg_text  = "#splitline{#mu = %.3f #pm %.3f}" % (mean.getVal(),  mean.getError())
+#     leg_text += "{#sigma = %.3f #pm %.3f}" % (sigma.getVal(),  sigma.getError())
+    
+#     leg = r.TLegend(0.03, 0.80, 0.20, 0.9)
+#     leg.AddEntry("gauss", leg_text, "lep")
+#     leg.Draw("same")
+
+    fit_stats_dict = get_BWxCBplusExp_fit_stats(Mean, Sigma, CB_alpha, CB_exp, tau, fsig)
+    return xframe, fit_stats_dict
 
 # def RooFit_hist_DSCB_fit(hist, canv, fit_range=None, count=1):
     

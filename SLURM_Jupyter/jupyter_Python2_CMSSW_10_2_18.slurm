@@ -8,10 +8,10 @@ date;hostname;pwd
  
 module add jupyter
 
-cd /ufrc/avery/rosedj1/HiggsMassMeasurement/CMSSW_10_2_18/src/
+cd /blue/avery/rosedj1/HiggsMassMeasurement/CMSSW_10_2_18/src/
 eval `scramv1 runtime -sh`
-cd /ufrc/avery/rosedj1/
+cd /blue/avery/rosedj1/
 
-source /ufrc/avery/rosedj1/HiggsMassMeasurement/setup.sh
+source /blue/avery/rosedj1/HiggsMassMeasurement/setup.sh
 
 launch_jupyter_notebook

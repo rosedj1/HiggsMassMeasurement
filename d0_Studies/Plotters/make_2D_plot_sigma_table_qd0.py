@@ -1,4 +1,6 @@
 """
+I have begun to merge this code into make_2D_plot_sigma_table_dpToverpT.py. 
+
 # PURPOSE: 
 #  This code reads in values from a pickled dictionary and puts those 
 #  values into a 2D histogram. Finally it draws the histogram to a PDF.
@@ -21,7 +23,7 @@ from Utils_Python.Utils_Files import check_overwrite
 
 #--- User Parameters ---#
 year = "2017"
-inpath_sigmadict = f"/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/plots/qd0/MC{year}JpsiDY_2D_plot_qd0dist_gausiterfitsigmas_4unbinnedfits_0p0eta2p4_5p0pT1000p0GeV.pkl"
+inpath_sigmadict = f"/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pkl_and_csv/MC{year}JpsiDY_2D_plot_qd0dist_gausiterfitsigmas_4unbinnedfits_0p0eta2p4_5p0pT1000p0GeV.pkl"
 outfile_path = f"/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/plots/qd0/MC{year}JpsiDY_2Dplot_qd0dist_gausiterfitsigmas_4unbinnedfits_0p0eta2p4_5p0pT1000p0GeV_final.pdf"
 overwrite = False
 
@@ -62,7 +64,7 @@ def get_ranges(key):
     pT_range = [float(num.replace("p",".")) for num in pT_range_str]
     return eta_range, pT_range
     
-def fill_hist_with_dict_vals(h_2d, dict_sigmas, scale_factor=1):
+def fill_hist_with_dict_qd0vals(h_2d, dict_sigmas, scale_factor=1):
     """
     Put the value of each key into a specific cell of the 2D hist.
     
@@ -82,7 +84,7 @@ def fill_hist_with_dict_vals(h_2d, dict_sigmas, scale_factor=1):
         print(f"...Filling 2D hist: midpt_pT, midpt_eta, bestfit_sigma=({midpt_pT}, {midpt_eta}, {bestfit_sigma})")
         h_2d.Fill(midpt_pT, midpt_eta, bestfit_sigma)
 
-def make_2D_hist(kinem, title_2D_plot, eta_ls, pT_ls):
+def make_2D_hist(name, title, eta_ls, pT_ls, color_lim, formatting="6.2f"):
     """
     Make 2D hist which will hold the best-fit sigma values
     from iterated gaus fits of the kinematic distributions. 
@@ -90,22 +92,22 @@ def make_2D_hist(kinem, title_2D_plot, eta_ls, pT_ls):
     The x-bin edges are the pT bin edges.
     The y-bin edges are the eta bin edges.
     """
-    hist_2D = r.TH2F("h_2d", title_2D_plot, 
-              len(pT_ls)-1, np.array(pT_ls, dtype=float), 
-              len(eta_ls)-1, np.array(eta_ls, dtype=float) )
+    h2d = r.TH2F(name, 
+                 title, 
+                 len(pT_ls)-1, np.array(pT_ls, dtype=float), 
+                 len(eta_ls)-1, np.array(eta_ls, dtype=float) 
+                 )
 
     r.gStyle.SetOptStat(0)
 
-    hist_2D.SetXTitle("p_{T} [GeV]")
-    hist_2D.SetYTitle("#left|#eta#right|")
+    h2d.SetXTitle("p_{T} [GeV]")
+    h2d.SetYTitle("#left|#eta#right|")
 
-    hist_2D.GetXaxis().SetTitleOffset(1.3)
-    hist_2D.SetContour(200)
-    if "qd0" in kinem:
-        r.gStyle.SetPaintTextFormat("6.0f")  # Number format. Don't measure sub-micron.
-    elif "delta_pT" in kinem:
-        r.gStyle.SetPaintTextFormat("6.2f")  # Number format.
-    return hist_2D
+    h2d.GetXaxis().SetTitleOffset(1.3)
+    h2d.SetContour(200)  # Use N different colors to smooth out color bar gradient.
+    h2d.GetZaxis().SetRangeUser(*color_lim)  # 
+    h2d.SetLabelSize(0.015, "Z")
+    return h2d
 
 def make_pdf(kinem, hist, outfile_path, preview_plots=False):
     r.gROOT.SetBatch(not preview_plots)
@@ -118,8 +120,14 @@ if __name__ == "__main__":
     check_overwrite(outfile_path, overwrite=overwrite)
     dict_sigmas = get_dict_of_sigmas(inpath_sigmadict)
     eta_ls, pT_ls = extract_binedge_lists(dict_sigmas)
-    h_2d = make_2D_hist(kinem, title_2D_plot, eta_ls, pT_ls)
-    fill_hist_with_dict_vals(h_2d, dict_sigmas, scale_factor=scale_factor)
+    # h_2d = make_2D_hist(kinem, title_2D_plot, eta_ls, pT_ls)
+    h_2d_before_corr = make_2D_hist("before_corr", title_2D_plot_before_corr,
+                                    eta_binedge_ls, pT_binedge_ls, color_lim_beforeafter_corr, formatting_beforeafter)
+    h_2d_after_corr = make_2D_hist("after_corr", title_2D_plot_after_corr, 
+                                    eta_binedge_ls, pT_binedge_ls, color_lim_beforeafter_corr, formatting_beforeafter)
+    h_2d_improv = make_2D_hist("improvement", title_2D_plot_improvement, 
+                                    eta_binedge_ls, pT_binedge_ls, color_lim_improv, formatting_improv)
+    
 
     print(f"Making PDF of 2D hist...")
     if color_lim is not None:
