@@ -1,5 +1,5 @@
 import sys, ROOT
-from ROOT import gStyle
+# from ROOT import gStyle
 
 def setTDRStyle():
 
@@ -85,11 +85,11 @@ def setTDRStyle():
 # For the Global title:
 
     ROOT . gStyle . SetOptTitle(1);
-    ROOT . gStyle . SetTitleFont(42);
-    ROOT . gStyle . SetTitleColor(1);
-    ROOT . gStyle . SetTitleTextColor(1);
-    ROOT . gStyle . SetTitleFillColor(10);
-    ROOT . gStyle . SetTitleFontSize(0.05);
+    # ROOT . gStyle . SetTitleFont(42);
+    # ROOT . gStyle . SetTitleColor(1);
+    # ROOT . gStyle . SetTitleTextColor(1);
+    # ROOT . gStyle . SetTitleFillColor(10);
+    # ROOT . gStyle . SetTitleFontSize(0.05);
     # ROOT . gStyle . SetTitleH(0); # Set the height of the title box
     # ROOT . gStyle . SetTitleW(0); # Set the width of the title box
     # ROOT . gStyle . SetTitleX(0); # Set the position of the title box
@@ -105,7 +105,7 @@ def setTDRStyle():
     # ROOT . gStyle . SetTitleXSize(Float_t size = 0.02); # Another way to set the size?
     # ROOT . gStyle . SetTitleYSize(Float_t size = 0.02);
     ROOT . gStyle . SetTitleXOffset(0.9);
-    ROOT . gStyle . SetTitleYOffset(1.25);
+    ROOT . gStyle . SetTitleYOffset(1.5);
     # ROOT . gStyle . SetTitleOffset(1.1, "Y"); # Another way to set the Offset
 
 # For the axis labels:
@@ -123,6 +123,12 @@ def setTDRStyle():
     ROOT . gStyle . SetNdivisions(510, "XYZ");
     ROOT . gStyle . SetPadTickX(1);  # To get tick marks on the opposite side of the frame
     ROOT . gStyle . SetPadTickY(1);
+
+# Change legend parameters:
+    ROOT . gStyle . SetLegendBorderSize(1);
+    ROOT . gStyle . SetLegendFillColor(2);
+    ROOT . gStyle . SetLegendFont(42);
+    ROOT . gStyle . SetLegendTextSize(0.02);
 
 # Change for log plots:
     ROOT . gStyle . SetOptLogx(0);
