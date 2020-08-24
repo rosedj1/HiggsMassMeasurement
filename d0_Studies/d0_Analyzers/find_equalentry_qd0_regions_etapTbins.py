@@ -19,7 +19,8 @@
 #   Make sure to check all the parameters in "User Parameters".
 #   Should be used with Python 3.X.
 # Author:  Jake Rosenzweig
-# Updated: 2020-06-24
+# Created: sometime before 2020-06-24
+# Updated: 2020-08-23
 """
 import os
 import sys

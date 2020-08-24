@@ -1,11 +1,9 @@
-# How to Improve the Width of the Higgs Boson Mass Resonance using the Correlation between muon pT mismeasurement and d0
+# Using ad hoc pT corrections to improve muon momentum resolution
 
 ## Analysis Steps
 
-1. Use muons from Drell-Yan and J/psi samples (and potentially Higgs samples, Upsilon samples, etc.).
-2. Bin muons in eta and pT.
-For this analysis I used 
-3. 
+1. Use muons (from Drell-Yan, J/psi, Higgs decays, Upsilon samples, etc.) and bin the muons in eta and pT.
+2. For this analysis I used 
 
 `HiggsMassMeasurement/d0_Studies/Plotters_vaex/make_pdf_qd0_hists_multiplesamples_etapTbins.py`
 
