@@ -12,14 +12,12 @@ import pickle
 
 import matplotlib.pyplot as plt
 import numpy as np
-plt.style.use("cmsstyle_plot")
-sys.path.append('/Users/Jake/HiggsMassMeasurement/')
-sys.path.append('/Users/Jake/HiggsMassMeasurement/d0_Studies/')
+from scipy.optimize import curve_fit
+# plt.style.use("cmsstyle_plot")
 
 from d0_Utils.d0_cls import KinBin3DOrganizer, GraphLineKinBin3D
 from d0_Utils.d0_dicts import label_LaTeX_dict, color_dict
 from PyUtils.Utils_StatsAndFits import prop_err_x_div_y
-from scipy.optimize import curve_fit
 
 fullpath_kinbin_ls_pkl = "/Users/Jake/Desktop/Research/Higgs_Mass_Measurement/d0_studies/kinbin3D_pkls/fullscan_12reg__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
 

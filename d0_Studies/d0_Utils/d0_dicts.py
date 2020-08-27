@@ -19,6 +19,19 @@ color_dict = {
     13:'turquoise',
 }
 
+color_dict_RooFit = {
+    1:600,#,'kBlue',
+    2:632,#'kRed',
+    3:416,#'kGreen',
+    4:616,#'kMagenta',
+    5:800,#'kOrange',
+    6:432,#'kCyan',
+    7:880,#'kViolet',
+    8:840,#'kTeal',
+    9:900,#'kPink',
+    10:920,#'kGray',
+}
+
 label_LaTeX_dict = {
     "pT1"  : {"label":r"$p_{T1}^{\mathrm{REC}}$", 
               "independent_label":r"$p_{T}^{\mathrm{REC}}$", 
@@ -168,16 +181,16 @@ label_LaTeX_dict = {
                "units":"cm", "default_bin_limits":[-0.01, 0.01, 0.0002], "default_x_limits":[-0.012, 0.012]},
     
     "qd0BS1" : {"label":r"$q(\mu_{1}^{\pm, \mathrm{REC} }) * d_{0}^{ \mathrm{BS} }$", 
-              "independent_label":r"$q(\mu^{\pm, \mathrm{REC} } * d_{0}^{ \mathrm{BS} })$", 
+              "independent_label":r"$q(\mu^{\pm, \mathrm{REC} }) * d_{0}^{ \mathrm{BS} }$", 
                  "units":"cm", "default_bin_limits":[-0.01, 0.01, 0.0002], "default_x_limits":[-0.012, 0.012]},
     "qd0BS2" : {"label":r"$q(\mu_{2}^{\pm, \mathrm{REC} }) * d_{0}^{ \mathrm{BS} }$", 
-              "independent_label":r"$$q(\mu^{\pm, \mathrm{REC} } * d_{0}^{ \mathrm{BS} })$", 
+              "independent_label":r"$$q(\mu^{\pm, \mathrm{REC} }) * d_{0}^{ \mathrm{BS} }$", 
                  "units":"cm", "default_bin_limits":[-0.01, 0.01, 0.0002], "default_x_limits":[-0.012, 0.012]},
     "qd0PV1" : {"label":r"$q(\mu_{1}^{\pm, \mathrm{REC} }) * d_{0}^{ \mathrm{PV} }$", 
-              "independent_label":r"$q(\mu^{\pm, \mathrm{REC} } * d_{0}^{ \mathrm{PV} })$", 
+              "independent_label":r"$q(\mu^{\pm, \mathrm{REC} }) * d_{0}^{ \mathrm{PV} }$", 
                  "units":"cm", "default_bin_limits":[-0.01, 0.01, 0.0002], "default_x_limits":[-0.012, 0.012]},
     "qd0PV2" : {"label":r"$q(\mu_{2}^{\pm, \mathrm{REC} }) * d_{0}^{ \mathrm{PV} }$", 
-              "independent_label":r"$q(\mu^{\pm, \mathrm{REC} } * d_{0}^{ \mathrm{PV} })$", 
+              "independent_label":r"$q(\mu^{\pm, \mathrm{REC} }) * d_{0}^{ \mathrm{PV} }$", 
                  "units":"cm", "default_bin_limits":[-0.01, 0.01, 0.0002], "default_x_limits":[-0.012, 0.012]},
     
     "massZ"    : {"label":r"$m_{\mu^{+}\mu^{-}}$",        "independent_label":r"$m_{\mu^{+}\mu^{-}}$", "units":"GeV", "default_bin_limits":[60,120,0.4], "default_x_limits":[50, 130]},

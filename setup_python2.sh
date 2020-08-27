@@ -1,8 +1,8 @@
 #!/bin/bash
 
 export PYTHONPATH=${PYTHONPATH}:${PWD}
-export PYTHONPATH=$PYTHONPATH:/blue/avery/rosedj1/HiggsMassMeasurement
-export PYTHONPATH=$PYTHONPATH:/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies
+export PYTHONPATH=$PYTHONPATH:/ufrc/avery/rosedj1/HiggsMassMeasurement
+export PYTHONPATH=$PYTHONPATH:/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies
 #export PYTHONPATH=$PYTHONPATH:${PWD}/leptonPtErrorCorrector/
 #export PYTHONPATH=$PYTHONPATH:${PWD}/leptonPtErrorCorrector/doCorrection/
 #export PYTHONPATH=$PYTHONPATH:${PWD}/leptonPtErrorCorrector/doCorrection/tmp/

@@ -3,12 +3,95 @@ import math
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
+# import matplotlib.pyplot as plt
+# import matplotlib.ticker as ticker
 
-from matplotlib.backends.backend_pdf import PdfPages
-from PyUtils.Utils_Physics import perc_diff
+# from matplotlib.backends.backend_pdf import PdfPages
+from Utils_Python.Utils_Physics import perc_diff
 
+def get_pT_corr_factors(pT_corr_factor_dict, eta_min, eta_max, pT_min, pT_max):
+    """
+    Return the slope and intercept from the best fit lines of 
+    dpT/pT vs. q*d0 plots. 
+    
+    Parameters
+    ----------
+    pT_corr_factor_dict : dict
+        Contains the best-fit parameters to help correct muon pT. 
+        Key : str
+            The bin that muon lands in: e.g., '0.0eta0.2_10.0pT14.0'
+        Val : dict
+            e.g., {'intercept': -0.0001016, 'slope': 1.01}
+    eta_min : float
+        Lower edge of eta bin.
+    eta_max : float
+        Upper edge of eta bin.
+    pT_min : float
+        Lower edge of pT bin.
+    pT_max : float
+        Upper edge of pT bin.
+        
+    Returns
+    -------
+    slope : float
+        Slope of best-fit line for that eta, pT bin.
+    interc : float
+        Intercept of best-fit line for that eta, pT bin.
+    """
+    key = "{}eta{}_{}pT{}".format(eta_min, eta_max, pT_min, pT_max)
+
+    interc = pT_corr_factor_dict[key]["intercept"]
+    slope = pT_corr_factor_dict[key]["slope"]
+
+    return slope, interc
+
+def correct_muon_pT(eta, pT, q, d0, 
+                    pT_corr_factor_dict, 
+                    eta_binedge_ls, pT_binedge_ls,
+                    verbose=False):
+    """
+    Use the eta, pT, q, and d0 of a reco muon to determine its corrected pT.
+
+    Parameters
+    ----------
+    FIXME: [ ] Finish doc string.
+
+    Returns
+    -------
+    pT_corr : float
+        The corrected pT (not the shift!), based on the kinematics of the muon. 
+    """
+    eta_min, eta_max = find_bin_edges_of_value(abs(eta), np.array(eta_binedge_ls))
+    pT_min,  pT_max  = find_bin_edges_of_value(pT,       np.array(pT_binedge_ls))
+    
+    if all([x is not None for x in [eta_min, eta_max, pT_min, pT_max]]):
+        slope, interc = get_pT_corr_factors(pT_corr_factor_dict, eta_min, eta_max, pT_min, pT_max)
+        delta_pT = pT * (interc + slope * q * d0)
+    else:
+        slope, interc = None, None
+        delta_pT = 0
+    
+    pT_corr = pT - delta_pT
+    
+    if (verbose):
+        rel_pT = delta_pT / pT
+        if (rel_pT > 0.05):
+            print(f"[WARNING] delta_pT ({rel_pT}) > 5%")
+
+        print("This muon's info:")
+        print("  eta = {}".format(eta))
+        print("  pT  = {}".format(pT))
+        print("  q   = {}".format(q))
+        print("  d0  = {}".format(d0))
+        print("  eta bin: [{}, {}]".format(eta_min, eta_max))
+        print("  pT bin:  [{}, {}]".format(pT_min, pT_max))
+        print("  slope:  {}".format(slope))
+        print("  interc: {}".format(interc))
+        print("  delta_pT: {}".format(delta_pT))
+        print("  pT - delta_pT = pT_corr : {} - {} = {}\n".format(pT, delta_pT, pT_corr))
+    
+    return pT_corr
+    
 def get_subset_mask(x_vals, x_min, x_max):
     """
     Return a mask of an array such that: x_min <= element <= x_max
@@ -83,12 +166,64 @@ def calc_bin_widths(bin_edges):
     bin_width_arr = right_edges - left_edges
     return bin_width_arr
 
-def calc_x_err_bins(x_val_center_list):
+def centers_of_binning_array(bin_arr, decimals=0):
+    """
+    Returns an array of the centers between adjacent bin edges.
+    Also works with bin_arr that has unequal bin widths. 
+    
+    Example: 
+        bin_arr = np.array([1, 2, 4, 8])
+        bin_arr_shifted = np.array([1.5, 3, 6])
+        
+    NOTE: Was formerly called shift_binning_array().
+    
+    Parameters
+    ----------
+    bin_arr : list or array-like
+        Edges of bins: [left_edge_first_bin, ..., right_edge_last_bin]
+    decimals : int, optional
+        Number of decimal places to round bin centers.
+        
+    Returns
+    -------
+    bin_centers_arr : array
+        Centers between adjacent bin edges.
+        Will be of length = len(bin_arr) - 1
+    """
+    bin_arr = np.array(bin_arr)
+    bin_edges_low = bin_arr[:-1]
+    bin_edges_high = bin_arr[1:]
+    
+    bin_centers_arr = (bin_edges_high + bin_edges_low) / 2.
+    if decimals != 0:
+        bin_centers_arr = np.round(bin_centers_arr, decimals=decimals)
+    
+    return bin_centers_arr
+
+def calc_x_err_bins_from_bin_edges(binedge_ls):
     """
     Returns lists of the "x-errors", i.e. the half-distances between neighboring bins.
     These may be symmetrical or asymmetrical. 
+    """
+    bin_arr = np.array(binedge_ls)
+    bin_edges_low = bin_arr[:-1]
+    bin_edges_high = bin_arr[1:]
+
+    centers = centers_of_binning_array(bin_arr)
+
+    low_err_arr = centers - bin_edges_low
+    high_err_arr = bin_edges_high - centers
     
-    FIXME?: Possibly incorporate calc_bin_widths() in here?
+    return low_err_arr, high_err_arr
+
+def calc_x_err_bins_from_bin_centers(x_val_center_list):
+    """
+    FIXME: OLD FUNCTION, not useful to pass in x_val_center_list...
+           Use calc_x_err_bins_from_bin_edges instead.
+    Returns lists of the "x-errors", i.e. the half-distances between neighboring bins.
+    These may be symmetrical or asymmetrical. 
+    
+    ?: Possibly incorporate calc_bin_widths() in here?
     """
     high_err_list = []
     for x_center in range(len(x_val_center_list)-1):
@@ -115,7 +250,41 @@ def calc_ymin_for_legend(n_graphs, text_height=0.042):
     delta_y = text_height*n_graphs
     return 0.9 - delta_y # When you do TCanvas(), it puts the top axis at y = 0.9.
 
-            
+def find_bin_edges_of_value(val, bin_edge_arr):
+    """
+    Return the neighboring bin edges of bin_edge_arr, where:
+    this_bin_edge < val < next_bin_edge
+    
+    Example: 
+      this_bin_edge = bin_edge_arr[3]
+      next_bin_edge = bin_edge_arr[4]
+    
+    Notes:
+      - bin_edge_arr should be a sorted array [least -> greatest]    
+      - Encountered some interesting "edge cases" (HAHAHAHA)
+        in which the val falls EXACTLY on one of the bin edges. 
+        This causes the issue that the returned bin edges are 
+        not neighboring. 
+        This necessitates the use of either `>=` in the lt_arr var 
+        as opposed to just `>`, or `<=` in the gt_arr var.
+    """
+    try:
+        # Hacks, bruh.
+        gt_arr = bin_edge_arr[val < bin_edge_arr]   # Bool array before slice, e.g.: [0, 0, 1, ... , 1, 1]
+        next_bin_edge = gt_arr[0]
+        lt_arr = bin_edge_arr[val >= bin_edge_arr]  # Bool array before slice, e.g.: [1, 1, 0, ... , 0, 0]
+        this_bin_edge = lt_arr[-1]
+    except IndexError:
+        # Most likely that the val is less than min or greater than max of bin_edge_arr.
+        if (val < min(bin_edge_arr)) or (val > max(bin_edge_arr)):
+            this_bin_edge = next_bin_edge = None
+            print(f"Tried putting {val} into {bin_edge_arr}")
+        else:
+            msg = "val ({}) could not be placed in or next to bin_edge_arr:\n{}".format(bin_edge_arr)
+            raise ValueError(msg)
+    
+    return this_bin_edge, next_bin_edge
+
 def make_kinem_subplot(lep, ax, data, x_limits, x_bins, x_label, y_label, y_max=-1, log_scale=False):
     """
     MAY BE DEPRECATED.
@@ -239,40 +408,6 @@ def make_binning_array(lim_ls):
     bin_edges = np.arange(ls_min, ls_max+0.5*binw, binw)
     
     return bin_edges, binw
-
-def centers_of_binning_array(bin_arr, decimals=0):
-    """
-    Returns an array of the centers between adjacent bin edges.
-    Also works with bin_arr that has unequal bin widths. 
-    
-    Example: 
-        bin_arr = np.array([1, 2, 4, 8])
-        bin_arr_shifted = np.array([1.5, 3, 6])
-        
-    NOTE: Was formerly called shift_binning_array().
-    
-    Parameters
-    ----------
-    bin_arr : list or array-like
-        Edges of bins: [left_edge_first_bin, ..., right_edge_last_bin]
-    decimals : int, optional
-        Number of decimal places to round bin centers.
-        
-    Returns
-    -------
-    bin_centers_arr : array
-        Centers between adjacent bin edges.
-        Will be of length = len(bin_arr) - 1
-    """
-    bin_arr = np.array(bin_arr)
-    bin_edges_low = bin_arr[:-1]
-    bin_edges_high = bin_arr[1:]
-    
-    bin_centers_arr = (bin_edges_high + bin_edges_low) / 2.
-    if decimals != 0:
-        bin_centers_arr = np.round(bin_centers_arr, decimals=decimals)
-    
-    return bin_centers_arr
 
 def event_counter(start, stop, step, df, branch):
     """
@@ -523,6 +658,7 @@ def find_equal_hist_regions_unbinned(vals_arr, r, algo=("normal", -1), verbose=F
     bin_reg_ls : list
         A list of the edges of each region along the x-axis. 
         The number of entries between regions should have ~same number of entries.
+        If 
     r : int
         A possibly updated number of regions, if algo was set to something other than "normal".
         
@@ -530,6 +666,8 @@ def find_equal_hist_regions_unbinned(vals_arr, r, algo=("normal", -1), verbose=F
         - I used to call them "divisions" but now I call them "regions"
     """
     entries_total = len(vals_arr)
+    if entries_total == 0:
+        return [None, None] , -1
     sorted_vals_arr = np.sort(vals_arr)
     # first_bin = round(sorted_vals_arr[0], round_to_n_decimals)
     # last_bin = round(sorted_vals_arr[-1], round_to_n_decimals)
@@ -553,8 +691,8 @@ def find_equal_hist_regions_unbinned(vals_arr, r, algo=("normal", -1), verbose=F
                 break
             # There are too few actual entries per region. 
             # Decrement the number of regions.  
-            msg  = "  Expecting {:.2f} entries per region (using {} regions), ".format(entries_per_reg, r)
-            msg += "but need at least {} entries per region.\n".format(find_at_least_per_reg)
+            msg  = "  Found {:.2f} entries per region (using {} regions), ".format(entries_per_reg, r)
+            msg += "but require at least {} entries per region.\n".format(find_at_least_per_reg)
             msg += "    Decrementing the number of regions from {} to {}".format(r, r-1)
             r -= 1
             print(msg)
@@ -628,16 +766,18 @@ def find_equal_hist_regions_unbinned(vals_arr, r, algo=("normal", -1), verbose=F
         bin_reg_ls.append(bin_edge)
         elem += 1  # Must not include this element again. 
               
-    # I think this will only trigger if r == entries_total, which is absurd.
+    # I think this will only trigger if r == entries_total.
+    # Can happen when the number of entries is VERY small. 
     if len(set(bin_reg_ls)) != len(bin_reg_ls):
         from collections import Counter
         c = Counter(bin_reg_ls)
         print(c)
         multiple = c.most_common(1)[0][0]
-        err_msg = "[ERROR] The same bin edge ({}) was found multiple times.\n".format(multiple)
-        err_msg += "Either the value of r ({}) was too large or ".format(r)
-        # err_msg += "the number of decimal places ({}) was too small.".format(round_to_n_decimals)
-        raise RuntimeError(err_msg)
+        msg  = "[WARNING] The same bin edge ({multiple}) was found multiple times.\n"
+        msg += "Using an ad hoc solution: duplicating first bin and shifting it left a little."
+        print(msg)
+        bin_reg_ls[0] = bin_reg_ls[0] - 1E-14 * abs(bin_reg_ls[0])
+        # raise RuntimeError(err_msg)
 
     if (verbose):
         print("[INFO] Final bin region list is:\n{}\n".format(bin_reg_ls))
