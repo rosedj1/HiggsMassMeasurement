@@ -27,15 +27,15 @@ from Utils_Python.Plot_Styles_ROOT.tdrstyle_official import setTDRStyle, tdrGrid
 
 #--- User Parameters ---#
 pdf_outpath = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/Toy_Model/output/plots"
-# Processes to run.
+# Processes to run. Structure: (bool_to_run_this, output_path)
 do_muon_traj_cumul_plot = (0, os.path.join(pdf_outpath, "muon_trajectories.pdf"))
 do_smear_and_nonsmear_plots = (0, os.path.join(pdf_outpath, "smear_and_nonsmear_traj_eachpT.pdf"))
-do_daOvera_dpTOverpT_plots = (0, os.path.join(pdf_outpath, "deltaa_and_deltapT_vs_d0_scatterplots.pdf"))
-do_th2f_scatterplots = (1, os.path.join(pdf_outpath, "h2d_withbestfitlines.pdf"))
+do_daOvera_dpTOverpT_plots = (1, os.path.join(pdf_outpath, "deltaa_and_deltapT_vs_d0_scatterplots_test01.pdf"))
+do_th2f_scatterplots = (0, os.path.join(pdf_outpath, "h2d_withbestfitlines.pdf"))
 
 n_toys = 100
 pT_ls = [5, 10, 20, 30, 40, 50, 75, 100]
-new_pixel_pos = [2.9, 6.8, 10.5, 16.0, 25.5, 33.9, 41.9, 49.8, 60.8, 69.2, 78.0, 86.8, 96.5, 108]
+new_pixel_pos = [2.9, 6.8, 10.5, 16.0, 25.5, 33.9, 41.9, 49.8, 60.8, 69.2, 78.0, 86.8, 96.5, 108.0]
 
 #------------------------#
 #--- Script functions ---#
