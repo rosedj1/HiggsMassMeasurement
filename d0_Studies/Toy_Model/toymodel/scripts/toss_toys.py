@@ -1,7 +1,7 @@
 """ Theoretical Muon Trajectory Analyzer
 PURPOSE: This script is used to make plots of simulated muon track hits
     in the Pixel and Strip Tracker layers. 
-SYNTAX: python this_script.py
+SYNTAX: python this_script.py > output.txt
 NOTES: This code produces 4 kinds of plots: 
     (1) A one-page PDF which shows the trajectories of muons with 
     varying pTs.
@@ -14,10 +14,11 @@ NOTES: This code produces 4 kinds of plots:
     to detect an anomalous 'clumping" of points.
 AUTHOR: Jake Rosenzweig
 CREATED: 2020-08-20
-UPDATED: 2020-08-27
+UPDATED: 2020-09-02
 TO DO: 
     [ ] Figure out how to suppress fit stats output.
     [ ] Perform a pol2 fit in make_pdf_smear_and_nonsmear_traj().
+    [ ] 
 """
 import os
 import ROOT as r
@@ -26,16 +27,16 @@ from Toy_Model.utils.classes import HitPlotOrg, BiasPlotter
 from Utils_Python.Plot_Styles_ROOT.tdrstyle_official import setTDRStyle, tdrGrid
 
 #--- User Parameters ---#
-pdf_outpath = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/Toy_Model/output/plots"
+pdf_outpath = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/Toy_Model/output/plots/neha_code_investigation"
 # Processes to run. Structure: (bool_to_run_this, output_path)
-do_muon_traj_cumul_plot = (0, os.path.join(pdf_outpath, "muon_trajectories.pdf"))
-do_smear_and_nonsmear_plots = (0, os.path.join(pdf_outpath, "smear_and_nonsmear_traj_eachpT.pdf"))
-do_daOvera_dpTOverpT_plots = (1, os.path.join(pdf_outpath, "deltaa_and_deltapT_vs_d0_scatterplots_test01.pdf"))
-do_th2f_scatterplots = (0, os.path.join(pdf_outpath, "h2d_withbestfitlines.pdf"))
+do_muon_traj_cumul_plot =     (0, os.path.join(pdf_outpath, "muon_trajectories_20200902_test01.pdf"))
+do_smear_and_nonsmear_plots = (0, os.path.join(pdf_outpath, "smear_and_nonsmear_traj_eachpT_20200902_test01.pdf"))
+do_daOvera_dpTOverpT_plots =  (0, os.path.join(pdf_outpath, "deltaa_and_deltapT_vs_d0_scatterplots_20200902_test01.pdf"))
+do_th2f_scatterplots =        (1, os.path.join(pdf_outpath, "h2d_withbestfitlines_20200902_test01.pdf"))
 
-n_toys = 100
-pT_ls = [5, 10, 20, 30, 40, 50, 75, 100]
-new_pixel_pos = [2.9, 6.8, 10.5, 16.0, 25.5, 33.9, 41.9, 49.8, 60.8, 69.2, 78.0, 86.8, 96.5, 108.0]
+n_toys = 5000
+pT_ls = [5, 10, 20, 40, 50, 75, 100]
+new_pixel_pos = [2.9, 6.8, 10.5, 16.0, 25.5, 33.9, 41.9, 49.8, 60.8, 69.2, 78.0, 86.8, 96.5, 108.0]  # cm
 
 #------------------------#
 #--- Script functions ---#
@@ -199,7 +200,7 @@ def make_TH2F_plots(outfile_path, pT_ls, position_ls, n_toys, x_lim=[-0.05, 0.05
         c1.Draw()
         c1.Print(outfile_path)
 
-        c1.Print(outfile_path + "]")
+    c1.Print(outfile_path + "]")
 
 if __name__ == '__main__':
     set_properties()

@@ -1,3 +1,6 @@
+# FIXME: graph_dXOverX() may have an issue when called multiple times
+# while do_fit = True.
+
 import numpy as np
 import ROOT as r
 from array import array
@@ -214,8 +217,8 @@ class BiasPlotter:
         """Returns a plot of dX/X vs. d0."""
         err_msg = "You have to toss some toys first! Do: `biasplotter.toss_toys(int)`"
         assert self.n_toys is not None, err_msg
-        print "Making {} plot after tossing {} toys...".format(kinem, self.n_toys)
-        # print(f"Making {kinem} plot after tossing {self.n_toys} toys...")
+        # print "Making {} plot after tossing {} toys...".format(kinem, self.n_toys)
+        print(f"Making {kinem} plot after tossing {self.n_toys} toys...")
         
         y_label = self.make_label(kinem)
         x_vals = np.array(self.d0_ls)
@@ -245,6 +248,9 @@ class BiasPlotter:
             gr.Draw("AP")
         
         if (do_fit):
+            # FIXME: Instead of self.fit_line = ...,
+            # maybe try something like gr_dict[kinem] = ...
+            # since this gets called twice for the same gr.
             self.fit_line = self.fit_graph_with_line(gr)
         return gr
 
@@ -252,7 +258,10 @@ class BiasPlotter:
         """Return a linear fit function and after fitting it to graph."""
         x_min = min(self.d0_ls) 
         x_max = max(self.d0_ls)
-        x = r.RooRealVar("x", "d_{0} (impact parameter)", x_min, x_max, "cm")  # (name, title, min, max, units)
+        # x = r.RooRealVar("x", "d_{0} (impact parameter)", x_min, x_max, "cm")  # (name, title, min, max, units)
+        # interc = r.RooRealVar("p0", "intercept", -999, 999)
+        # slope = r.RooRealVar("p1", "slope", -9999, 9999)
+        # linefit = r.RooFormula("linefit", "@0+@1*@2", r.RooArgList(interc, slope, x))
         fit_func = r.TF1('f1', '[0]+[1]*x', x_min, x_max)
         fit_func.SetLineColor(2)
         fit_func.SetLineWidth(1)
