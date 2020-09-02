@@ -100,7 +100,7 @@ def get_ndcs_rec(lep_genindex_ls):
 
 def get_ndcs_gen(rec_ndcs_ls, lep_genindex):
     """ 
-    Use the good reco indices to retrieve the gen indices.
+    Use the good reco indices to retrieve the corresponding gen indices.
     These gen indices can be used to slice GEN vectors. 
 
     rec_ndcs_ls = [2, 1, 0, 3]
@@ -127,22 +127,39 @@ def validate_lep_genindex(lep_genindex_ls):
     else:
         return True
 
-def initialize_muon(evt, ndx):
+def initialize_muon(evt, reco_ndx, gen_ndx):
     """
-    For a given event (evt), build a muon (mu) using the reco values
-    at a given index (ndx) in the lep_kinem vectors. 
+    For a given event (evt), build a muon (mu) using: 
+        - the reco values at a given index (reco_ndx) in the lep_kinem vectors
+        - the gen values at a given gen index (gen_ndx) in the GENlep_kinem vectors. 
+
+    NOTE:
+        - The reco values are retrieved using ROOT.Math.LorentzVector methods (mu.Pt(), mu.Phi(), etc.)
+        - If you use this muon in ROOT calculations like: mu1 + mu2,
+          then be sure that the kinematics are stored using ROOT.Math.SetPtEtaPhiM(pt,eta,phi,m).
 
     Additionally: 
     - checks ID to make sure it is a muon.
-    - Stores: charge, 
+    - Stores: pT, eta, phi, mass, charge, d0_BS.
 
+    Returns
+    -------
+    mu : ROOT.Math.LorentzVector
     """
-    mu = ROOT.Math.PtEtaPhiMVector(evt.lepFSR_pt[ndx], evt.lepFSR_eta[ndx], evt.lepFSR_phi[ndx], evt.lepFSR_mass[ndx])
-    mu.charge = evt.lep_id[ndx] / -13.
+    # Record reco info. 
+    mu = ROOT.Math.PtEtaPhiMVector(evt.lepFSR_pt[reco_ndx], evt.lepFSR_eta[reco_ndx], evt.lepFSR_phi[reco_ndx], evt.lepFSR_mass[reco_ndx])
+    mu.charge = evt.lep_id[reco_ndx] / -13.
     if abs(mu.charge) != 1:
         print(f"mu.charge ({mu.charge}]) != +-1")
         raise ValueError
-    mu.d0 = evt.lep_d0BS[ndx]
+    mu.d0 = evt.lep_d0BS[reco_ndx]
+    # Gen kinematics.
+    mu.gen_Pt = evt.GENlep_pt[gen_ndx]
+    mu.gen_Eta = evt.GENlep_eta[gen_ndx]
+    mu.gen_Phi = evt.GENlep_phi[gen_ndx]
+    mu.gen_Mass = evt.GENlep_mass[gen_ndx]
+    # Kinematical combinations.
+    mu.dpTOverpT = (mu.Pt() - mu.gen_Pt) / mu.gen_Pt
     return mu
 
 def clone_muon(mu):
@@ -151,11 +168,23 @@ def clone_muon(mu):
     cloned_mu.d0 = mu.d0
     return cloned_mu
 
-def make_muon_ls(evt, rec_ndcs_ls):
+def make_muon_ls(evt, rec_ndcs_ls, gen_ndcs_ls):
+    """Create a list of muons with reco and gen kinematic info.
+    
+    Parameters
+    ----------
+    evt : TTree event (e.g. tree.GetEntry(2))
+    rec_ndcs_ls : list
+        The reco indices of the muons in a "lep vector" (e.g. lep_pt, lep_id).
+    gen_ndcs_ls : list
+        The gen indices of a lep_gen vector that correspond to the matched reco muons. 
+        Should be the same length as rec_ndcs_ls.
+    """
+    assert len(rec_ndcs_ls) == len(gen_ndcs_ls)
     mu_ls = []
-    # Run over the 4 rec muons.
-    for ndx in rec_ndcs_ls:
-        mu = initialize_muon(evt, ndx)
+    # Run over the reco muons.
+    for reco_ndx,gen_ndx in zip(rec_ndcs_ls, gen_ndcs_ls):
+        mu = initialize_muon(evt, reco_ndx, gen_ndx)
         mu_ls.append(mu)
     return mu_ls
 
@@ -180,7 +209,7 @@ def make_muon_corr_ls(mu_ls, pT_corr_factor_dict, eta_binedge_ls, pT_binedge_ls,
     return mu_corr_ls
 
 def check_muon_kinem(mu):
-    """Make sure that this muon has:
+    """Make sure that this muon has reco info:
         0.0 < abs(eta) < 2.4
         5 < pT < 200
     """
@@ -188,7 +217,7 @@ def check_muon_kinem(mu):
     passed_pT =  True
     # passed_eta = (0 < abs(mu.Eta())) and (abs(mu.Eta()) < 2.4)
     # passed_pT = (5 < mu.Pt()) and (mu.Pt() < 200)
-    passed_d0 = (abs(mu.d0) < 0.010)
+    passed_d0 = True #(abs(mu.d0) < 0.010)
     return all([passed_eta, passed_pT, passed_d0])
 
 def verify_all_muons(mu_ls):
@@ -331,7 +360,7 @@ if __name__ == "__main__":
 
         # Event looks good so far. 
         # Now check kinematics of muons.
-        mu_ls = make_muon_ls(t, rec_ndcs_ls)
+        mu_ls = make_muon_ls(t, rec_ndcs_ls, gen_ndcs_ls)
         all_muons_passed = verify_all_muons(mu_ls)
         if not all_muons_passed:
             continue
