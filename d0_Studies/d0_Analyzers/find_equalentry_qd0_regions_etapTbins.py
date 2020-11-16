@@ -19,7 +19,8 @@
 #   Make sure to check all the parameters in "User Parameters".
 #   Should be used with Python 3.X.
 # Author:  Jake Rosenzweig
-# Updated: 2020-06-24
+# Created: sometime before 2020-06-24
+# Updated: 2020-08-23
 """
 import os
 import sys
@@ -104,7 +105,7 @@ if (verbose):
 extra = (
     f"_{r}reg"
     f"with{algo[1]}perreg"
-    f"__{min(eta_ls):.1f}_eta_{max(eta_ls):.1f}"
+    f"__{min(eta_ls)}_eta_{max(eta_ls)}"
     f"__{min(pT_ls):.1f}_pT_{max(pT_ls):.1f}_GeV"
 )
 extra = make_str_title_friendly(extra)

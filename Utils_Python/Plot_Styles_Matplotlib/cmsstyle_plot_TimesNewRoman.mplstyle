@@ -1,0 +1,44 @@
+lines.marker      : o    ## the default marker
+lines.markersize  : 2            ## markersize, in points
+patch.edgecolor        : white   ## if forced, or patch is not filled
+
+axes.grid           : True   ## display grid or not
+axes.formatter.limits : -4, 4 ## use scientific notation if log10
+axes.formatter.use_mathtext : True ## When True, use mathtext for scientific
+
+xtick.top            : True  ## draw ticks on the top side
+xtick.major.size     : 13    ## major tick size in points
+xtick.minor.size     : 6.5      ## minor tick size in points
+xtick.direction      : in    ## direction: in, out, or inout
+xtick.minor.visible  : True  ## visibility of minor ticks on x-axis
+ytick.right          : True  ## draw ticks on the right side
+ytick.major.size     : 13    ## major tick size in points
+ytick.minor.size     : 6.5      ## minor tick size in points
+ytick.direction      : in    ## direction: in, out, or inout
+ytick.minor.visible  : True  ## visibility of minor ticks on y
+
+legend.framealpha    : 1      ## legend patch transparency (default=0.8)
+legend.edgecolor     : white      ## background patch boundary color
+legend.fancybox      : False     ## if True, use a rounded box for the axis
+legend.fontsize      : xx-small  ## default=medium
+
+image.cmap   : hot_r           ## A colormap name, gray etc...
+errorbar.capsize : 1.5             ## length of end cap on error bars in pixels
+hist.bins : 50                   ## The default number of histogram bins.
+savefig.format      : pdf      ## png, ps, pdf, svg
+
+text.usetex : False  ## If you turn to True, you must have LaTeX installed. 
+
+font.family  : serif #sans-serif
+#font.style   : normal
+#font.variant : normal
+#font.weight  : normal
+#font.stretch : normal
+#font.size    : 10.0
+
+font.serif       : Times New Roman
+#font.serif      : DejaVu Serif, Bitstream Vera Serif, Computer Modern Roman, New Century Schoolbook, Century Schoolbook L, Utopia, ITC Bookman, Bookman, Nimbus Roman No9 L, Times New Roman, Times, Palatino, Charter, serif
+#font.sans-serif : DejaVu Sans, Bitstream Vera Sans, Computer Modern Sans Serif, Lucida Grande, Verdana, Geneva, Lucid, Arial, Helvetica, Avant Garde, sans-serif
+#font.cursive    : Apple Chancery, Textile, Zapf Chancery, Sand, Script MT, Felipa, cursive
+#font.fantasy    : Comic Neue, Comic Sans MS, Chicago, Charcoal, ImpactWestern, Humor Sans, xkcd, fantasy
+#font.monospace  : DejaVu Sans Mono, Bitstream Vera Sans Mono, Computer Modern Typewriter, Andale Mono, Nimbus Mono L, Courier New, Courier, Fixed, Terminal, monospace

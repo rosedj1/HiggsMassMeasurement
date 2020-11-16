@@ -8,7 +8,7 @@ from Utils_Python.Utils_Selections import Selector
 from Utils_Python.Utils_Physics import calc_dphi, calc_dR
 from Utils_Python.Plot_Styles_ROOT.tdrstyle_official import fixOverlay, setTDRStyle, tdrGrid
 
-from Utils_ROOT.ROOT_StatsAndFits import RooFit_iterative_gaus_fit, RooFit_gaus_fit_unbinned_from_TTree
+from Utils_ROOT.ROOT_StatsAndFits import RooFit_iterative_gaus_fit 
 from Utils_ROOT.ROOT_fns import fill_dpToverpT_hist
 
 # from d0_Studies.d0_Utils.d0_dicts import color_dict_RooFit
@@ -24,6 +24,7 @@ outdir_plots = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/plots/hists_
 
 filename = "20200602_fullstats_dpToverpT"
 overwrite = False
+verbose = False
 
 n_evts = -1
 
@@ -58,7 +59,7 @@ makeDirs(outdir_pkl)
 # Handle naming of files. 
 extra = (
     f"_{num_sigmas:.2f}sigmas"
-    f"__{min(eta_ls):.1f}_eta_{max(eta_ls):.1f}"
+    f"__{min(eta_ls)}_eta_{max(eta_ls)}"
     f"__{min(pT_ls):.1f}_pT_{max(pT_ls):.1f}_GeV"
 )
 extra = make_str_title_friendly(extra)
@@ -139,7 +140,13 @@ for h in (h_Jpsi_dpToverpT, h_Upsilon_dpToverpT):
     
     print(f"Performing iterative gaus fit on hist: {h.GetName()}")
     if (do_iter_gaus_fit):
-        fit_stats_dict = RooFit_iterative_gaus_fit(h, canv, iters=iters, num_sigmas=num_sigmas, binned_fit=True)
+        # FIXME: Probably need to draw onto the canvas here!
+        fit_stats_dict = RooFit_iterative_gaus_fit(h, 
+                            binned_fit=True, switch_to_binned_fit=2000, 
+                            iters=iters, num_sigmas=num_sigmas, 
+                            n_bins=100, x_lim=None, 
+                            xframe=None, x_label="Independent var", title="", units="",
+                            marker_color=1, only_draw_last=False, draw=False, verbose=verbose)
     elif (do_BWconvCB_fit):
         # fit_stats_dict = RooFit_BWconvCB_fit(h, canv, iters=iters, num_sigmas=num_sigmas, binned_fit=True)
         pass

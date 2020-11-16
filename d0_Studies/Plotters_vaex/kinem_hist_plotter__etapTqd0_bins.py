@@ -75,7 +75,7 @@ massZ_max_Jpsi = massZ_minmax_Jpsi[1]
 makeDirs(outdir)
 
 stats_filename = filename_base
-extra_   = "__{:.1f}_eta_{:.1f}".format(min(eta_ls), max(eta_ls))
+extra_   = "__{}_eta_{}".format(min(eta_ls), max(eta_ls))
 extra_  += "__{:.1f}_pT_{:.1f}_GeV".format(min(pT_ls), max(pT_ls))
 extra_ = make_str_title_friendly(extra_)
 extra_ += ".stat"
@@ -124,7 +124,7 @@ for k in range(len(eta_ls)-1):
     eta_range = [eta_min, eta_max]
 
     # For each eta range, make a pdf. 
-    extra   = "__{:.1f}_eta_{:.1f}".format(eta_min, eta_max)
+    extra   = "__{}_eta_{}".format(eta_min, eta_max)
     extra  += "__{:.1f}_pT_{:.1f}_GeV".format(min(pT_ls), max(pT_ls))
     extra = make_str_title_friendly(extra)
     extra += ".pdf"

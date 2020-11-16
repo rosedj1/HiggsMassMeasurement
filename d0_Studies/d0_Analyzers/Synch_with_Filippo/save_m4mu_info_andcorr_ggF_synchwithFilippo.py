@@ -1,12 +1,16 @@
 """
 PURPOSE:
-  This code opens up a gluon fusion Higgs sample
-  from Filippo's area on HPG T2.
-  It selects m4mu events which pass all specified selection criteria,
-  stores the m4mu and m4mu_corr values in a TTree, and makes 
-  distributions of these 2 variables.
-  m4mu_corr is the m4mu reevaluated after each muon has
-  had its pT corrected from the d0 studies. 
+    This code opens up a ggH sample from Filippo's area on HPG T2.
+    It selects m4mu events which pass all specified selection criteria,
+    stores the m4mu and m4mu_corr values in a TTree, and makes 
+    distributions of these 2 variables.
+    m4mu_corr is the m4mu reevaluated after each muon has
+    had its pT corrected from the d0 studies. 
+Syntax: 
+Notes: 
+Author: Jake Rosenzweig
+Created:
+Updated: 2020-11-01
 """
 import pickle
 import ROOT
@@ -14,15 +18,18 @@ import numpy as np
 from array import array
 
 # Local imports.
+from Particles import MyMuon
+from Utils_Python.Selections import passed_Higgs_selections, build
 from Utils_Python.Plot_Styles_ROOT.tdrstyle_official import setTDRStyle, tdrGrid#, fixOverlay
 from Utils_Python.Utils_Files import check_overwrite
 from d0_Studies.d0_Utils.d0_fns import correct_muon_pT
 from array import array
 #----- User Parameters -----#
-year = 2017
+year = 2018
 inpath_file = f"/cmsuf/data/store/user/t2/users/ferrico/Full_RunII/Production_10_2_18/Higgs_VX_BS/125/GluGluHToZZTo4L_M125_{year}.root"
-inpath_pkl = f"/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/KinBin_Info/MC{year}_d0_pT_corrfactors_0p0eta2p4_5p0pT1000p0.pkl"
-outpath_file_woext = f"/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/root_files/MC{year}_ggF_synchwithFilippo_basiccuts_usingFSR_absd0cut0p010"
+# inpath_pkl = f"/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/KinBin_Info/MC{year}_d0_pT_corrfactors_0p0eta2p4_5p0pT1000p0.pkl"
+inpath_pkl = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/Pickles/BestSoFar/MC2018ggH_combined_pT_corr_factor_dct.pkl"
+outpath_file_woext = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC{year}"
 
 eta_binedge_ls = [0.00, 0.20, 0.40, 0.60, 0.80, 1.00, 1.25, 1.50, 1.75, 2.00, 2.10, 2.20, 2.30, 2.40]
 pT_binedge_ls = [5.0, 7.0, 10.0, 14.0, 20.0, 27.0, 38.0, 50.0, 75.0, 100.0, 150.0, 200.0, 1000.0]
@@ -38,26 +45,7 @@ def make_outfiles(outpath_file_woext, overwrite):
 
     check_overwrite(outpath_rootfile, overwrite)
     check_overwrite(outpath_pdf, overwrite)
-    return outpath_rootfile, outpath_pdf
-
-def calc_Hmass(mu1, mu2, mu3, mu4):
-    """
-    NOTE: This method relies on calls like: mu.Pt(), mu.Eta(), etc. 
-    So you must change the muon kinematics by doing: mu.SetPt(val), e.g.
-    """
-    H = mu1 + mu2 + mu3 + mu4
-    return H.M()
-
-def passed_Higgs_selections(evt):
-    """
-    Returns True, if this event passes the given selections.
-    """
-    selec_ls = []
-    selec_ls.append(evt.passedFullSelection)
-    selec_ls.append(evt.finalState == 1)
-    selec_ls.append((105 < evt.mass4l) & (evt.mass4l < 140))
-#     selec_ls.append(evt.passedFiducialSelection)
-    return all(selec_ls)
+    return (outpath_rootfile, outpath_pdf)
 
 def check_2_OSSF_muon_pairs(id_ls):
     """
@@ -93,17 +81,6 @@ def get_ndcs_rec(lep_genindex_ls):
             3rd element is 1 : lep_pt[3] matches GENlep_pt[1]"""
     return [ct for ct,x in enumerate(lep_genindex_ls) if x >= 0]
 
-def get_ndcs_gen(rec_ndcs_ls, lep_genindex):
-    """ 
-    Use the good reco indices to retrieve the gen indices.
-    These gen indices can be used to slice GEN vectors. 
-
-    rec_ndcs_ls = [2, 1, 0, 3]
-    lep_genindex = [2, 3, 1, 0, -1]
-    returns: [1, 3, 2, 0]  # good gen indices to slices GEN vectors.
-    """
-    return [lep_genindex[ndx] for ndx in rec_ndcs_ls]
-
 def validate_lep_genindex(lep_genindex_ls):
     """
     Return True, if lep_genindex_ls satisfies the following:
@@ -122,37 +99,11 @@ def validate_lep_genindex(lep_genindex_ls):
     else:
         return True
 
-def initialize_muon(evt, ndx):
-    """
-    For a given event (evt), build a muon (mu) using the reco values
-    at a given index (ndx) in the lep_kinem vectors. 
-
-    Additionally: 
-    - checks ID to make sure it is a muon.
-    - Stores: charge, 
-
-    """
-    mu = ROOT.Math.PtEtaPhiMVector(evt.lepFSR_pt[ndx], evt.lepFSR_eta[ndx], evt.lepFSR_phi[ndx], evt.lepFSR_mass[ndx])
-    mu.charge = evt.lep_id[ndx] / -13.
-    if abs(mu.charge) != 1:
-        print(f"mu.charge ({mu.charge}]) != +-1")
-        raise ValueError
-    mu.d0 = evt.lep_d0BS[ndx]
-    return mu
-
 def clone_muon(mu):
     cloned_mu = ROOT.Math.PtEtaPhiMVector(mu.Pt(), mu.Eta(), mu.Phi(), mu.M())
     cloned_mu.charge = mu.charge
     cloned_mu.d0 = mu.d0
     return cloned_mu
-
-def make_muon_ls(evt, rec_ndcs_ls):
-    mu_ls = []
-    # Run over the 4 rec muons.
-    for ndx in rec_ndcs_ls:
-        mu = initialize_muon(evt, ndx)
-        mu_ls.append(mu)
-    return mu_ls
 
 def make_muon_corr_ls(mu_ls, pT_corr_factor_dict, eta_binedge_ls, pT_binedge_ls, verbose=False):
     mu_corr_ls = []
@@ -173,42 +124,6 @@ def make_muon_corr_ls(mu_ls, pT_corr_factor_dict, eta_binedge_ls, pT_binedge_ls,
         # Save muons for this event.
         mu_corr_ls.append(mu_corr)
     return mu_corr_ls
-
-def check_muon_kinem(mu):
-    """Make sure that this muon has:
-        0.0 < abs(eta) < 2.4
-        5 < pT < 200
-    """
-    passed_eta = True
-    passed_pT =  True
-    # passed_eta = (0 < abs(mu.Eta())) and (abs(mu.Eta()) < 2.4)
-    # passed_pT = (5 < mu.Pt()) and (mu.Pt() < 200)
-    passed_d0 = (abs(mu.d0) < 0.010)
-    return all([passed_eta, passed_pT, passed_d0])
-
-def verify_all_muons(mu_ls):
-    """
-    Make sure all muons passed selections and do final pT checks.
-    Returns True if all muons passed, False otherwise.
-    """
-    # count_pT_gt10_for2mu = 0
-    # count_pT_gt20_for1mu = 0
-    for mu in mu_ls:
-        pass_kinem = check_muon_kinem(mu)
-        if not pass_kinem:
-            return False
-        # if mu.Pt() > 10:
-        #     count_pT_gt10_for2mu += 1
-        # if mu.Pt() > 20:
-        #     count_pT_gt20_for1mu += 1
-    # End loop over muons.
-    # if count_pT_gt10_for2mu < 2:
-    #     return False
-    # elif count_pT_gt20_for1mu < 1:
-    #     return False
-    # else:
-        # return True
-    return True
 
 def check_matched_IDs(rec_ndcs_ls, gen_ndcs_ls, rec_ID_ls, gen_ID_ls):
     """
@@ -253,7 +168,6 @@ def print_muon_ls_info(mu_ls, mu_corr_ls):
 #--------------------#
 #----- Analysis -----#
 #--------------------#
-global_atleast2mu_pTgt10 = 0 # Delete this later
 if __name__ == "__main__":
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
     outpath_rootfile, outpath_pdf = make_outfiles(outpath_file_woext, overwrite)
@@ -284,7 +198,6 @@ if __name__ == "__main__":
 
     ptr_m4mu = array('f', [0.])
     ptr_m4mu_corr = array('f', [0.])
-    ptr_m4mu_diff = array('f', [0.])
     newtree.Branch("m4mu", ptr_m4mu, "m4mu/F")
     newtree.Branch("m4mu_corr", ptr_m4mu_corr, "m4mu_corr/F")
 
@@ -295,6 +208,7 @@ if __name__ == "__main__":
     good_evts_adhoc = 0
     m4mu_ls = []
     m4mu_corr_ls = []
+
     # Event loop.
     for ct in range(n_evts):
         if ct % 50000 == 0:
@@ -326,7 +240,7 @@ if __name__ == "__main__":
 
         # Event looks good so far. 
         # Now check kinematics of muons.
-        mu_ls = make_muon_ls(t, rec_ndcs_ls)
+        mu_ls = make_muon_ls(t, rec_ndcs_ls, gen_ndcs_ls)
         all_muons_passed = verify_all_muons(mu_ls)
         if not all_muons_passed:
             continue

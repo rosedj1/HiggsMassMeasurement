@@ -1,7 +1,7 @@
 import ROOT
 import numpy as np
 
-from Utils_Python.Utils_Selections import Selector
+from Utils_Python.Selections import Selector
 from Utils_Python.Utils_Physics import calc_dphi, calc_dR  
 from d0_Studies.d0_Utils.d0_fns import find_bin_edges_of_value, correct_muon_pT, calc_num_bins, print_header_message
 

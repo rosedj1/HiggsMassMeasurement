@@ -82,7 +82,7 @@ def make_prefix(sample_ls):
 def make_suffix(kinem, num_fits, eta_ls, pT_ls):
     suffix = (
         f"{kinem}_{num_fits}unbinnedfits"
-        f"_{min(eta_ls):.1f}eta{max(eta_ls):.1f}"
+        f"_{min(eta_ls)}eta{max(eta_ls)}"
         f"_{min(pT_ls):.1f}pT{max(pT_ls):.1f}GeV"
         )
     suffix = make_str_title_friendly(suffix)

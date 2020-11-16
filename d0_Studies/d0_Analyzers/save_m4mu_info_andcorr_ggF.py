@@ -5,14 +5,19 @@ FIXME: This file needs to have its Higgs mass cuts figured out.
     [ ] Do reco indexing
     [ ] Make sure 4 muons in event
     [ ] No electrons!
-PURPOSE:
-  This code opens up a gluon fusion Higgs sample
-  from Filippo's area on HPG T2.
-  It selects m4mu events which pass all specified selection criteria,
-  stores the m4mu and m4mu_corr values in a TTree, and makes 
-  distributions of these 2 variables.
-  m4mu_corr is the m4mu reevaluated after each muon has
-  had its pT corrected from the d0 studies. 
+Purpose:
+    This code opens up a gluon fusion Higgs sample
+    from Filippo's area on HPG T2.
+    It selects m4mu events which pass all specified selection criteria,
+    stores the m4mu and m4mu_corr values in a TTree, and makes 
+    distributions of these 2 variables.
+    m4mu_corr is the m4mu reevaluated after each muon has
+    had its pT corrected from the d0 studies. 
+Syntax: 
+Notes: 
+Author: Jake Rosenzweig
+Created:
+Updated: 
 """
 import pickle
 import ROOT

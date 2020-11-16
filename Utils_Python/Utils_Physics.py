@@ -68,32 +68,13 @@ def perc_diff(num, ref):
     """
     return (num - ref) / ref * 100.
 
-# FIXME: Below is not yet tested.
-class Particle:
-    def __init__(self):
-        pass
-    
-class Muon(Particle):
-    def __init__(self, ID):
-        self.ID = ID
-        self.charge = self.charge_from_ID(ID)
-    
-    def SetPtEtaPhiMass(self, pT, eta, phi, mass):
-        self.pT = pT
-        self.eta = eta
-        self.phi = phi
-        self.mass = mass
-        
-    def SetGENPtEtaPhiMass(self, gpT, geta, gphi, gmass):
-        self.gen_pT = gpT
-        self.gen_eta = geta
-        self.gen_phi = gphi
-        self.gen_mass = gmass
-                           
-    def charge_from_ID(self, ID):
-        if ID == 13:
-            return -1 
-        elif ID == -13: 
-            return +1 
-        else:
-            raise TypeError("Based on the ID ({}), this is not a muon!".format(ID))
+def calc_Hmass(mu1, mu2, mu3, mu4):
+    """
+    Return the invariant mass of 4 particles.
+    NOTE: 
+    - This method relies on calls like: mu.Pt(), mu.Eta(), etc. 
+      So you must change the muon kinematics by doing: mu.SetPt(val), e.g.
+    - The particles must have type ROOT.Math.LorentzVector.
+    """
+    H = mu1 + mu2 + mu3 + mu4
+    return H.M()

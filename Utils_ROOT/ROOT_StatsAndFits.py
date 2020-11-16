@@ -1,123 +1,164 @@
-import ROOT
 import ROOT as r
 import numpy as np
 from array import array
 
 from Utils_Python.Plot_Styles_ROOT.tdrstyle_official import fixOverlay
-from Utils_ROOT.ROOT_Plotting import Root_Hist_GetLastBinRightEdge
+from Utils_ROOT.ROOT_Plotting import Root_Hist_GetLastBinRightEdge, make_new_xframe
 from Utils_ROOT.ROOT_fns import skip_black_yellow_fit_line_colors
 
 from d0_Studies.d0_Utils.d0_dicts import color_dict_RooFit
 
-def RooFit_gaus_fit_unbinned(data, verbose=False):
+def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None, 
+                    count=1, 
+                    x_label="Independent Var", units="", x_lim=None,
+                    fit_whole_range_first_iter=True,
+                    verbose=False,
+                    n_bins=100,
+                    line_color=4, marker_color=1, 
+                    force_line_color=False, view_plot=False):
     """
-    Perform an unbinned Gaussian fit to some data.
-    Return a list of the best-fit parameters: [mean, mean_err, sigma, sigma_err].
+    Perform a binned or unbinned Gaussian fit to some data using RooFit.
+    Return a 2-tuple: 
+        (best_fit_stats_ls, xframe_with_gauss)
+        where: best_fit_stats_ls: [mean, mean_err, sigma, sigma_err].
+
+    TODO:
+    [ ] Fix the tick marks which show up on top of stats box
+        in top-right corner. Stats box should be topmost.
+    [ ] A range error always pops up, even though all ranges seem to
+        be taking effect.
+        [#0] ERROR:Plotting -- Range 'fit_nll_gauss_roodata' not
+             defined for variable 'x_var'. Ignoring ...
 
     Parameters
     ----------
-    data : list or array-like
-        The data to be fit.
-    
-    Returns
-    -------
-    fit_stats_ls : 4-element list
-        The best-fit parameters from the fit: [mean, mean_err, sigma, sigma_err] 
-    """
-    data = np.array(data)
-    
-    min_ = data.min()
-    max_ = data.max()
-    avg_ = data.mean()
-    std_ = data.std()
-    
-    x = ROOT.RooRealVar("x","x", min_, max_)
-    mean = ROOT.RooRealVar("mean","Mean of Gaussian", avg_, min_, max_)
-    sigma = ROOT.RooRealVar("sigma","Width of Gaussian", std_, 0, 1000)
-    gauss = ROOT.RooGaussian("gauss","gauss(x,mean,sigma)", x, mean, sigma)
-
-    # Make RooDataSet.
-    ptr = array('f', [0.])
-    tree = ROOT.TTree("tree", "tree")
-    tree.Branch("x", ptr, "x/F")
-    for val in data:
-        ptr[0] = val
-        tree.Fill()
-    rds = ROOT.RooDataSet("rds","dataset from tree", tree, ROOT.RooArgSet(x))
-    
-    # Modify fit range, if needed.
-#     if fit_range is None:
-#         fit_x_min = x_min
-#         fit_x_max = x_max
-#     else:
-#         fit_x_min = fit_range[0]
-#         fit_x_max = fit_range[1]
-        
-    # Find and fill the mean and sigma variables.
-    if (verbose):
-        result = gauss.fitTo(rds)
-    else:
-        result = gauss.fitTo(rds, ROOT.RooFit.PrintLevel(-1))
-#                          ROOT.RooFit.Range(fit_x_min, fit_x_max), 
-        
-    fit_stats_ls = [mean.getVal(), mean.getError(), sigma.getVal(), sigma.getError()]
-
-    return fit_stats_ls
-
-def RooFit_gaus_fit_hist_binned(hist, x_roofit, xframe, fit_range=None, count=1, 
-                                draw_stats=False, line_color=None, marker_color=None):
-    """
-    Return a list of the best-fit parameters obtained from fitting
-    a histogram (hist) with a Gaussian function: [mean, mean_err, sigma, sigma_err].
-    Also draws the histogram to the canvas.
-    ###can make the canvas print the fitted histogram to a PDF.
-
-    Parameters
-    ----------
-    hist : ROOT.TH1
-        Histogram to be fit with a Gaussian fit. 
-    canv : ROOT.TCanvas
-        Canvas on which histogram will be painted.
-    fit_range : 2-element list, optional
-        [fit_x_min, fit_x_max]
-        If None, then full x-axis range will be used.
+    data : list (or array-like) or ROOT.TH1
+        The data to be fit with a Gaussian function.
+        NOTE:
+        If the data is of type `list` or `numpy.ndarray`,
+        then either a binned OR *unbinned fit* can be performed,
+        depending on the value of `binned_fit`.
+        However, if the data is of type `ROOT.TH1` then only 
+        a *binned fit* is performed.
+    binned_fit : bool, optional
+        If True, force a binned fit.
+        Otherwise: 
+            if type(data) is `ROOT.TH1F`: binned fit.
+            if type(data) is `list` or `numpy.ndarray`: unbinned fit.
+    fit_range : 2-elem list, optional
+        [x_min, x_max]
+        Range along x-axis over which to do the fit.
+        If none is provided, fit range will be [min(data), max(data)].
+    xframe : ROOT.RooRealVar.frame, optional
+        Essentially a canvas onto which the data and Gaussian fit will be drawn.
+        If a frame is not provided, a frame will be created.
     count : int, optional
+        An iterator to help with setting the legend of best-fit params.
         Used to position the fit stats labels on the plot. 
         Also used to color the fit lines. 
         Example: count=1 is kBlack, count=2 is kRed
+    x_label : str, optional
+        Label of the x-axis. Can accommodate ROOT LaTeX by using '#'.
+    units : str, optional
+        Units of the x-axis variable.
+    x_lim : 2-elem list, optional
+        The min and max x-axis values to show on the plot: [x_min, x_max]
+    fit_whole_range_first_iter : bool, optional
+        If True, the entire x-axis range will be fit over for first iteration.
+        Otherwise, first fit range is: mean(data) +- num_sigmas * rms(data)
+    verbose : bool
+        If True, print juicy debug info.
+    n_bins : int, optional
+        The number of bins to use for a binned fit on an array.
+        Used when type(data) is either `numpy.ndarray` or `list`
+        AND the User specified to do a binned fit.
+    line_color : ROOT.TColor (int), optional
+    marker_color : ROOT.TColor (int), optional
+    force_line_color : bool, optional
+        If False, then line color is be determined by `line_color`.
+        When count=5, the line color is changed to kOrange (kYellow is bad).
+        However, if `force_line_color`, then line_color is necessarily
+        determined by `line_color`
+    view_plot : bool
+        If True, then the canvas will be drawn to the screen.
+        Used for testing purposes.
 
     Returns
     -------
-    fit_stats_ls : 4-element list
-        The best-fit parameters from the fit: [mean, mean_err, sigma, sigma_err] 
+    A 2-tuple: (fit_stats_ls, xframe)
+        fit_stats_ls : 4-element list
+            The best-fit parameters from the fit: [mean, mean_err, sigma, sigma_err]
+        xframe : ROOT.RooFit.RooRealVar.frame
+            Essentially a canvas with the data and Gaussian fit drawn on.
+            Still need to do xframe.Draw() onto a TCanvas.
     """
-    x_min = hist.GetBinLowEdge(0)
-    x_max = Root_Hist_GetLastBinRightEdge(hist)
-    x_avg = hist.GetMean()
-    x_std = hist.GetStdDev()
+    r.RooMsgService.instance().setStreamStatus(1,False)
+    # Investigate data.
+    if isinstance(data, r.TH1):
+        msg = (
+            f"[ERROR] Your data are in a histogram, but you are requesting an unbinned fit.\n"
+            f"  Perhaps you should set `binned_fit = True`."
+            )
+        assert binned_fit, msg
+        x_min = data.GetBinLowEdge(0)
+        x_max = Root_Hist_GetLastBinRightEdge(data)
+        x_avg = data.GetMean()
+        x_std = data.GetStdDev()
+        n_entries = data.GetEntries()
+    elif (isinstance(data, list) or isinstance(data, np.ndarray)):
+        data = np.array(data)
+        x_min = data.min()
+        x_max = data.max()
+        x_avg = data.mean()
+        x_std = data.std()
+        n_entries = len(data)
+    else:
+        raise TypeError(f"Data (type: {type(data)}) must of type `list`, `numpy.ndarray`, or `ROOT.TH1`.")
+
+    if binned_fit:
+        print(f"[INFO] Performing a BINNED Gaussian fit.")
+    else:
+        print(f"[INFO] Performing an UNBINNED Gaussian fit.")
+    # Make fit variables.
+    x_var = r.RooRealVar("x_var", x_label, x_min, x_max, units)  # (name, title, min, max, units)
+    # x_var.setRange("test_range", x_min, x_max)
+    mean = r.RooRealVar("mean","Mean of Gaussian", x_avg, x_min, x_max)
+    sigma = r.RooRealVar("sigma","Width of Gaussian", x_std, 0, 9999)
+    gauss = r.RooGaussian("gauss","The Gaussian Itself", x_var, mean, sigma)
     
-    # x = ROOT.RooRealVar("x","x", x_min, x_max)
-    mean = ROOT.RooRealVar("mean","Mean of Gaussian", x_avg, x_min, x_max)
-    sigma = ROOT.RooRealVar("sigma","Width of Gaussian", x_std, 0, 999999)
-    gauss = ROOT.RooGaussian("gauss","gauss(x,mean,sigma)", x_roofit, mean, sigma)
-
-    ls = ROOT.RooArgList(x_roofit)
-    data = ROOT.RooDataHist("data", "data set with x", ls, hist)
-
-    # xframe = x.frame(ROOT.RooFit.Title("Some title here?"))
-
-    if count == 1:
-        # New histogram. Draw to a clean canvas. 
-        hist.Draw()
-        data.plotOn(xframe, ROOT.RooLinkedList())
-        if marker_color is not None:
-            data.plotOn(xframe, ROOT.RooFit.MarkerColor(marker_color))
+    # Prepare appropriate RooFit data container.
+    if isinstance(data, r.TH1):
+        # Must do binned fit. Make RooDataHist.
+        tmp_hist = data
+        # x_var.setBins(n_bins)
+        ls = r.RooArgList(x_var)
+        roodata = r.RooDataHist("roodata", "RooDataHist", ls, data)
+    else:
+        # Using array of data. Not sure yet if binned or unbinned fit.
+        # Make a hist with data array for stats purposes.
+        tmp_hist = r.TH1F()
+        tmp_hist.SetBins(n_bins, 
+                         x_min if x_lim is None else x_lim[0], 
+                         x_max if x_lim is None else x_lim[1]
+                         )
+        tmp_hist.StatOverflows(True)  # Count under/overflow bins in stats.
+        tmp_hist.Sumw2()
+        for val in data:
+            tmp_hist.Fill(val)
+        # Check type of binning.
+        if binned_fit:
+            # x_var.setBins(n_bins)
+            ls = r.RooArgList(x_var)
+            roodata = r.RooDataHist("roodata", "RooDataHist", ls, tmp_hist)
         else:
-            data.plotOn(xframe, ROOT.RooFit.MarkerColor(1))
-    # else:
-        # Don't need to keep drawing to canvas...
-    #     # Probably using an iterative Gaus fit. Draw to previous canvas. 
-    #     hist.Draw("same")
+            # Do unbinned fit.
+            ptr = array('f', [0.])
+            tree = r.TTree("tree", "tree")
+            tree.Branch("x_var", ptr, "x_var/F")
+            for val in data:
+                ptr[0] = val
+                tree.Fill()
+            roodata = r.RooDataSet("roodata","dataset from tree", tree, r.RooArgSet(x_var))
 
     # Modify fit range, if needed.
     if fit_range is None:
@@ -127,159 +168,333 @@ def RooFit_gaus_fit_hist_binned(hist, x_roofit, xframe, fit_range=None, count=1,
         fit_x_min = fit_range[0]
         fit_x_max = fit_range[1]
         
+    print(f"JAKE: find the fit range error1")
     # Find and fill the mean and sigma variables.
-    result = gauss.fitTo(data, 
-                         ROOT.RooFit.Range(fit_x_min, fit_x_max), 
-                         ROOT.RooFit.PrintLevel(-1)
-                        )
-    
-    color = color_dict_RooFit[count]
-        
-    # Draw the fit. 
-    if line_color is not None:
-        gauss.plotOn(xframe, ROOT.RooFit.LineColor(line_color))
-    else: 
-        gauss.plotOn(xframe, ROOT.RooFit.LineColor(color))
+    if verbose:
+        # result = gauss.fitTo(roodata, r.RooFit.Range(fit_x_min, fit_x_max))
+        result = gauss.fitTo(roodata, r.RooFit.Range(fit_x_min, fit_x_max), r.RooFit.PrintLevel(3),
+        # r.RooFit.Timer(True),
+        # r.RooFit.BatchMode(True), # Compute batch of likelihood values. Computations are faster.
+        # r.RooFit.Offset(True)
+        )
+        print(f"JAKE: find the fit range error2")
+    else:
+        result = gauss.fitTo(roodata, r.RooFit.Range(fit_x_min, fit_x_max), r.RooFit.PrintLevel(-1),
+        # r.RooFit.Timer(True),
+        # r.RooFit.BatchMode(True) # Compute batch of likelihood values. Computations are faster.
+        )
+        print(f"JAKE: find the fit range error3")
+    print(f"JAKE: find the fit range error4")
+    # Draw data and then the fit.
+    # NOTE: After a MONSTROUS amount of testing,
+    # I finally managed to figure out how to add all
+    # objects to xframe and keep them persistent.
+    # Be careful, if you must modify the below!
+    if not view_plot: 
+        r.gROOT.SetBatch(True)
+    # c = r.TCanvas()
+    # c.Draw("same")
+    # If frame does not exist, make it.
+    # x_var.setBins(n_bins)
+    if xframe is None:
+        xframe = x_var.frame(r.RooFit.Range(x_min, x_max), r.RooFit.Title(x_label))
+    # tmp_hist.SetLineColor(r.kBlue)
+    # tmp_hist.SetStats(True)
+    tmp_hist.SetLineWidth(0)  # Don't show hist.
+    tmp_hist.Draw("sames")
 
-    # Put the fit params on the plot.
-    if (draw_stats):
-        text_y_min = 0.95 - 0.11*(count-1)  # In the top left corner of TCanvas("c","c",600,600).
-        gauss.paramOn(xframe, ROOT.RooFit.Layout(0.16, 0.44, text_y_min))
-#     text_y_min = 0.92 - 0.11*(count-1)
-#     gauss.paramOn(xframe, ROOT.RooFit.Layout(0.19, 0.4, text_y_min))
-        xframe.getAttText().SetTextSize(0.020)
-        xframe.getAttText().SetTextColor(color)
-    
+    # st = tmp_hist.FindObject("stats")
+    # xframe.addObject(st)
+    # xframe.Draw("same")
+    # xframe.SetStats(True)  # In RooFitStats box 
+
+    # Put the Gaussian fit parameters on the plot.
+    if (count == 5) and not force_line_color:
+        # Avoid yellow because it is difficult to read.
+        line_color = r.kOrange
+
+    # gauss.paramOn(xframe, 
+    #     r.RooFit.Layout(0.13, 0.40, text_y_min)  # (x_min, x_max, y_max) as fraction of canvas width.
+    #     )
+    # xframe.getAttText().SetTextSize(0.020)
+    # xframe.getAttText().SetTextColor(line_color)
+
+    # roodata.plotOn(xframe, r.RooLinkedList())
+
+    # tmp_hist.Draw("same")
+    xframe.addObject(tmp_hist, "sames", True)  # Draw on same canvas. True means hist will not be drawn.
+    # st.Draw("same")
+    # r.gPad.Update()
+    # r.gPad.GetPrimitive("stats")
+    roodata.plotOn(xframe, r.RooFit.MarkerColor(marker_color))
+    # roodata.statOn(xframe,  
+    #                 # r.RooFit.Label("Unbinned data:"),
+    #                 r.RooFit.Layout(0.68, 0.95, 0.95), 
+    #                 r.RooFit.Format("NMRE")
+    #                 )
+    # xframe.getAttText().SetTextSize(0.020)
+    # xframe.getAttText().SetTextColor(1)
+
+    # RooFit insists on plotting the very first Gaussian along the x-axis.
+    # Therefore, draw it with linewidth=0 and then redraw a good line.
+    gauss.plotOn(xframe, r.RooFit.LineColor(line_color), r.RooFit.Range(fit_x_min, fit_x_max), r.RooFit.LineWidth(0))
+    gauss.plotOn(xframe, r.RooFit.LineColor(line_color), r.RooFit.Range(fit_x_min, fit_x_max), r.RooFit.LineWidth(2))
+    # if count == 1:
+    #     gauss.plotOn(xframe,   r.RooFit.LineColor(line_color), r.RooFit.Range(fit_x_min, fit_x_max), r.RooFit.LineWidth(0))
+
+    # Put fit stats on plot.
+    # text_y_min = 0.95 - 0.11*(count-1)  # In the top left corner of TCanvas("c","c",600,600).
+    # text_y_min = 0.92 - 0.11*(count-1)
+    text_y_min = 0.88 - 0.11*(count-1)
+    pave = r.TPaveText(0.13, text_y_min-0.11, 0.33, text_y_min, "NDC")
+    pave.SetFillColor(0)
+    pave.SetBorderSize(0) # Use 0 for no border.
+    pave.SetTextAlign(12) # 22 is centered vert and horiz.
+    pave.SetTextSize(0.016)
+    pave.SetTextColor(line_color)
+    pave.SetFillStyle(1001)  # Solid fill.
+    pave.AddText(f"Fit {count}:")  # Accommodates LaTeX!
+    pave.AddText(f"  #mu = {mean.getVal():.4g} #pm {mean.getError():.4g}")
+    pave.AddText(f"  #sigma = {sigma.getVal():.4g} #pm {sigma.getError():.4g}")
+    pave.AddText("  #chi^{2}/ndf = %.4g" % xframe.chiSquare())
+    pave.Draw("same")
+
+    # latex = r.TLatex()
+    # latex.SetNDC()
+    # latex.SetTextSize(0.016)
+    # latex.SetTextColor(line_color)
+
+    # Ensures a stats box exists so that the hist
+    # can access it down below.
+    r.gStyle.SetOptStat("iouRMe")
+
+    # roodata.statOn(xframe)
+    # tmp_hist.SetStats(True)
+
+    # Add all objects to xframe and THEN draw it.
+    # latex.DrawLatex(0.13, text_y_min, f"Fit {count}:")
+    # print(f"length = {len(r.gPad.GetListOfPrimitives())}")
+    # print(f"last one: {r.gPad.GetListOfPrimitives()[-1]}")
+    # latex.DrawLatex(0.13, text_y_min-0.02, f"  #mu = {mean.getVal():.4g} #pm {mean.getError():.4g}")
+    # latex.DrawLatex(0.13, text_y_min-0.04, f"  #sigma = {sigma.getVal():.4g} #pm {sigma.getError():.4g}")
+    # latex.DrawLatex(0.13, text_y_min-0.06,  "  #chi^{2}/ndf = %.4g" % xframe.chiSquare())
+    xframe.addObject(pave.Clone())  # Not sure if .Clone() is necessary, but it works!
+    xframe.addObject(tmp_hist.FindObject("stats").Clone())
     xframe.Draw("same")
-    
-#     pavelabel_x_start = ( float(x_max) + float(x_min) ) * 0.65
-#     title = ROOT.TPaveLabel( pavelabel_x_start, 300, x_max, 350, 'Come on dude!' )
-#     title.SetTextFont( 50 )
-#     title.Draw("same")
+    r.gPad.Update()
+    # c.Update()
 
-    # Make a legend.
+# Make a legend.
 #     leg_text  = "#splitline{#mu = %.5f #pm %.5f}" % (mean.getVal(),  mean.getError())
 #     leg_text += "{#sigma = %.5f #pm %.5f}" % (sigma.getVal(),  sigma.getError())
-#     leg = ROOT.TLegend(0.10, 0.75, 0.35, 0.9)
-#     leg = ROOT.TLegend()
+#     leg = r.TLegend(0.10, 0.75, 0.35, 0.9)
+#     leg = r.TLegend(0.03, 0.80, 0.20, 0.9)
+#     leg = r.TLegend()
 #     leg.AddEntry("hist", leg_text, "pel")
 #     leg.Draw("same")
-    
+
 #     leg_text  = "#splitline{#mu = %.3f #pm %.3f}" % (mean.getVal(),  mean.getError())
 #     leg_text += "{#sigma = %.3f #pm %.3f}" % (sigma.getVal(),  sigma.getError())
 
-    fixOverlay()
+    # fixOverlay()
 
-    fit_stats_ls = [mean.getVal(), mean.getError(), sigma.getVal(), sigma.getError()]
+    # try:
+    #     del x_var #tmp_hist
+    # except NameError:
+    #     pass
+    fit_stats_ls = [mean.getVal(), mean.getError(), sigma.getVal(), sigma.getError(), xframe.chiSquare()]
+    return (fit_stats_ls, xframe)
 
-    return fit_stats_ls
+def RooFit_iterative_gaus_fit(data, binned_fit=False, switch_to_binned_fit=2000, iters=1, num_sigmas=2, 
+                              n_bins=100, x_lim=None, fit_whole_range_first_iter=True,
+                              xframe=None, x_label="Independent var", title="", units="",
+                              marker_color=1, force_last_line_color=None, only_draw_last=False, 
+                              verbose=False, view_plot=False):
+    """Return a 2-tuple: 
+        (dict of the fit statistics from iterative Gaussian fits on given data, 
+         xframe on which the fits can be drawn)
+    
+    FIXME:
+        - Make option to show hist stats on xframe.
+    NOTE: 
+        - The fit can be *binned* or *unbinned* depending on the bool `binned_fit`.
+          A histogram can only do binned fits, but an array can be binned or unbinned.
+        - The fit can also switch from unbinned to binned fit, if you need to save time for instance.
+          if len(data) > `switch_to_binned_fit`, then a binned fit will be performed.
+        - The fit range = [mean - num_sigmas*std, mean + num_sigmas*std], 
+            and changes for each subsequent fit, since the mean and std change with each fit.
+        for each iterative fit.
 
-def RooFit_iterative_gaus_fit(data, x_roofit, xframe, iters, fit_range=None, num_sigmas=2, 
-                              binned_data=True, draw_stats=False, 
-                              only_draw_last=False, line_color=None, marker_color=None):
-    """
-    Performs an iterative Gaussian fit on a histogram (hist), 
-    changing the fit_range as described below. 
-    Returns a dictionary of the fit statistics for each iterative fit.
-
-    Performs either binned or unbinned fits. 
-
-    Procedure:
+    Procedure (suppose num_sigmas=2):
         Fit 1 fit range = [data.mean - 2*data.std,   data.mean + 2*data.std]
         Fit 2 fit range = [Fit1.mu   - 2*Fit1.sigma, Fit1.mu   + 2*Fit1.sigma]
+        etc.
 
     Parameters
     ----------
-    data : ROOT.TH1 or numpy.ndarray
-        Histogram or array to be fit with a Gaussian curve. 
-        Type will be verified when this function is called. 
-    canv : ROOT.TCanvas
-        Canvas on which histogram will be painted.
-    iters : int
+    data : ROOT.TH1 or list or numpy.ndarray
+        Histogram or array-like to be fit with a Gaussian curve.
+    binned_fit : bool, optional
+        If True, force a binned fit. otherwise an unbinned fit will be performed.
+    xframe : ROOT.RooRealVar.frame, optional
+        Essentially a canvas onto which the data and Gaussian fits will be drawn.
+        If a frame is not provided, a frame will be created.
+    iters : int, optional
         The number of fit iterations to perform.
-    fit_range : 2-element list, optional
-        [fit_x_min, fit_x_max]
-        If None, then full x-axis range will be used. 
-    num_sigmas : int
+    num_sigmas : int, optional
         The number of sigmas to go away from the mean in each direction. 
         Used in determining the fit range. 
-    binned_data : bool
-        If True, must accept a TH1 parameter as `data` and will 
-        perform a binned fit. 
-    only_draw_last : bool
-        Only draw very last fit on canvas. 
+    n_bins : int, optional
+        The number of bins along the x-axis.
+    x_lim : 2-elem list, optional
+        The min and max x-axis values to show on the plot: [x_min, x_max]
+    fit_whole_range_first_iter : bool, optional
+        If True, the entire x-axis range will be fit over for first iteration.
+        Otherwise, first fit range is: mean(data) +- num_sigmas * rms(data)
+    x_label : str, optional
+        Label of the x-axis. Can accommodate ROOT LaTeX by using '#'.
+    units : str, optional
+        Units of the x-axis.
+    title : str, optional
+    only_draw_last : bool, optional
+        If True, only draw the very last fit on the frame. 
+    switch_to_binned_fit : int, optional
+        The max number of entries in an array on which an UNBINNED fit should be performed.
+        If n_entries in array > switch_to_binned_fit, then a binned fit will be done.
+    line_color : ROOT.TColor (int), optional
+    marker_color : ROOT.TColor (int), optional
+    force_last_line_color : ROOT.TColor (int), optional
+        Last fit will have this line color.
+        Useful for controlling the line color when doing `only_draw_last`.
+    verbose : bool
+        If True, print juicy debug info.
+    view_plot : bool
+        If True, then the canvas will be drawn to the screen
+        and the terminal will hang, waiting for user input.
+        Used for testing purposes.
 
     Returns
     -------
-    fit_stats_dict : dict
-        A dictionary of the iterated fit statistics. 
-        Key : str
-        Val : list of each iteration. The last element is the last fit. 
-            "mean_ls"     : [mean_fit1, mean_fit2, ...]
-            "mean_err_ls" : [mean_err_fit1, mean_err_fit2, ...]
-            "std_ls"      : [sigma_fit1, sigma_fit2, ...]
-            "std_err_ls"  : [sigma_err_fit1, sigma_err_fit2, ...]
+    A 2-tuple: (fit_stats_dict, xframe)
+        fit_stats_dict : dict
+            A dictionary of the iterated fit statistics. 
+            Key : str
+            Val : list of each iteration. The last element is the last fit. 
+            {
+                "mean_ls"      : [mean_fit1, mean_fit2, ...],
+                "mean_err_ls"  : [mean_err_fit1, mean_err_fit2, ...],
+                "std_ls"       : [sigma_fit1, sigma_fit2, ...],
+                "std_err_ls"   : [sigma_err_fit1, sigma_err_fit2, ...],
+                "fit_range_ls" : [(x_min_fit1, x_max_fit1), (x_min_fit2, x_max_fit2), ...]
+            }
+        xframe : ROOT.RooFit.RooRealVar.frame
+            Essentially a canvas with the data and Gaussian fit drawn on.
+            Still need to do xframe.Draw() onto a TCanvas.
     """
-    if (binned_data):
-        assert isinstance(data, ROOT.TH1)
+    if isinstance(data, r.TH1):
+        data_mean = data.GetMean()
+        data_rms = data.GetRMS()
+        data_x_min = data.GetBinLowEdge(1)
+        data_x_max = Root_Hist_GetLastBinRightEdge(data)
+    elif isinstance(data, np.ndarray) or isinstance(data, list):
+        data = np.array(data)
+        data_mean = data.mean()
+        data_rms = data.std()
+        data_x_min = data.min()
+        data_x_max = data.max()
     else:
-        # Doing unbinned fit, which requires an array 
-        # or other methods which are not yet implemented...
-        import numpy
-        assert isinstance(data, numpy.ndarray)
+        msg = f"The type of data ({type(data)}) must be `list`, `numpy.ndarray`, or `ROOT.TH1`"
+        raise TypeError(msg)
 
+    if xframe is None:
+        x_min, x_max, x_roofit, xframe = make_new_xframe(data_x_min, data_x_max, x_lim,
+                                                         x_label, units, n_bins, title)
+
+    # Prepare final lists of fit stats.
     mean_ls = []
     mean_err_ls = []
     std_ls = []
     std_err_ls = []
+    chi2_ls = []
+    fit_range_ls = []
     
+    if verbose:
+        print(f"...Performing {iters} iterated Gaussian fits...")# Iterated Gaussian fits.
     count = 0
     while count < iters:
         count += 1 
-        
-        # Determine fit range:
         if count == 1:
-            if (binned_data):
-                x_min_ = data.GetMean() - num_sigmas * data.GetRMS()
-                x_max_ = data.GetMean() + num_sigmas * data.GetRMS()
+            # Determine starting fit range:
+            if fit_whole_range_first_iter:
+                x_min_fit = data_x_min
+                x_max_fit = data_x_max
             else:
-                x_min_ = data.mean() - num_sigmas * data.std()
-                x_max_ = data.mean() + num_sigmas * data.std()
+                x_min_fit = data_mean - num_sigmas * abs(data_rms)
+                x_max_fit = data_mean + num_sigmas * abs(data_rms)
         else:
-            x_min_ = mean_ls[-1] - num_sigmas * std_ls[-1]
-            x_max_ = mean_ls[-1] + num_sigmas * std_ls[-1]
-            
-        fit_range = [x_min_, x_max_]
-        
+            # Make a fit range based on previous fit result.
+            x_min_fit = mean_ls[-1] - num_sigmas * abs(std_ls[-1])
+            x_max_fit = mean_ls[-1] + num_sigmas * abs(std_ls[-1])
+        fit_range = (x_min_fit, x_max_fit)
+        # Set color of fit line.
         color = count
-        if (only_draw_last):
-            # Only show last iterated fit and stats.
-            # canv.Clear()
-            color = 1  # Choose 1 so that stats box is in top right. 
 
-        if (binned_data):
-            fit_stats_ls = RooFit_gaus_fit_hist_binned(data, x_roofit, xframe, fit_range=fit_range, 
-                                                        count=color, draw_stats=draw_stats,
-                                                        line_color=line_color, marker_color=marker_color)
-        else:
-            # Do unbinned fit. 
-            fit_stats_ls = RooFit_gaus_fit_unbinned_from_array(data, x_roofit, xframe, fit_range=fit_range, 
-                                                        count=color, draw_stats=draw_stats,
-                                                        line_color=line_color, marker_color=marker_color)
-        
+        if count == iters:
+            # Last fit. Maybe change final line color. Maybe make a new frame.
+            if force_last_line_color is not None:
+                color = force_last_line_color
+            if only_draw_last:
+                # Only show last iterated fit and stats.
+                print(f"Drawing only the last Iter. Gauss. Fit (#{count}) to xframe.")
+                # Make a new xframe to clear the previous one(s). 
+                x_min, x_max, x_roofit, xframe = make_new_xframe(data_x_min, data_x_max, x_lim,
+                                                            x_label, units, n_bins, title)
+        # Determine whether to use binned or unbinned fit.
+        do_binned = binned_fit
+        if not binned_fit:
+            # Trying to do unbinned fit. 
+            # See if it will take too long.
+            if len(data) > switch_to_binned_fit:
+                if verbose:
+                    msg = (
+                        f"[INFO] Switching to binned fit since len(data) > the limit you set:\n"
+                        f"       {len(data)} > {switch_to_binned_fit}"
+                        )
+                    print(msg)
+                do_binned = True
+
+        fit_stats_ls, xframe = RooFit_gaus_fit(data, binned_fit=do_binned, fit_range=fit_range, xframe=xframe, 
+                                               count=count,
+                                               x_label=x_label, x_lim=x_lim,
+                                               verbose=verbose,
+                                               n_bins=n_bins,
+                                               line_color=color,
+                                               force_line_color=only_draw_last,
+                                               marker_color=marker_color,
+                                               view_plot=view_plot)
+
         mean_ls.append(fit_stats_ls[0])
         mean_err_ls.append(fit_stats_ls[1])
         std_ls.append(fit_stats_ls[2])
         std_err_ls.append(fit_stats_ls[3])
-        
+        chi2_ls.append(fit_stats_ls[4])
+        fit_range_ls.append(fit_range)
+    # End while loop.
+    if view_plot:
+        input("Press enter to continue.")
+
+    # Iterated fits are done. Collect stats.
     fit_stats_dict = {
-        "mean_ls" : mean_ls,
-        "mean_err_ls" : mean_err_ls,
-        "std_ls" : std_ls,
-        "std_err_ls" : std_err_ls,
+        "mean_ls"      : mean_ls,
+        "mean_err_ls"  : mean_err_ls,
+        "std_ls"       : std_ls,
+        "std_err_ls"   : std_err_ls,
+        "chi2_ls"      : chi2_ls,
+        "fit_range_ls" : fit_range_ls,
     }
-        
-    return fit_stats_dict 
+    if verbose:
+        print(f"Final iterated Gaussian fit statistics:\n{fit_stats_dict}\n")
+    return (fit_stats_dict, xframe)
 
 def get_BWxCBplusExp_fit_stats(mean, sigma, alpha, n, tau, fsig):
     """
@@ -350,7 +565,7 @@ def RooFit_CBxBWplusExp_fit_binned(hist, x_lim, fit_range=None, show_params=True
         The frame object which holds the plots. 
         Can be drawn to a TCanvas.
     """
-#     ROOT.RooMsgService.instance().setStreamStatus(1,False)
+#     r.RooMsgService.instance().setStreamStatus(1,False)
 
     BW_MEAN_PDG = 91.19
     BW_SIGMA_PDG = 2.44
@@ -423,24 +638,24 @@ def RooFit_CBxBWplusExp_fit_binned(hist, x_lim, fit_range=None, show_params=True
 #     x_avg = hist.GetMean()
 #     x_std = hist.GetStdDev()
     
-#     x = ROOT.RooRealVar("x","x", x_min, x_max)
-#     mean = ROOT.RooRealVar("mean","Mean of Gaussian", x_avg, x_min, x_max)
-#     sigma = ROOT.RooRealVar("sigma","Width of Gaussian", x_std, 0, x_max)
-#     gauss = ROOT.RooGaussian("gauss","gauss(x,mean,sigma)", x, mean, sigma)
+#     x = r.RooRealVar("x","x", x_min, x_max)
+#     mean = r.RooRealVar("mean","Mean of Gaussian", x_avg, x_min, x_max)
+#     sigma = r.RooRealVar("sigma","Width of Gaussian", x_std, 0, x_max)
+#     gauss = r.RooGaussian("gauss","gauss(x,mean,sigma)", x, mean, sigma)
 
     
-#     ROOT.RooRealVar("Sigma_DSCB", "Sigma_DSCB", 0.005, -0.03, 0.03)
-#     ROOT.RooRealVar("AlphaL", "AlphaL", 1, 0, 5)
-#     ROOT.RooRealVar("ExpL", "ExpL", 1, 0, 10)
-#     ROOT.RooRealVar("AlphaR", "AlphaR", 1, 0, 5)
-#     ROOT.RooRealVar("ExpR", "ExpR", 1, 0, 10)
+#     r.RooRealVar("Sigma_DSCB", "Sigma_DSCB", 0.005, -0.03, 0.03)
+#     r.RooRealVar("AlphaL", "AlphaL", 1, 0, 5)
+#     r.RooRealVar("ExpL", "ExpL", 1, 0, 10)
+#     r.RooRealVar("AlphaR", "AlphaR", 1, 0, 5)
+#     r.RooRealVar("ExpR", "ExpR", 1, 0, 10)
     
-#     ls = ROOT.RooArgList(x)
-#     data = ROOT.RooDataHist("data", "data set with x", ls, hist)
+#     ls = r.RooArgList(x)
+#     data = r.RooDataHist("data", "data set with x", ls, hist)
 
-#     xframe = x.frame(ROOT.RooFit.Title("Some title here?"))
-#     data.plotOn(xframe, ROOT.RooLinkedList())
-#     data.plotOn(xframe, ROOT.RooFit.MarkerColor(2))
+#     xframe = x.frame(r.RooFit.Title("Some title here?"))
+#     data.plotOn(xframe, r.RooLinkedList())
+#     data.plotOn(xframe, r.RooFit.MarkerColor(2))
 
 #     hist.Draw("same")
 #     # Modify fit range, if needed.
@@ -452,34 +667,34 @@ def RooFit_CBxBWplusExp_fit_binned(hist, x_lim, fit_range=None, show_params=True
 #         fit_x_max = fit_range[1]
         
 #     result = gauss.fitTo(data, 
-#                          ROOT.RooFit.Range(fit_x_min, fit_x_max), 
-#                          ROOT.RooFit.PrintLevel(-1)
+#                          r.RooFit.Range(fit_x_min, fit_x_max), 
+#                          r.RooFit.PrintLevel(-1)
 #                         )
     
 #     color = skip_black_yellow_fit_line_colors(count)
         
 #     # Draw the fit. 
-#     gauss.plotOn(xframe, ROOT.RooFit.LineColor(color))
+#     gauss.plotOn(xframe, r.RooFit.LineColor(color))
 #     # Put the fit params on the plot.
 # #     text_y_min = 0.95 - 0.11*(count-1)  # In the top left corner of TCanvas("c","c",600,600).
-# #     gauss.paramOn(xframe, ROOT.RooFit.Layout(0.16, 0.4, text_y_min))
+# #     gauss.paramOn(xframe, r.RooFit.Layout(0.16, 0.4, text_y_min))
 #     text_y_min = 0.92 - 0.11*(count-1)
-#     gauss.paramOn(xframe, ROOT.RooFit.Layout(0.19, 0.4, text_y_min))
+#     gauss.paramOn(xframe, r.RooFit.Layout(0.19, 0.4, text_y_min))
 #     xframe.getAttText().SetTextSize(0.020)
 #     xframe.getAttText().SetTextColor(color)
     
 #     xframe.Draw("same")
     
 # #     pavelabel_x_start = ( float(x_max) + float(x_min) ) * 0.65
-# #     title = ROOT.TPaveLabel( pavelabel_x_start, 300, x_max, 350, 'Come on dude!' )
+# #     title = r.TPaveLabel( pavelabel_x_start, 300, x_max, 350, 'Come on dude!' )
 # #     title.SetTextFont( 50 )
 # #     title.Draw("same")
 
 #     # Make a legend.
 # #     leg_text  = "#splitline{#mu = %.5f #pm %.5f}" % (mean.getVal(),  mean.getError())
 # #     leg_text += "{#sigma = %.5f #pm %.5f}" % (sigma.getVal(),  sigma.getError())
-# #     leg = ROOT.TLegend(0.10, 0.75, 0.35, 0.9)
-# #     leg = ROOT.TLegend()
+# #     leg = r.TLegend(0.10, 0.75, 0.35, 0.9)
+# #     leg = r.TLegend()
 # #     leg.AddEntry("hist", leg_text, "pel")
 # #     leg.Draw("same")
     
@@ -488,50 +703,3 @@ def RooFit_CBxBWplusExp_fit_binned(hist, x_lim, fit_range=None, show_params=True
 #     canv.Draw()
     
 #     return mean, sigma
-
-def RooFit_gaus_fit_unbinned_from_TTree(tree, canv, fit_range=None, count=1):
-    """
-    FIXME: Not yet implemented or tested.
-    Do a Gaussian fit on unbinned data. 
-    Returns the best-fit Gaus parameters [mu, mu_err, sigma, sigma_err].
-    
-    Notes:
-      Since unbinned data don't have a "y-value" (i.e. a bin height),
-      then there is no need for a scaling coeff factor in the Gaussian. 
-    """
-    ROOT.RooMsgService.instance().setStreamStatus(1,False)
-
-    x_min = data.min()
-    x_max = data.max()
-    x_avg = data.mean()
-    x_std = data.std()
-    
-#     c = ROOT.TCanvas()
-#     c.Draw()
-    
-    x = ROOT.RooRealVar("x","The Independent Variable", x_min, x_max)
-    mean = ROOT.RooRealVar("mean","Mean of Gaussian", x_avg, x_min, x_max)
-    sigma = ROOT.RooRealVar("sigma","Width of Gaussian", x_std, 0, 999999)
-    gauss = ROOT.RooGaussian("gauss","gauss(x,mean,sigma)", x, mean, sigma)
-
-    dataset = ROOT.RooDataSet("dataset", "dataset", tree, ROOT.RooArgSet(x))
-
-#     xframe = x.frame()
-#     dataset.plotOn(xframe, ROOT.RooLinkedList())
-#     gauss.plotOn(xframe)
-#     xframe.Draw("same")
-    
-#     leg_text  = "#splitline{#mu = %.3f #pm %.3f}" % (mean.getVal(),  mean.getError())
-#     leg_text += "{#sigma = %.3f #pm %.3f}" % (sigma.getVal(),  sigma.getError())
-    
-#     leg = ROOT.TLegend(0.03, 0.80, 0.20, 0.9)
-#     leg.AddEntry("gauss", leg_text, "lep")
-#     leg.Draw("same")
-
-    # Find and fill the mean and sigma variables.
-    result = gauss.fitTo(dataset, ROOT.RooFit.PrintLevel(-1))
-    
-    fit_stats_ls = [mean.getVal(), mean.getError(),
-                    sigma.getVal(), sigma.getError()]
-    
-    return fit_stats_ls
