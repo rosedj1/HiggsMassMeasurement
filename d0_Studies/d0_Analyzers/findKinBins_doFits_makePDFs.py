@@ -263,7 +263,7 @@ for sample_name in sample_name_ls:
         filename_base = filename.split("__")[0]
         extra  = (
             f"_{sample_name}2018"
-            f"_{eta_min:.1f}_eta_{eta_max:.1f}"
+            f"_{eta_min}_eta_{eta_max}"
             f"_{min(pT_ls):.1f}_pT_{max(pT_ls):.1f}_GeV"
         )
         extra = make_str_title_friendly(extra)

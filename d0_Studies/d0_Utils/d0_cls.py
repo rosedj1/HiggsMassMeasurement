@@ -1,214 +1,36 @@
+import time
 import numpy as np
 import matplotlib.pyplot as plt
+import ROOT as r
 
 from scipy.optimize import curve_fit
-
+from array import array
+# Package imports.
 # Not all of these may be used here. Just saving time for now.
 from Utils_Python.Utils_Files import makeDirs, make_str_title_friendly, check_overwrite
 from Utils_Python.Utils_Plotting import (change_cmap_bkg_to_white, save_plots_to_outpath, make_1D_dist, get_stats_1Dhist, 
-                                    get_stats_2Dhist, hist_y_label, make_2by2_subplots_for_ratioplots,
-                                    make_stats_legend_for_1dhist, make_stats_legend_for_2dhist, 
-                                    make_stats_legend_for_gaus_fit)
-from Utils_Python.Utils_Physics import theta2pseudorap, pseudorap2theta, calc_dR, calc_dphi
+                                        get_stats_2Dhist, hist_y_label, make_2by2_subplots_for_ratioplots,
+                                        make_stats_legend_for_1dhist, make_stats_legend_for_2dhist, 
+                                        make_stats_legend_for_gaus_fit)
+from Utils_Python.Utils_Physics import theta2pseudorap, pseudorap2theta, calc_dR, calc_dphi, perc_diff
 from Utils_Python.Utils_StatsAndFits import (linear_func, gaussian_func, 
-                                        fit_with_gaussian, fit_with_line, 
-                                        iterative_fit_gaus, prop_err_x_div_y)
+                                            fit_with_gaussian, fit_with_line, 
+                                            iterative_fit_gaus, check_fit_convergence,
+                                            prop_err_x_div_y, prop_err_on_dsigoversig,
+                                            get_bestfit_vals_from_statsdict)
 from Utils_Python.Utils_Collection_Helpers import weave_lists
-from d0_Utils.d0_fns import (make_binning_array, centers_of_binning_array, get_subset_mask, 
-                             make_kinem_subplot, combine_cut_list, calc_x_err_bins_from_bin_centers)
+from Utils_ROOT.ROOT_StatsAndFits import RooFit_iterative_gaus_fit
+from Utils_ROOT.ROOT_Plotting import make_TPave
+from d0_Utils.d0_fns import (make_binning_array, centers_of_binning_array, get_subset_mask, correct_muon_pT,
+                             make_kinem_subplot, combine_cut_list, calc_x_err_bins_from_bin_centers, 
+                             find_equal_hist_regions_unbinned, find_bin_edges_of_value)
 from d0_Utils.d0_dicts import color_dict, label_LaTeX_dict
-
-class HistInfo:
-    """
-    Right now, just the most basic object possible.
-    """
-    def __init__(self):
-        pass
-    
-class HistProxy:
-    """
-    This class needs serious salvaging. Has not been touched in a long time. 
-    May have useful methods. 
-    """
-    def __init__(self,
-#                  infile,
-                 tree,
-                 year,
-                 charge,
-                 bspv,
-                 binning_style,  # 'pT' or 'eta',
-                 n_bins,
-                 x_axis_bounds_list, # 2-element list
-                 d0_bin_bounds_list,
-                 eta_bin_bounds_list,
-                 pT_cuts_internal_list,
-                 massZ_cut,
-                 test_in_tier2):
-#                 make_big_pdf):
-
-#         self.infile    = infile
-        self.tree      = tree
-        self.year      = year
-        self.charge    = charge
-        self.bspv      = bspv
-        self.bin_style = binning_style
-        self.x_bounds = x_axis_bounds_list
-        self.d0_bin_bounds = d0_bin_bounds_list  # A 2-element list.
-        self.eta_bin_bounds = eta_bin_bounds_list
-        self.pT_cuts    = pT_cuts_internal_list  # Was pT_low_str and pT_high_str
-        self.massZ_cut = massZ_cut
-        self.n_bins    = n_bins
-        self.test_in_tier2 = test_in_tier2
-        self.make_big_pdf = make_big_pdf
-        
-        self.ID        = charge_dict[charge]
-        
-        self.draw_hist()
-    
-    def draw_hist(self):
-        
-#         infile    = self.infile
-        year      = self.year
-        tree      = self.tree
-        charge    = self.charge
-        bspv      = self.bspv
-        bin_style = self.bin_style
-        pT_cuts    = self.pT_cuts  # Was pT_low_str and pT_high_str
-        massZ_cut = self.massZ_cut
-        n_bins    = self.n_bins
-        ID        = self.ID
-        
-        x_min = self.x_bounds[0]
-        x_max = self.x_bounds[1]
-        this_d0_str = self.d0_bin_bounds[0]
-        next_d0_str = self.d0_bin_bounds[1]
-        this_eta_str = str(self.eta_bin_bounds[0])
-        next_eta_str = str(self.eta_bin_bounds[1])
-        pT_low_str = str(self.pT_cuts[0])
-        pT_high_str = str(self.pT_cuts[1])
-               
-        
-        c = ROOT.TCanvas()
-        c.cd()
-
-        if bin_style in 'eta':
-            cuts_per_event  = "(Id1 == %s && %s < d0%s1 && d0%s1 < %s && %s < eta1 && eta1 < %s && %s < pT1 && pT1 < %s) || " % (ID, this_d0_str, bspv, bspv, next_d0_str, this_eta_str, next_eta_str, pT_low_str, pT_high_str)
-            cuts_per_event += "(Id2 == %s && %s < d0%s2 && d0%s2 < %s && %s < eta2 && eta2 < %s && %s < pT2 && pT2 < %s)"     % (ID, this_d0_str, bspv, bspv, next_d0_str, this_eta_str, next_eta_str, pT_low_str, pT_high_str)
-            hist_name = "deltapT_mu%s_%s__%s_pT_%s__%s_eta_%s__%s_d0_%s" % (charge, bspv, pT_low_str, pT_high_str, this_eta_str, next_eta_str, this_d0_str, next_d0_str)
-        # WARNING: 'this_pT_str' is NOT the same as 'pT_low_str'
-        # 'this_pT_str' is for binning over pT, whereas 'pT_low_str' is for implicit pT cuts during eta binning.
-
-        #----- NEEDS DEBUGGING AND TESTING -----#
-        elif bin_style in 'pT':
-            cuts_per_event  = "(Id1 == %s && %s < d0%s1 && d0%s1 < %s && %s < pT1 && pT1 < %s) || " % (ID, this_d0_str, bspv, bspv, next_d0_str, this_pT_str, next_pT_str)
-            cuts_per_event += "(Id2 == %s && %s < d0%s2 && d0%s2 < %s && %s < pT2 && pT2 < %s)"     % (ID, this_d0_str, bspv, bspv, next_d0_str, this_pT_str, next_pT_str)
-            hist_name = "deltapT_mu%s_%s__%s_pT_%s__%s_d0_%s" % (charge, bspv, this_pT_str, next_pT_str, this_d0_str, next_d0_str) 
-#        elif bin_style in 'eta_with_pT_cut'
-        #---------------------------------------#
-
-        if len(massZ_cut) != 0:
-            cuts_per_event = "("+cuts_per_event+") && %s" % (massZ_cut)
-
-        hist_name = make_str_title_friendly(hist_name)  
-        hist_name = hist_name.replace('+','pos') # Must do this because fn() above doesn't work for some reason?
-        hist_name = hist_name.replace('-','neg')
-
-        h = ROOT.TH1F(hist_name, cuts_per_event, n_bins, x_min, x_max)
-        
-        # Fill up the histo with either lep1's deltapT info, if it has the ID of interest.
-        # Otherwise use the other lep's deltapT info.
-        tricky_root_expr  = "10000*(pT1-genLep_pt1)/genLep_pt1/genLep_pt1*(Id1==%s) + " % ID
-        tricky_root_expr += "10000*(pT2-genLep_pt2)/genLep_pt2/genLep_pt2*(Id2==%s)" % ID
-        #--- Confirmed that this works by using a Google Spreadsheet! ---#
-        
-        # @@@@@ WARNING: this is just for 2016 file!!! @@@@@
-        tree.Draw("%s >> %s"%(tricky_root_expr, hist_name), cuts_per_event, "")
-        
-        latex_name  = "10^{4} #times (p_{T}^{RECO}-p_{T}^{GEN})/(p_{T}^{GEN})^{2}"
-        bw = bin_width/10000.
-        h.GetXaxis().SetTitle(latex_name)
-        h.GetYaxis().SetTitle("Events / [%.4f GeV^{-1}]" % bw)
-        h.GetXaxis().SetTitleOffset(1.3)
-        h.GetYaxis().SetTitleOffset(1.3)
-        h.SetTitle(cuts_per_event)
-        # h1.SetAxisRange(0.0, 0.1, "X")   
-        # h1.SetLabelSize(0.03, "Y")                        
-        # h1.SetLineColor(1)
-        h.Draw("hist 9 same")
-        # h1.Draw("e1 hist 9 same")
-        c.Draw()
-        
-        mean = h.GetMean()
-        mean_err = h.GetMeanError()
-        stdev = h.GetStdDev()
-        stdev_err = h.GetStdDevError()
-        
-        self.c = c
-        self.h = h
-        self.tree = tree
-        self.hist_name = hist_name
-        self.cuts_per_event = cuts_per_event
-        self.h_mean = mean
-        self.h_mean_err = mean_err
-        self.h_stdev = stdev
-        self.h_stdev_err = stdev_err
-        
-        # Save plots.
-        global outpath_plots_deltapT_dist
-        global d0_min 
-        global d0_max
-        global make_plots_deltapT_vs_d0
-        
-        if (self.test_in_tier2):
-            fullpath = os.path.join(outpath_plots_deltapT_dist, hist_name)
-            c.SaveAs(fullpath + '.png')
-            c.SaveAs(fullpath + '.pdf')  
-            
-        #----- I will probably have to make_big_pdf outside this class.
-#        elif (self.make_big_pdf):
-#            
-#            if bin_style in 'eta':
-#                pdf_title = ("deltapT_dist_MC%s_mu%s__%s_eta_%s__%s_d0%s_%s_increm%s" % (year, charge, this_eta_str, next_eta_str, str(d0_min), str(bspv), str(d0_max), str(d0_bin_width)))
-#                pdf_title = ("deltapT_dist_MC%s_mu%s_%s__%s_pT_%s__%s_eta_%s__%s_d0%s_%s_increm%s" % (year, charge, bspv, pT_low_str, pT_high_str, this_eta_str, next_eta_str, str(d0_min), str(bspv), str(d0_max), str(d0_bin_width)))
-#            elif bin_style in 'pT':
-#                if len(this_pT_str) < 4:  # Turn: 5p0 --> 05p0, for plot-ordering purposes.
-#                    this_pT_str = '0'+this_pT_str  
-#                pdf_title = ("deltapT_dist_MC%s_mu%s_%s__%s_pT_%s__%s_d0%s_%s_increm%s" % (year, charge, bspv, this_pT_str, next_pT_str, str(d0_min), str(bspv), str(d0_max), str(d0_bin_width)))
-#            
-#            pdf_title = make_str_title_friendly(pdf_title)
-#            fullpath = os.path.join(outpath_plots_deltapT_dist, pdf_title)
-#            
-#            if this_d0_str in str(d0_min):
-#                c.Print(fullpath + '.pdf[')
-#            c.Print(fullpath + '.pdf')
-#            if next_d0_str in str(d0_max):
-#                c.Print(fullpath + '.pdf]')
-
-        # Extract mean, RMS, and store for later.
-        #--- FIXME! Implement a fit with CBxBW + exp
-        #--- FIXME! Implement a fit with Voigtian
-        
-            
-        if (verbose):
-#             print("deltapT_mean_list:", deltapT_mean_list)
-#             print("deltapT_mean_err_list:", deltapT_mean_err_list)
-            if bin_style in 'eta':
-                print("Completed %s<pT<%s, %s<eta<%s, %s<d0%s<%s \n" % (pT_low_str, pT_high_str, this_eta_str, next_eta_str, this_d0_str, bspv, next_d0_str))
-                print("Here's the important stored info:")
-                print("self.c", self.c)
-                print("self.h", self.h)
-                print("self.tree", self.tree)
-                print("self.hist_name", self.hist_name)
-                print("self.cuts_per_event", self.cuts_per_event)
-                print("self.h_mean", self.h_mean)
-                print("self.h_mean_err", self.h_mean_err)
-                print("self.h_stdev", self.h_stdev)
-                print("self.h_stdev_err", self.h_stdev_err)
-            if bin_style in 'pT':
-                print("Completed %s<pT<%s, %s<d0%s<%s \n" % (this_pT_str, next_pT_str, this_d0_str, bspv, next_d0_str))
-                
-        if (make_plots_deltapT_vs_d0):
-            return mean, mean_err
+# class HistInfo:
+#     """
+#     Right now, just the most basic object possible.
+#     """
+#     def __init__(self):
+#         pass
         
 class KinematicBin():
 
@@ -905,9 +727,8 @@ class KinematicBin():
         (as opposed to counting both muons from event just because one pass the cuts).
         """
         pass
-    
-    
-#--------------------------------#
+ 
+#-------------------------------------------------------------------#
 
 class KinBinOrganizer():
     """
@@ -1011,32 +832,680 @@ class KinBinOrganizer():
             self.hist_mean_err_ls.append(kb.stats_dict[kinem]['hist_stats'][2])
             self.fit_mean_ls.append(kb.stats_dict[kinem]['fit_stats']['mean_ls'][-1])
             self.fit_mean_err_ls.append(kb.stats_dict[kinem]['fit_stats']['mean_err_ls'][-1])
+ 
+#-------------------------------------------------------------------#
 
-class KinBin3D():
-    def __init__(self, eta_range, pT_range, qd0_range, 
-                 n_entries, kinem, fit_stats_dict, fit_type, 
-                 pT_stats_ls, qd0_stats_ls, cut_str):
+class KinBin2D:
+    """A container to organize muons in an (eta, pT) bin.
+    
+    NOTE:
+        This class consumes lots of memory because it stores
+        the muons as ROOT.Math.LorentzVector objects and then
+        DUPLICATES them after splitting a KinBin2D up into 
+        multiple KinBin3Ds.
+        It would be more efficient to then delete the KinBin2D.muon_ls
+        since the information is now stored among all the KinBin3Ds.
         """
+
+    def __init__(self, eta_range, pT_range):
+        """
+        Parameters
+        ----------
+        eta_range = 2-elem list: [eta_min, eta_max]
+        pT_range = 2-elem list: [pT_min, pT_max]
+        """
+        self.kinbin_dim = 2
+        self.eta_range = eta_range
+        self.pT_range = pT_range
+
+        self.eta_min = eta_range[0]
+        self.eta_max = eta_range[1]
+        self.pT_min = pT_range[0]
+        self.pT_max = pT_range[1]
+
+        self.h_qd0 = None
+        self.h_dpTOverpT = None
+        self.gr_dpTOverpT_vs_qd0 = None
+
+        self.muon_ls = []
+        self.qd0_ls = []
+        self.dpTOverpT_ls = []
+        self.KinBin3D_dict = {}
+
+        self.iters = None
+        self.is_qd0_binned = None
+        self.fit_func = None
+        self.interc_and_err = (None, None)
+        self.slope_and_err = (None, None)
+        self.equalentry_qd0_bin_edges = None
+
+    def get_bin_key(self, title_friendly=False):
+        """Return a string which identifies this 2D bin.
+        
+        Optional parameter: title_friendly 
+            Useful for making file names and title names. 
+            If True, replaces '.' with 'p'.
+        """
+        key = f"{self.eta_min}eta{self.eta_max}_{self.pT_min}pT{self.pT_max}"
+        return key if not title_friendly else key.replace(".", "p")
+
+    def get_bin_edges(self):
+        """Return a 4-tuple of the eta and pT bin edges."""
+        return (self.eta_min, self.eta_max, self.pT_min, self.pT_max)
+
+    def make_latex_2Dbin_cut_str(self):
+        """Return a LaTeX raw string for ROOT that shows the (eta, pT) values for this bin.
+        
+        This should just be for display purposes, never for using as an identifying key.
+        """
+        return r"%.2f < #left|#eta#right| < %.2f, %.0f < p_{T} < %.0f GeV" % self.get_bin_edges()
+    
+    def make_latex_bin_cut_str(self):
+        """Return a label with this KinBin's cuts in LaTeX form."""
+        if self.kinbin_dim == 2:
+            return self.make_latex_2Dbin_cut_str()
+        elif self.kinbin_dim == 3:
+            return self.make_latex_3Dbin_cut_str()
+        else:
+            msg = f"self.kinbin_dim value ({self.kinbin_dim}) not understood."
+            raise ValueError(msg)
+
+    def make_qd0_hist(self, n_bins=100, x_lim=[-0.01, 0.01]):
+        """Make and fill a qd0 hist using the muon info in this KinBin.
+        
+        x_lim [x_min, x_max] determines the x-axis range for viewing.
+
+        NOTE: Can work with either KinBin2D or KinBin3D objects.
+        """
+        key = self.get_bin_key(title_friendly=True)
+        latex_root_bin_str = self.make_latex_bin_cut_str()
+        x_label = r"qd_{0} (cm)"
+        title = r"%s" % (latex_root_bin_str)
+        h = r.TH1F(f"h_qd0_{key}", title, n_bins, x_lim[0], x_lim[1])
+        h.Sumw2()
+        h.StatOverflows(True)
+        h.SetXTitle(x_label)
+        h.SetYTitle(r"Events / (%.4f)" % h.GetBinWidth(1))
+        # Fill the histogram.
+        for val in [mu.charge * mu.d0 for mu in self.muon_ls]:
+            h.Fill(val)
+        self.h_qd0 = h
+
+    def make_dpTOverpT_hist(self, n_bins=100, x_lim=[-0.4, 0.4]):
+        """Make and fill a delta_pT/pT hist using the muon info in this KinBin.
+        
+        x_lim [x_min, x_max] determines the x-axis range for viewing.
+
+        NOTE: Can work with either KinBin2D or KinBin3D objects.
+        """
+        key = self.get_bin_key(title_friendly=True)
+        latex_root_bin_str = self.make_latex_bin_cut_str()
+        x_label = r"(p_{T}^{REC} - p_{T}^{GEN})/p_{T}^{GEN}"
+        title = r"%s" % (latex_root_bin_str)
+        h = r.TH1F(f"h_dpTOverpT_{key}", title, n_bins, x_lim[0], x_lim[1])
+        h.Sumw2()
+        h.StatOverflows(True)
+        h.SetXTitle(x_label)
+        h.SetYTitle(r"Events / (%.4f)" % h.GetBinWidth(1))
+        # Fill the histogram.
+        for val in [mu.dpTOverpT for mu in self.muon_ls]:
+            h.Fill(val)
+        self.h_dpTOverpT = h
+
+    def make_empty_hists(self, bins_qd0=100, bins_dpTOverpT=100):
+        """Create empty histograms which will be filled with muon kinematic info."""
+        # Prepare plot labels.
+        latex_root_bin_str = self.make_latex_bin_cut_str()
+        key = self.get_bin_key(title_friendly=False)
+        make_title = lambda x : r"#bf{muon %s distribution} (%s)" % (x, latex_root_bin_str)
+        title_qd0 = make_title(r"qd_{0}")
+        title_dpTOverpT = make_title(r"#Deltap_{T}/p_{T}")
+        # Make histograms.
+        h_qd0 = r.TH1F(f"h_qd0_{key}", f"{title_qd0}", bins_qd0, -0.01, 0.01)
+        h_qd0.SetXTitle(r"qd_{0} (cm)")
+        h_qd0.SetYTitle(r"Events / (%.4f)" % h_qd0.GetBinWidth(1))
+        self.h_qd0 = h_qd0
+        # label_LaTeX_dict["qd0BS1"]["independent_label_ROOT"]
+        h_dpTOverpT = r.TH1F(f"h_dpTOverpT_{key}", title_dpTOverpT, bins_dpTOverpT, -0.6,  0.6)
+        h_dpTOverpT.SetXTitle(r"#Deltap_{T}/p_{T}")
+        h_dpTOverpT.SetYTitle(r"Events / (%.4f)" % h_dpTOverpT.GetBinWidth(1))
+        self.h_dpTOverpT = h_dpTOverpT
+
+    def add_muon(self, muon):
+        """Add this MyMuon and its info to this KinBin2D."""
+        self.muon_ls.extend([muon])
+        self.qd0_ls.extend([muon.charge * muon.d0])  # x-vals.
+        self.dpTOverpT_ls.extend([muon.dpTOverpT])   # y-vals.
+    
+    def fill_hists(self):
+        """Take the muons in this KinBin and store the
+        qd0 and dpT/pT kinematics per muon in corresponding hists."""
+        for mu in self.muon_ls:
+            self.h_qd0.Fill(mu.charge * mu.d0)
+            self.h_dpTOverpT.Fill(mu.dpTOverpT)
+
+    def make_dpTOverpT_graph(self, color=4, do_fit=True):
+        """Store a TGraph of dpT/pT vs. qd0 using the stored muons in this KinBin.
+        Also draw and store a best-fit line on the graph.
+        """
+        latex_cut_str = self.make_latex_bin_cut_str()
+        print(f"...Building TGraph for bin: {latex_cut_str}")
+        # Prepare x and y vals.
+        x_vals, y_vals, x_err_vals, y_err_vals = [], [], [], []
+        if (self.is_qd0_binned):
+            y_label = r"#mu_{Gauss}(#Deltap_{T}/p_{T})"
+            for kb3d in self.KinBin3D_dict.values():
+                x_vals.append(kb3d.qd0_avg)
+                y_vals.append(kb3d.fit_stats_dict_dpTOverpT["mean_ls"][-1])
+                y_err_vals.append(kb3d.fit_stats_dict_dpTOverpT["mean_err_ls"][-1])
+        else:
+            x_vals = self.qd0_ls
+            y_vals = self.dpTOverpT_ls
+            y_err_vals = np.zeros_like(x_vals)
+        x_err_vals = np.zeros_like(x_vals)
+        # Convert them to array.arrays afterward.
+        x_arr = array('f', x_vals)
+        y_arr = array('f', y_vals)
+        x_err_arr = array('f', x_err_vals)
+        y_err_arr = array('f', y_err_vals)
+        # Make the graph.
+        n_pts = len(x_arr)
+        assert n_pts == len(y_arr) == len(x_err_arr) == len(y_err_arr) != 0
+        # gr = r.TGraph(n_pts, x_arr, y_arr)
+        gr = r.TGraphErrors(n_pts, x_arr, y_arr, x_err_arr, y_err_arr)
+        # Make it pretty.
+        graph_title = r"(%s)" % (latex_cut_str)
+        gr.SetMarkerStyle(21) #25
+        gr.SetMarkerSize(0.2)
+#         gr.Draw("AP")
+        gr.SetLineColor(color)
+        gr.SetLineWidth(1)
+        gr.SetMarkerColor(color)
+        gr.SetTitle(graph_title)
+        gr.GetXaxis().SetTitle(r"qd_{0} [cm]")
+        gr.GetYaxis().SetTitle(y_label)
+        gr.GetXaxis().SetLimits(-0.004, 0.004)
+        gr.GetYaxis().SetRangeUser(-0.05, 0.05)
+        self.gr_dpTOverpT_vs_qd0 = gr
+#         gr.GetYaxis().SetTitleOffset(1.5)
+        # Must do 2 Draw() calls to set TGraphs properly...
+        # if (draw):
+        #     gr.Draw("AP")
+        
+        if (do_fit):
+            self.fit_line = self.fit_graph_with_line(self.gr_dpTOverpT_vs_qd0)
+
+    def fit_graph_with_line(self, gr):
+        """Return a linear fit function and after fitting it to graph."""
+        if (self.is_qd0_binned):
+            # FIXME
+            x_min = -0.006# Make this automatic: min([gr.GetPointX(2)])
+            x_max = 0.006
+        else:
+            x_min = min(self.qd0_ls)
+            x_max = max(self.qd0_ls)
+        y_min = -0.02
+        y_max = 0.02
+        # Make the fit function.
+        key = self.get_bin_key(title_friendly=False)
+        fit_func = r.TF1(f"f1_{key}", '[0]+[1]*x', x_min, x_max)
+        fit_func.SetLineColor(2)
+        fit_func.SetLineWidth(1)
+        fit_func.SetLineStyle(1)
+        # Fit it onto a histogram `h1`:
+        gr.Fit(fit_func,'S')
+        # The option 'S' saves the fit results into a pointer.
+        # r.gStyle.SetOptFit(111)
+        fit_func.Draw("same")
+        self.interc_and_err = (fit_func.GetParameter(0), fit_func.GetParError(0))
+        self.slope_and_err = (fit_func.GetParameter(1), fit_func.GetParError(1))
+        self.chi2 = fit_func.GetChisquare()
+        self.NDF = fit_func.GetNDF()
+        return fit_func
+
+    def make_empty_equalentry_KinBin3Ds(self, regions, algo=("normal", -1), verbose=False, title_friendly=False):
+        """Use the muons in this KinBin2D (eta, pT) to create a dict of equal-entry KinBin3Ds (eta, pT, qd0).
+
+        NOTE: The qd0 bin edges are automatically determined in such a way that 
+            there is an equal number of muons in each qd0 bin.
+        
+        regions : int
+            The number of equal-entry regions to split the qd0 axis into.
+            Each equal-entry region corresponds to a KinBin3D (eta_range, pT_range, qd0_range)
+
+        Structure of KinBin3D dict:
+            eta_ls = [0.2, 0.4]
+            pT_ls  = [7.0, 10.0]  # NOTE: these lists do not need to be the same length!
+            regions = 3  
+            
+            => Will make 3 KinBin3Ds each with an (eta, pT, qd0) bin: 
+                {
+                    "0.2eta0.4_7.0pT10.0_-0.026519qd0-0.0014461" : KinBin3D(0.2to0.4, 7.0to10.0, -0.026519to-0.0014461),
+                    "0.2eta0.4_7.0pT10.0_-0.0014461qd0-0.0014522" : KinBin3D(0.2to0.4, 7.0to10.0, -0.0014461to-0.0014522),
+                    "0.2eta0.4_7.0pT10.0_-0.0014522qd00.025578" : KinBin3D(0.2to0.4, 7.0to10.0, -0.026519to0.025578),
+                }
+        """
+        self.equalentry_qd0_bin_edges, regions = find_equal_hist_regions_unbinned(self.qd0_ls, regions, algo=algo, verbose=verbose)
+        for qd0_min,qd0_max in zip(self.equalentry_qd0_bin_edges[:-1], self.equalentry_qd0_bin_edges[1:]):
+            kb3d = KinBin3D(eta_range=self.eta_range, pT_range=self.pT_range, qd0_range=[qd0_min,qd0_max])
+            key = self.make_3Dbin_key(qd0_min, qd0_max, title_friendly=title_friendly)
+            self.KinBin3D_dict[key] = kb3d
+
+    def make_3Dbin_key(self, qd0_min, qd0_max, title_friendly=False):
+        """Use this KinBin2D's (eta, pT) info and the given qd0 info to make a str key."""
+        key_tmp = self.get_bin_key(title_friendly=title_friendly)
+        key = f"{key_tmp}_{qd0_min}qd0{qd0_max}"
+        if (title_friendly):
+            return key.replace(".", "p").replace("-", "neg")
+        else:
+            return key
+
+    def store_muon_info_in_KinBin3Ds(self, title_friendly=False):
+        """Save KinBin2D muon info in correct KinBin3Ds, based on (eta, pT, qd0) values of each muon."""
+        for muon in self.muon_ls:
+            # Decide which (eta, pT, qd0) bin this muon belongs to.
+            qd0 = muon.charge * muon.d0
+            # qd0_min, qd0_max = find_bin_edges_of_value(qd0, qd0_bin_edges_tmp)
+            qd0_min, qd0_max = find_bin_edges_of_value(qd0, self.equalentry_qd0_bin_edges)
+            if any([x is None for x in (qd0_min, qd0_max)]):
+                msg = f"[WARNING] This muon has a strange qd0 value: qd0={[qd0_min, qd0_max]}"
+                print(msg)
+                print("Skipping this muon, since your bins cannot hold it!")
+                continue
+            # Put muon into correct KinBin3D.
+            key = self.make_3Dbin_key(qd0_min, qd0_max, title_friendly=title_friendly)
+            # self.KinBin3D_dict[key].store_muon_info(muon)
+            self.KinBin3D_dict[key].add_muon(muon)
+
+    def overwrite_muon_info(self, delete_all=True):
+        """Overwrite long-listed attributes to save memory."""
+        if delete_all:
+            self.muon_ls = "overwritten"
+            self.qd0_ls = "overwritten"
+            self.dpTOverpT_ls = "overwritten"
+        else:
+            # Don't overwrite muon_ls.
+            self.qd0_ls = "overwritten"
+            self.dpTOverpT_ls = "overwritten"
+
+    def do_itergausfit(self, bins_dpTOverpT=100, bins_qd0=100,
+                       x_lim_dpTOverpT=[-0.4,0.4], x_lim_qd0=[-0.01,0.01],
+                       fit_whole_range_first_iter=True,
+                       iters=1, num_sigmas=2,
+                       switch_to_binned_fit=2000, verbose=False, alarm_level="warning",
+                       use_mu_pT_corr=False, only_draw_last=False):
+        """Perform an unbinned iterated Gaussian fit on the dpT/pT
+        distribution. Store the statistics and best-fit vals of this KinBin.
+        
+        FIXME: Update Parameter descriptions.
+
+        NOTE:
+        - Should also work for child classes, like KinBin3D.
+
+        Parameters
+        ----------
+        bins_dpTOverpT : int
+            The number of bins along the x-axis of the dpTOverpT distribution.
+        bins_qd0 : int
+            The number of bins along the x-axis of the qd0 distribution.
+        x_lim_dpTOverpT : 2-elem list, optional
+            The min and max x-axis values to show on the dpTOverpT plot: [x_min, x_max]
+        x_lim_qd0 : 2-elem list, optional
+            The min and max x-axis values to show on the qd0 plot: [x_min, x_max]
+        fit_whole_range_first_iter : bool, optional
+            If True, the entire x-axis range will be fit over for first iteration.
+            Otherwise, first fit range is: mean(data) +- num_sigmas * rms(data)
+        iters : int
+            Number of Gaussian fit iterations to perform.
+        switch_to_binned_fit : int, optional
+            The max number of entries in an array on which an UNBINNED fit should be performed.
+            If n_entries in array > switch_to_binned_fit, then a binned fit will be done.
+        verbose : bool
+            If True, print juicy debug info.
+        use_mu_pT_corr : bool
+            If True, use the corrected muon pT (from d0 studies).
+            Make a distribution of (pT_rec_corr - pT_gen)/pT_gen.
+        """
+        self.n_entries = len(self.muon_ls)
+        self.iters = iters
+        if verbose:
+            start = time.perf_counter()
+            print(
+                f"...Analyzing KinBin{self.kinbin_dim}D: {self.get_bin_key()}...\n"
+                f"...which has {self.n_entries} muons.\n"
+                f"...Performing {iters} Gaussian fit iterations using RooFit..."
+                )
+        # self.qd0_avg = self.calc_avg_qd0()
+
+        # Create self.h_qd0 and self.h_dpTOverpT.
+        # make_empty_hists(self, bins_qd0=100, bins_dpTOverpT=100)
+        # self.make_dpTOverpT_hist(n_bins=bins_dpTOverpT, x_lim=x_lim_dpTOverpT)
+        # self.make_qd0_hist(n_bins=bins_qd0, x_lim=x_lim_qd0)
+
+        if use_mu_pT_corr:
+            # Perform iter Gauss fit on corrected reco pT vals.
+            dpTOverpT_ls = [(mu.pT_corr - mu.gen_pT)/mu.gen_pT for mu in self.muon_ls]
+
+            self.fit_stats_dict_dpTOverpT_corr, self.frame_dpTOverpT_corr = RooFit_iterative_gaus_fit(
+                                dpTOverpT_ls, 
+                                binned_fit=False, switch_to_binned_fit=switch_to_binned_fit, 
+                                iters=iters, num_sigmas=num_sigmas, 
+                                n_bins=bins_dpTOverpT, x_lim=x_lim_dpTOverpT,
+                                fit_whole_range_first_iter=fit_whole_range_first_iter,
+                                xframe=None,
+                                x_label=r"(p_{T}^{REC,corr.} - p_{T}^{GEN})/p_{T}^{GEN}", 
+                                title="%s" % self.make_latex_bin_cut_str(), 
+                                units="",
+                                marker_color=r.kRed+2, force_last_line_color=2,
+                                only_draw_last=only_draw_last, 
+                                verbose=verbose)
+
+        # Perform iter Gauss fit on reco pT vals.
+        dpTOverpT_ls = [mu.dpTOverpT for mu in self.muon_ls]
+        self.fit_stats_dict_dpTOverpT, self.frame_dpTOverpT = RooFit_iterative_gaus_fit(
+                                dpTOverpT_ls, 
+                                binned_fit=False, switch_to_binned_fit=switch_to_binned_fit, 
+                                iters=iters, num_sigmas=num_sigmas, 
+                                n_bins=bins_dpTOverpT, x_lim=x_lim_dpTOverpT,
+                                fit_whole_range_first_iter=fit_whole_range_first_iter,
+                                xframe=None,
+                                x_label=r"(p_{T}^{REC} - p_{T}^{GEN})/p_{T}^{GEN}", 
+                                title="%s" % self.make_latex_bin_cut_str(), 
+                                units="",
+                                marker_color=r.kBlue+2, force_last_line_color=4,
+                                only_draw_last=only_draw_last, 
+                                verbose=verbose)
+
+        # Print info on fit stats convergence.
+        for stat in ["mean_ls", "mean_err_ls", "std_ls", "std_err_ls"]:
+            if use_mu_pT_corr:
+                check_fit_convergence(self.fit_stats_dict_dpTOverpT_corr[stat],
+                                  max_perc_diff=5,
+                                  compare_to_last=3,
+                                  alarm_level=alarm_level)
+            check_fit_convergence(self.fit_stats_dict_dpTOverpT[stat],
+                                  max_perc_diff=5,
+                                  compare_to_last=3,
+                                  alarm_level=alarm_level)
+
+        if verbose:
+            end = time.perf_counter()
+            print(
+                f"Completed {iters} Iterated Gaussian fits "
+                f"on KinBin{self.kinbin_dim}D: {self.get_bin_key()}\n"
+                f"...took {(end - start):.6f} seconds.\n"
+                )
+            print("Now saving best-fit vals for this KinBin2D.")
+        self.store_bestfit_vals()
+        
+    def store_bestfit_vals(self):
+        """Store best-fit values from iterated Gauss fits of this KinBin2D."""
+        bf_mean, bf_mean_err, bf_std, bf_std_err = get_bestfit_vals_from_statsdict(self.fit_stats_dict_dpTOverpT)
+        bf_mean_corr, bf_mean_err_corr, bf_std_corr, bf_std_err_corr = get_bestfit_vals_from_statsdict(self.fit_stats_dict_dpTOverpT_corr)
+
+        self.bestfit_mean_beforecorr = bf_mean
+        self.bestfit_mean_aftercorr = bf_mean_corr
+        self.bestfit_meanerr_beforecorr = bf_mean_err
+        self.bestfit_meanerr_aftercorr = bf_mean_err_corr
+        self.bestfit_std_beforecorr = bf_std
+        self.bestfit_std_aftercorr = bf_std_corr
+        self.bestfit_stderr_beforecorr = bf_std_err
+        self.bestfit_stderr_aftercorr = bf_std_err_corr
+
+        # Calculate percent improvement in sigma and its error.
+        self.sigma_perc_improve = (bf_std_corr - bf_std) / bf_std * 100.
+        self.sigma_perc_improve_err = prop_err_on_dsigoversig(
+                            bf_std,
+                            bf_std_corr,
+                            bf_std_err,
+                            bf_std_err_corr
+                    ) * 100. # sig1, sig2, sig_err1, sig_err2
+
+    def make_beforeafterpTcorr_frames(self):
+        """Store the paves and frames for before/after pT correction."""
+        frame_uncorr = self.frame_dpTOverpT.Clone()
+        frame_corr   = self.frame_dpTOverpT_corr.Clone()
+
+        # Move the hist stats boxes off of one another.
+        statsbox_uncorr = frame_uncorr.findObject("stats")
+        statsbox_uncorr.SetX1NDC(0.70)
+        statsbox_uncorr.SetX2NDC(0.90)
+        statsbox_uncorr.SetY1NDC(0.75)  # y min.
+        statsbox_uncorr.SetY2NDC(0.90)
+        statsbox_uncorr.SetTextColor(r.kBlue+2)
+
+        statsbox_corr = frame_corr.findObject("stats")
+        statsbox_corr.SetX1NDC(0.70)
+        statsbox_corr.SetX2NDC(0.90)
+        statsbox_corr.SetY1NDC(0.60)  # y min.
+        statsbox_corr.SetY2NDC(0.75)
+        statsbox_corr.SetTextColor(r.kRed+2)
+
+        # # Move the fit stats boxes off of one another.
+        fit_stats_uncorr = frame_uncorr.findObject("TPave")
+        fit_stats_uncorr.SetX1NDC(0.13)
+        fit_stats_uncorr.SetX2NDC(0.38)
+        fit_stats_uncorr.SetY1NDC(0.77)  # y min.
+        fit_stats_uncorr.SetY2NDC(0.88)
+        fit_stats_uncorr.SetBorderSize(1)
+        fit_stats_uncorr.SetTextColor(r.kBlue)
+        line2change = fit_stats_uncorr.GetLineWith("Fit")
+        oldtext = line2change.GetTitle().rstrip(":")
+        line2change.SetTitle(r"%s before p_{T} corrections:" % oldtext)
+
+        fit_stats_corr = frame_corr.findObject("TPave")
+        fit_stats_corr.SetX1NDC(0.13)
+        fit_stats_corr.SetX2NDC(0.38)
+        fit_stats_corr.SetY1NDC(0.66)  # y min.
+        fit_stats_corr.SetY2NDC(0.77)
+        fit_stats_corr.SetBorderSize(1)
+        fit_stats_corr.SetTextColor(r.kRed)
+        # Change some of the text in this pave.
+        line2change = fit_stats_corr.GetLineWith("Fit")
+        oldtext = line2change.GetTitle().rstrip(":")
+        line2change.SetTitle(r"%s after p_{T} corrections:" % oldtext)
+        line2change = fit_stats_corr.GetLineWith("mu")
+        newtext = line2change.GetTitle().replace("mu", r"mu_{corr.}")
+        line2change.SetTitle(newtext)
+        line2change = fit_stats_corr.GetLineWith("sigma")
+        newtext = line2change.GetTitle().replace("sigma", r"sigma_{corr.}")
+        line2change.SetTitle(newtext)
+
+        # Make a box showing the improvement.
+        pave_sig_improve = make_TPave(w=0.25, h=0.06, topright_corner_pos=(0.38, 0.66))
+        txt_improve  = r"#frac{#left|#sigma_{corr.} - #sigma#right|}{#sigma} = "
+        txt_improve += r"%.4g #pm %.4g" % (abs(self.sigma_perc_improve), self.sigma_perc_improve_err) + "%"
+        pave_sig_improve.AddText(txt_improve)
+
+        # Save everything in this KinBin2D.
+        self.frame_dpTOverpT_clone = frame_uncorr
+        self.frame_dpTOverpT_corr_clone = frame_corr
+        self.statsbox_uncorr = statsbox_uncorr
+        self.statsbox_corr = statsbox_corr
+        self.fit_stats_uncorr = fit_stats_uncorr
+        self.fit_stats_corr = fit_stats_corr
+        self.pave_sig_improve = pave_sig_improve
+        # Put two frames onto each other.
+        # frame_uncorr.addObject(frame_corr)
+        # frame_uncorr.Draw("same")
+        # cname = self.get_bin_key(title_friendly=False)
+        # c = r.TCanvas(cname, cname)
+        # c.cd()
+        # c.Draw()
+
+        # c.Update()
+        # self.frame_beforeafterpTcorr = frame_uncorr
+
+    def draw_beforeafterpTcorr(self):
+        """Draw a plot showing before/after pT corr for this KinBin2D."""
+        self.frame_dpTOverpT_clone.Draw()
+        self.frame_dpTOverpT_corr_clone.Draw("same")
+        self.statsbox_uncorr.Draw("same")
+        self.statsbox_corr.Draw("same")
+        self.fit_stats_uncorr.Draw("same")
+        self.fit_stats_corr.Draw("same")
+        self.pave_sig_improve.Draw("same")
+
+#-------------------------------------------------------------------#
+
+class KinBin3D(KinBin2D):
+    """A container to organize muons in an (eta, pT, qd0) bin."""
+
+    def __init__(self, eta_range=None, pT_range=None, qd0_range=None, 
+        n_entries=0, kinem=None, fit_stats_dict=None, fit_type=None, 
+        pT_stats_ls=None, qd0_stats_ls=None, cut_str=None):
+        """
+        fit_stats_dict : dict
+            {
+                "mean_ls"     : [mean_fit1, mean_fit2, ...]
+                "mean_err_ls" : [mean_err_fit1, mean_err_fit2, ...]
+                "std_ls"      : [sigma_fit1, sigma_fit2, ...]
+                "std_err_ls"  : [sigma_err_fit1, sigma_err_fit2, ...]
+            }
         fit_type : str
             Either "binned" or "unbinned"
         """
+        self.kinbin_dim = 3
         self.eta_range = eta_range
+        self.eta_min = eta_range[0]
+        self.eta_max = eta_range[1]
         self.pT_range = pT_range
+        self.pT_min = pT_range[0]
+        self.pT_max = pT_range[1]
         self.qd0_range = qd0_range
+        self.qd0_min = qd0_range[0]
+        self.qd0_max = qd0_range[1]
+
         self.n_entries = n_entries
+        self.qd0_avg = None
+
+        self.muon_ls = []
+        self.qd0_ls = []
+        self.dpTOverpT_ls = []
+
         self.kinem = kinem
-        self.fit_stats_dict = fit_stats_dict
+        self.fit_stats_dict = fit_stats_dict  # An older attribute from an older code.
+        self.fit_stats_dict_dpTOverpT = None
+        self.fit_stats_dict_qd0 = None
         self.fit_type = fit_type
         self.pT_stats_ls = pT_stats_ls
         self.qd0_stats_ls = qd0_stats_ls
-        self.cut_str=cut_str
+        self.cut_str = cut_str
+
+        self.h_dpTOverpT = None
+    
+    def get_bin_key(self, title_friendly=False):
+        """Return a string which identifies this 3D bin.
         
+        Optional parameter: title_friendly 
+            Useful for making file names and title names. 
+            If True, replaces '.' with 'p'.
+        """
+        key = (
+            f"{self.eta_min}eta{self.eta_max}_"
+            f"{self.pT_min:.1f}pT{self.pT_max:.1f}_"
+            f"{self.qd0_min:.6f}qd0{self.qd0_max:.6f}"
+            )
+        return key if not title_friendly else key.replace(".", "p")
+
+    def add_muon(self, muon):
+        """Add this muon as a ROOT.Math.LorentzVector into this KinBin3D."""
+        self.muon_ls.extend([muon])
+        self.qd0_ls.extend([muon.charge * muon.d0])  # x-vals.
+        self.dpTOverpT_ls.extend([muon.dpTOverpT])   # y-vals.
+        
+    def make_latex_3Dbin_cut_str(self):
+        """Return a LaTeX raw string for ROOT that shows the (eta, pT, qd0) values for this bin."""
+        cut =  r"%.2f < #left|#eta#right| < %.2f, " % (self.eta_min, self.eta_max)
+        cut += r"%.0f < p_{T} < %.0f GeV, " % (self.pT_min, self.pT_max)
+        cut += r"%.3E < qd_{0} < %.3E cm" % (self.qd0_min, self.qd0_max)
+        return cut
+    
+    def analyze_KinBin3D(self, bins_dpTOverpT, bins_qd0,
+                         x_lim_dpTOverpT, x_lim_qd0, fit_whole_range_first_iter=True,
+                         iters=1, num_sigmas=2,
+                         switch_to_binned_fit=2000, verbose=False, alarm_level="warning"):
+        """Analyze and store dpT/pT and qd0 muon info within this KinBin3D.
+        
+        Parameters
+        ----------
+        bins_dpTOverpT : int
+            The number of bins along the x-axis of the dpTOverpT distribution.
+        bins_qd0 : int
+            The number of bins along the x-axis of the qd0 distribution.
+        x_lim_dpTOverpT : 2-elem list, optional
+            The min and max x-axis values to show on the dpTOverpT plot: [x_min, x_max]
+        x_lim_qd0 : 2-elem list, optional
+            The min and max x-axis values to show on the qd0 plot: [x_min, x_max]
+        fit_whole_range_first_iter : bool, optional
+            If True, the entire x-axis range will be fit over for first iteration.
+            Otherwise, first fit range is: mean(data) +- num_sigmas * rms(data)
+        iters : int
+            Number of Gaussian fit iterations to perform.
+        switch_to_binned_fit : int, optional
+            The max number of entries in an array on which an UNBINNED fit should be performed.
+            If n_entries in array > switch_to_binned_fit, then a binned fit will be done.
+        verbose : bool
+            If True, print juicy debug info.
+        """
+        self.n_entries = len(self.muon_ls)
+        if verbose:
+            print(
+                f"[INFO] Analyzing KinBin3D:"
+                f"[INFO]   {self.get_bin_key()} with {self.n_entries} entries\n"
+                f"[INFO] Performing {iters} Gaussian fit iterations using RooFit"
+                )
+        self.qd0_avg = self.calc_avg_qd0()
+        self.make_dpTOverpT_hist(n_bins=bins_dpTOverpT, x_lim=x_lim_dpTOverpT)
+        self.make_qd0_hist(n_bins=bins_qd0, x_lim=x_lim_qd0)
+        
+        self.fit_stats_dict_dpTOverpT, self.frame_dpTOverpT = RooFit_iterative_gaus_fit(self.dpTOverpT_ls, 
+                                binned_fit=False, switch_to_binned_fit=switch_to_binned_fit, 
+                                iters=iters, num_sigmas=num_sigmas, 
+                                n_bins=bins_dpTOverpT, x_lim=x_lim_dpTOverpT,
+                                fit_whole_range_first_iter=fit_whole_range_first_iter,
+                                xframe=None, x_label=r"(p_{T}^{REC} - p_{T}^{GEN})/p_{T}^{GEN}", 
+                                title=r"%s" % self.make_latex_bin_cut_str(), 
+                                units="",
+                                marker_color=1, only_draw_last=False, 
+                                verbose=verbose)
+        for stat in ["mean_ls", "mean_err_ls", "std_ls", "std_err_ls"]:
+            check_fit_convergence(self.fit_stats_dict_dpTOverpT[stat],
+                                  max_perc_diff=5,
+                                  compare_to_last=3,
+                                  alarm_level=alarm_level)
+
+    def calc_avg_qd0(self):
+        """Return the unweighted mean of the qd0 values of all muons in this KinBin3D."""
+        return np.mean(self.qd0_ls)
+
+    def overwrite_muon_info(self):
+        """Overwrite long-listed attributes to save memory."""
+        self.qd0_ls = "overwritten"
+        self.dpTOverpT_ls = "overwritten"
+
+    def correct_muon_ls_pT(self, pT_corr_factor_dct,
+                           eta_binedge_ls, pT_binedge_ls,
+                           verbose=False):
+        """Return a list of the MyMuon objects in this KinBin3D
+        with their pT corrected using the ad hoc d0 method."""
+        corr_mu_ls = []
+        for mu in self.muon_ls:
+            mu.pT_corr = correct_muon_pT(mu.eta, mu.pT, mu.charge, mu.d0, 
+                        pT_corr_factor_dct, 
+                        eta_binedge_ls, pT_binedge_ls,
+                        verbose=verbose)
+            corr_mu_ls.append(mu)
+        return corr_mu_ls
+
+#-------------------------------------------------------------------#
+
 class KinBin3DOrganizer():
     """
     ~~~ New and improved KinBinOrganizer ~~~
     Organizes KinBin3D objects by similar properties. Returns lists of KinBin objs.
 
-    NOTE: This entire class should focus on the kinbin_obj being a dictionary
+    NOTE: This entire class should focus on the kinbin_obj being a dictionary.
         This provides MUCH better organization and much less 
         automatic figuring out how everything fits together.
     """
@@ -1127,7 +1596,7 @@ class KinBin3DOrganizer():
     def find_similar_KinBins(self, eta_range, pT_range):
         """
         Takes in list of a KinBin3D objects and, depending on what eta and pT range you give it,
-        will return a subst of the original list which fall within those eta and pT range.
+        will return a subset of the original list which falls within those eta and pT ranges.
         """
         kb_same_eta = [kb for kb in self.kinbin_ls if kb.eta_range == eta_range]
         kb_same_eta_same_pT = [kb for kb in kb_same_eta if kb.pT_range == pT_range]
@@ -1161,7 +1630,9 @@ class KinBin3DOrganizer():
 
         return qd0_avg_ls, dpToverpT_bestfitmean_ls, dpToverpT_bestfitmean_err_ls
 
-class GraphLineKinBin3D():
+#-------------------------------------------------------------------#
+
+class GraphLineKinBin3D:
     """
     One of the lines drawn on a graph. Contains all the info that went into building this line. 
 
@@ -1254,7 +1725,7 @@ class GraphLineKinBin3D():
         if len(y_label) == 0:
             y_label = r"iter. Gaus fit $\mu( \Delta p_{T} \ / p_{T}^{\mathrm{REC}})$"
         
-        eta_text = r"$%.1f < \left| \eta^{\mathrm{REC}} \right| < %.1f$" % (eta_range[0], eta_range[1])
+        eta_text = r"$%.2f < \left| \eta^{\mathrm{REC}} \right| < %.2f$" % (eta_range[0], eta_range[1])
         pT_text = r"$%.1f < p_{T}^{\mathrm{REC}} < %.1f$ [GeV]" % (pT_range[0], pT_range[1])
         
         if (const_bin in "pT"):
@@ -1366,7 +1837,7 @@ class GraphLineKinBin3D():
         ax.legend(loc="upper left", framealpha=1)#, fontsize=text_size_legend)
         return ax
 
-#-------------------
+#-------------------------------------------------------------------#
 
 class GraphLine():
     """
@@ -1484,6 +1955,8 @@ class GraphLine():
         # Draw fit on axes.
         # return optimized parameters
         self.popt_linear = None
+
+#-------------------------------------------------------------------#
 
 class KinematicBinVaex():
     # FIXME: I attempted to make it work with vaex. It almost works!
@@ -2105,7 +2578,7 @@ class KinematicBinVaex():
         textbox_text += self.cuts
         ax.text(0.03, 0.87, textbox_text, horizontalalignment='left', verticalalignment='center', transform=ax.transAxes)
         
-        if (iter_gaus[0]):
+        if iter_gaus[0]:
             # Do iterative fitting procedure.
             # Produce a dictionary of stats for these fits.
             best_guess_coeff = max(bin_vals)  # The Gaus coeff is usually around the max height of Gaus curve.

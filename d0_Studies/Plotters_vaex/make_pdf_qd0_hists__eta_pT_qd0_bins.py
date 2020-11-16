@@ -59,7 +59,7 @@ for k in range(len(eta_ls)-1):
     eta_max = eta_ls[k+1]
 
     # For each eta range, make a pdf. 
-    extra   = "__{:.1f}_eta_{:.1f}".format(eta_min, eta_max)
+    extra   = "__{}_eta_{}".format(eta_min, eta_max)
     extra  += "__{:.1f}_pT_{:.1f}_GeV".format(min(pT_ls), max(pT_ls))
     extra = make_str_title_friendly(extra)
     extra += ".pdf"

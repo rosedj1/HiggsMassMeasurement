@@ -114,7 +114,7 @@ massZ_max_Jpsi = massZ_minmax_Jpsi[1]
 # Prep directories and file names. 
 makeDirs(outdir_plots)
 
-suffix   = "__{:.1f}_eta_{:.1f}".format(min(eta_ls), max(eta_ls))
+suffix   = "__{}_eta_{}".format(min(eta_ls), max(eta_ls))
 suffix  += "__{:.1f}_pT_{:.1f}_GeV".format(min(pT_ls), max(pT_ls))
 suffix = make_str_title_friendly(suffix)
 
@@ -190,7 +190,7 @@ for k in range(len(eta_ls)-1):
     print("eta loop k,",k)
 
     # For each eta range, make a pdf. 
-    extra   = "__{:.1f}_eta_{:.1f}".format(eta_min, eta_max)
+    extra   = "__{}_eta_{}".format(eta_min, eta_max)
     extra  += "__{:.1f}_pT_{:.1f}_GeV".format(min(pT_ls), max(pT_ls))
     extra = make_str_title_friendly(extra)
     extra += ".pdf"

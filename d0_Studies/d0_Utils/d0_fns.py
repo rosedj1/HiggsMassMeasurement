@@ -1,12 +1,7 @@
 import os
 import math
-
 import numpy as np
 import pandas as pd
-# import matplotlib.pyplot as plt
-# import matplotlib.ticker as ticker
-
-# from matplotlib.backends.backend_pdf import PdfPages
 from Utils_Python.Utils_Physics import perc_diff
 
 def get_pT_corr_factors(pT_corr_factor_dict, eta_min, eta_max, pT_min, pT_max):
@@ -17,7 +12,7 @@ def get_pT_corr_factors(pT_corr_factor_dict, eta_min, eta_max, pT_min, pT_max):
     Parameters
     ----------
     pT_corr_factor_dict : dict
-        Contains the best-fit parameters to help correct muon pT. 
+        Contains the best-fit parameters to correct muon pT. 
         Key : str
             The bin that muon lands in: e.g., '0.0eta0.2_10.0pT14.0'
         Val : dict
@@ -38,31 +33,118 @@ def get_pT_corr_factors(pT_corr_factor_dict, eta_min, eta_max, pT_min, pT_max):
     interc : float
         Intercept of best-fit line for that eta, pT bin.
     """
-    key = "{}eta{}_{}pT{}".format(eta_min, eta_max, pT_min, pT_max)
-
+    key = f"{eta_min}eta{eta_max}_{pT_min}pT{pT_max}"
     interc = pT_corr_factor_dict[key]["intercept"]
     slope = pT_corr_factor_dict[key]["slope"]
+    return (slope, interc)
 
-    return slope, interc
+def parse_etapT_key(key):
+    """Return a 4-tuple of floats 
+    (eta_min, eta_max, pT_min, pT_max)
+    using info from the key str.
+    """
+    eta_part, pT_part = key.split("_")
+    eta_min_str, eta_max_str = eta_part.split("eta")
+    pT_min_str, pT_max_str = pT_part.split("pT")
+    eta_min = float(eta_min_str)
+    eta_max = float(eta_max_str)
+    pT_min = float(pT_min_str)
+    pT_max = float(pT_max_str)
+    return (eta_min, eta_max, pT_min, pT_max)
+
+def get_binedges_from_keys(eta, pT, pT_corr_factor_dict):
+    """Return the 4-tuple corresponding to the bin info
+    into which eta, pT should fit.
+    
+    Example: key = '1.25eta1.5_100.0pT1000.0'
+    So eta = -1.3 and pT = 120 would fit within this bin.
+    Return (1.25, 1.5, 100.0, 1000.0).
+
+    NOTE: Eta bin edges are always positive.
+    """
+    abs_eta = abs(eta)
+    key_ls = list(pT_corr_factor_dict.keys())
+    for key in key_ls:
+        eta_min, eta_max, pT_min, pT_max = parse_etapT_key(key)
+        within_eta = (eta_min < abs_eta) and (abs_eta < eta_max)
+        within_pT = (pT_min < pT) and (pT < pT_max)
+        if within_eta and within_pT:
+            return (eta_min, eta_max, pT_min, pT_max)
+    err_msg = f"eta ({eta}) and pT ({pT}) did not fit in any of pT_corr_factor_dict keys"
+    raise KeyError(err_msg)
+
+def make_key_from_binedges(binedge_tup):
+    """Return a key (str) from eta and pT bin edges.
+
+    Example:
+    - binedge_tup = (0.2, 0.4, 38.0, 50.0)  # (eta_min, eta_max, pT_min, pT_max)
+    - returns: '0.2eta0.4_38.0pT50.0'
+    """
+    eta_min = binedge_tup[0]
+    eta_max = binedge_tup[1]
+    pT_min  = binedge_tup[2]
+    pT_max  = binedge_tup[3] 
+    return f"{eta_min}eta{eta_max}_{pT_min}pT{pT_max}"
 
 def correct_muon_pT(eta, pT, q, d0, 
-                    pT_corr_factor_dict, 
-                    eta_binedge_ls, pT_binedge_ls,
-                    verbose=False):
-    """
-    Use the eta, pT, q, and d0 of a reco muon to determine its corrected pT.
+                    pT_corr_factor_dict, detection="manual",
+                    eta_binedge_ls=None, pT_binedge_ls=None,
+                    verbose=False, print_all_muon_info=False):
+    """Return the corrected pT of a muon, by comparing the muon's kinematics
+    to a dictionary of correction factors.
+
+    Kinematics required to determine correction: (eta, pT, charge, d0)
 
     Parameters
     ----------
-    FIXME: [ ] Finish doc string.
+    eta : float
+        The pseudorapidity of the muon.
+    pT : float
+        The reconstructed pT of the muon.
+    q : float
+        The charge of the muon.
+    d0 : float
+        The signed transverse impact parameter of the muon.
+    pT_corr_factor_dict : dict
+        Contains the best-fit parameters to correct muon pT. 
+        Key : str
+            The bin that muon lands in: e.g., '0.0eta0.2_10.0pT14.0'
+        Val : dict
+            e.g., {'intercept': -0.0001016, 'slope': 1.01}
+    detection : str
+        How to find bin edges: either 'auto' or 'manual'
+        If 'auto', then the pT_corr_factor_dict keys will be parsed
+        to identify the best bin edges between which to place the muon
+        based on the muon's eta and pT values.
+        This is useful when etabin1 has a different set of pT
+        bins from etabin2.
+        If 'manual', then eta_binedge_ls and pT_binedge_ls
+        must be provided.
+    eta_binedge_ls : list
+        A list of all eta bin edges.
+        The muon eta should fall into one of these bins.
+    pT_binedge_ls : list
+        A list of all pT bin edges.
+        The muon pT should fall into one of these bins.
 
     Returns
     -------
     pT_corr : float
-        The corrected pT (not the shift!), based on the kinematics of the muon. 
+        The corrected muon pT (not the shift!).
     """
-    eta_min, eta_max = find_bin_edges_of_value(abs(eta), np.array(eta_binedge_ls))
-    pT_min,  pT_max  = find_bin_edges_of_value(pT,       np.array(pT_binedge_ls))
+    det = detection.lower()
+    if "auto" in det:
+        # Use the pT_corr_factor_dict keys to figure out
+        # which (eta, pT) bin to place muon.
+        # First put muon in eta 
+        # The pT bins can DEPEND on the eta bins, i.e.
+        # There can be different pT bin edges for different eta bins.
+        eta_min, eta_max, pT_min, pT_max = get_binedges_from_keys(eta, pT, pT_corr_factor_dict)
+    elif "man" in det:
+        eta_min, eta_max = find_bin_edges_of_value(abs(eta), np.array(eta_binedge_ls))
+        pT_min,  pT_max  = find_bin_edges_of_value(pT,       np.array(pT_binedge_ls))
+    else:
+        raise ValueError(f"Parameter `detection` must be either 'manual' or 'auto'.")
     
     if all([x is not None for x in [eta_min, eta_max, pT_min, pT_max]]):
         slope, interc = get_pT_corr_factors(pT_corr_factor_dict, eta_min, eta_max, pT_min, pT_max)
@@ -73,11 +155,10 @@ def correct_muon_pT(eta, pT, q, d0,
     
     pT_corr = pT - delta_pT
     
-    if (verbose):
+    if verbose and print_all_muon_info:
         rel_pT = delta_pT / pT
         if (rel_pT > 0.05):
             print(f"[WARNING] delta_pT ({rel_pT}) > 5%")
-
         print("This muon's info:")
         print("  eta = {}".format(eta))
         print("  pT  = {}".format(pT))
@@ -89,7 +170,6 @@ def correct_muon_pT(eta, pT, q, d0,
         print("  interc: {}".format(interc))
         print("  delta_pT: {}".format(delta_pT))
         print("  pT - delta_pT = pT_corr : {} - {} = {}\n".format(pT, delta_pT, pT_corr))
-    
     return pT_corr
     
 def get_subset_mask(x_vals, x_min, x_max):
@@ -142,7 +222,7 @@ def calc_num_bins(bin_min, bin_max, bin_width):
     ----------
     bin_min, bin_max, bin_width
     """
-    return int(round( (bin_max-bin_min)/bin_width ))
+    return int(round( (bin_max - bin_min) / bin_width ))
 
 def calc_bin_widths(bin_edges):
     """
@@ -165,6 +245,10 @@ def calc_bin_widths(bin_edges):
     right_edges = bin_edges[1:]
     bin_width_arr = right_edges - left_edges
     return bin_width_arr
+
+def get_uniform_bin_width(x_min, x_max, N):
+    """Return the constant bin width of all N bins in range [x_min, x_max]."""
+    return (x_max - x_min) / float(N)
 
 def centers_of_binning_array(bin_arr, decimals=0):
     """
@@ -250,40 +334,79 @@ def calc_ymin_for_legend(n_graphs, text_height=0.042):
     delta_y = text_height*n_graphs
     return 0.9 - delta_y # When you do TCanvas(), it puts the top axis at y = 0.9.
 
+def check_edge_cases(val, bin_edge_arr):
+    """If val falls exactly on first or last bin edge, 
+    return the first two or last two adjacent bins, respectively."""
+    assert len(set(bin_edge_arr)) > 1
+    if (val == bin_edge_arr[0]):
+        print(f"[WARNING] val ({val}) falls exactly on lower bin edge!")
+        return (bin_edge_arr[0], bin_edge_arr[1])
+    elif (val == bin_edge_arr[-1]):
+        print(f"[WARNING] val ({val}) falls exactly on upper bin edge!")
+        return (bin_edge_arr[-2], bin_edge_arr[-1])
+    else:
+        return (None, None)
+
 def find_bin_edges_of_value(val, bin_edge_arr):
     """
-    Return the neighboring bin edges of bin_edge_arr, where:
-    this_bin_edge < val < next_bin_edge
+    Return the adjacent bin edges of bin_edge_arr, where:
+    this_bin_edge < val <= next_bin_edge
     
     Example: 
-      this_bin_edge = bin_edge_arr[3]
-      next_bin_edge = bin_edge_arr[4]
+        bin_edge_arr = [2,     3,     6,     9]
+        regions =       | reg1 | reg2 | reg3 |
+
+        The random val = 4 would fall into reg2. 
+        The random val = 3 (which happens to be a bin edge) would fall into reg1.
+        The random val = 9 (which happens to be a bin edge) would fall into reg3.
+    Then find_bin_edges_of_value(4, bin_edge_arr) returns: (3, 6)
     
-    Notes:
-      - bin_edge_arr should be a sorted array [least -> greatest]    
-      - Encountered some interesting "edge cases" (HAHAHAHA)
-        in which the val falls EXACTLY on one of the bin edges. 
-        This causes the issue that the returned bin edges are 
-        not neighboring. 
-        This necessitates the use of either `>=` in the lt_arr var 
-        as opposed to just `>`, or `<=` in the gt_arr var.
+    NOTE:
+        - !!! bin_edge_arr should be a sorted array [least -> greatest] !!!
+
+    Parameters
+    ----------
+    val : float
+        The value that you want to check where it belongs in bin_edge_arr.
+    bin_edge_arr : list or array-like
+        The list of bin edges which val will be compared, to see where it "belongs".
+
+    Returns
+    -------
+    2-tuple of adjacent bin_edge_arr values (not the indices!) such that
+    this_bin_edge < val < next_bin_edge.             
     """
+    # Test for any duplicates in bin_edge_arr and make sure it has at least 2 entries (1 region).
+    msg = f"Problem encountered with bin_edge_arr ({bin_edge_arr}). Stopping now."
+    assert len(set(bin_edge_arr)) > 1, msg
+    # bin_edge_arr seems OK. Go with it.
+    bin_edge_arr = np.array(bin_edge_arr)
+    none_tup = (None, None)
+    # See if val falls exactly on first or last bin edge.
+    this_bin_edge, next_bin_edge = check_edge_cases(val, bin_edge_arr)
+    if None not in (this_bin_edge, next_bin_edge):
+        # val has been assigned to a bin. We are done.
+        return (this_bin_edge, next_bin_edge)
+    # Keep searching.
     try:
         # Hacks, bruh.
-        gt_arr = bin_edge_arr[val < bin_edge_arr]   # Bool array before slice, e.g.: [0, 0, 1, ... , 1, 1]
-        next_bin_edge = gt_arr[0]
-        lt_arr = bin_edge_arr[val >= bin_edge_arr]  # Bool array before slice, e.g.: [1, 1, 0, ... , 0, 0]
+        lt_arr = bin_edge_arr[val > bin_edge_arr]  # Bool array before slice, e.g.: [1, 1, 0, ... , 0, 0]
         this_bin_edge = lt_arr[-1]
+        gt_arr = bin_edge_arr[val <= bin_edge_arr]   # Bool array before slice, e.g.: [0, 0, 1, ... , 1, 1]
+        next_bin_edge = gt_arr[0]
     except IndexError:
-        # Most likely that the val is less than min or greater than max of bin_edge_arr.
+        # Most likely the val is less than min or greater than max of bin_edge_arr.
         if (val < min(bin_edge_arr)) or (val > max(bin_edge_arr)):
-            this_bin_edge = next_bin_edge = None
-            print(f"Tried putting {val} into {bin_edge_arr}")
+            print(f"[WARNING] Tried putting {val:.6f} into {bin_edge_arr}")
+            return none_tup
         else:
-            msg = "val ({}) could not be placed in or next to bin_edge_arr:\n{}".format(bin_edge_arr)
-            raise ValueError(msg)
-    
-    return this_bin_edge, next_bin_edge
+            msg = f"val ({bin_edge_arr}) could not be placed in or next to bin_edge_arr:\n"
+            raise IndexError(msg)
+    except TypeError:
+        if (None in bin_edge_arr):
+            print(f"[WARNING] bin_edge_arr looks weird:\n  {bin_edge_arr}")
+            raise TypeError
+    return (this_bin_edge, next_bin_edge)
 
 def make_kinem_subplot(lep, ax, data, x_limits, x_bins, x_label, y_label, y_max=-1, log_scale=False):
     """
@@ -614,8 +737,7 @@ def find_equal_hist_divisions(bin_edges, bin_vals, K, verbose=False):
 
     return bin_div_ls, bin_stats_dict
 
-# def find_equal_hist_regions_unbinned(vals_arr, r, round_to_n_decimals=2, algo=("normal", -1), verbose=False):
-def find_equal_hist_regions_unbinned(vals_arr, r, algo=("normal", -1), verbose=False):
+def find_equal_hist_regions_unbinned(vals_arr, regions, algo=("normal", -1), verbose=False):
     """
     Return the "bin edges" (really just specific values of vals_arr) 
     which divide the array into regions with equal number of values per region. 
@@ -631,12 +753,10 @@ def find_equal_hist_regions_unbinned(vals_arr, r, algo=("normal", -1), verbose=F
     Parameters
     ----------
     vals_arr : array
-        Array of values which will be sorted and then split into `r` regions.
-    r : int
+        Array of values which will be sorted and then split into `regions`.
+    regions : int
         Number of regions to split histogram into.
         Each region will contain approximately the same number of entries. 
-    DELETEround_to_n_decimals : int, optional
-        Number of decimals to round bin edge values to. 
     algo : 2-tuple, optional
         algo[0] : str
             The kind of algorithm to run as described below.
@@ -645,9 +765,9 @@ def find_equal_hist_regions_unbinned(vals_arr, r, algo=("normal", -1), verbose=F
             If `-1` then use the `r` specified.
             
         Possible algo's:
-        "normal" : default, split vals_arr up into `r` regions. 
-        "at_least" : request at least algo[1] entries per region, first trying `r` regions. 
-                     If there are fewer than algo[1] entries per region, then try `r-1` regions.
+        "normal" : default, split vals_arr up into `regions`. 
+        "at_least" : request at least algo[1] entries per region, first trying `regions`. 
+                     If there are fewer than algo[1] entries per region, then try `regions-1`.
                      Try recursively until to a minimum of 2 regions. Stops at 2 regions. 
 
     verbose : bool, optional
@@ -655,19 +775,36 @@ def find_equal_hist_regions_unbinned(vals_arr, r, algo=("normal", -1), verbose=F
         
     Returns
     -------
+    2-tuple : (bin_reg_ls, regions)
+    where,
     bin_reg_ls : list
         A list of the edges of each region along the x-axis. 
         The number of entries between regions should have ~same number of entries.
         If 
-    r : int
+    regions : int
         A possibly updated number of regions, if algo was set to something other than "normal".
         
     Notes:
         - I used to call them "divisions" but now I call them "regions"
     """
+    # if entries_total == 0:
+    #     return ([None, None] , -1)
+    mode = algo[0]
     entries_total = len(vals_arr)
-    if entries_total == 0:
-        return [None, None] , -1
+
+    if mode in "normal":
+        try:
+            # If you have 4 elements in vals_arr, then you can only make a max of 3 regions
+            # which share common bin edges:
+            assert regions < entries_total
+        except AssertionError:
+            msg = (
+                f"[ERROR] regions ({regions}) >= entries_total ({entries_total})\n"
+                f"        This happens when you try to split a small bin edge array into too many regions.\n"
+                f"        Perhaps try: `algo=('at_least', <some_num_entries_per_region>)`"
+                ) 
+            raise ValueError(msg)
+    
     sorted_vals_arr = np.sort(vals_arr)
     # first_bin = round(sorted_vals_arr[0], round_to_n_decimals)
     # last_bin = round(sorted_vals_arr[-1], round_to_n_decimals)
@@ -676,38 +813,37 @@ def find_equal_hist_regions_unbinned(vals_arr, r, algo=("normal", -1), verbose=F
     bin_reg_ls = [first_bin]  # This is what we are after ultimately. 
 
     # Prepare the expectation of each region, based on sorted_vals_arr.
-    entries_per_reg = float(entries_total) / float(r)
+    entries_per_reg = float(entries_total) / float(regions)
     
-    mode = algo[0]
     find_at_least_per_reg = algo[1]
-    if (mode in "at_least"):
-        # Make sure User specified desired number of entries per region.
+    if mode in "at_least":
+        # Make sure User specified a reasonable number of entries per region.
         assert find_at_least_per_reg > 0
 
         while entries_per_reg < find_at_least_per_reg:
-            if (r == 2): 
+            if (regions == 2): 
                 msg = "[WARNING] Could not find at least {} entries per region.".format(find_at_least_per_reg)
                 print_header_message(msg)
                 break
             # There are too few actual entries per region. 
             # Decrement the number of regions.  
-            msg  = "  Found {:.2f} entries per region (using {} regions), ".format(entries_per_reg, r)
-            msg += "but require at least {} entries per region.\n".format(find_at_least_per_reg)
-            msg += "    Decrementing the number of regions from {} to {}".format(r, r-1)
-            r -= 1
+            msg  = "  Found {:.2f} entries per region (using {} regions),".format(entries_per_reg, regions)
+            msg += " but require at least {} entries per region.\n".format(find_at_least_per_reg)
+            msg += "    Decrementing the number of regions from {} to {}".format(regions, regions-1)
+            regions -= 1
             print(msg)
             
-            entries_per_reg = float(entries_total) / float(r)
-        print("Splitting array into {} equal-entry regions, {:.2f} entries per region.".format(r, entries_per_reg))
+            entries_per_reg = float(entries_total) / float(regions)
+        print("Splitting array into {} equal-entry regions, {:.2f} entries per region.".format(regions, entries_per_reg))
 
     entries_per_reg_roundup = math.ceil(entries_per_reg)
     entries_per_reg_rounddown = math.floor(entries_per_reg)
     
-    num_regions_with_more = entries_total % r
-    num_regions_with_fewer = r - num_regions_with_more
+    num_regions_with_more = entries_total % regions
+    num_regions_with_fewer = regions - num_regions_with_more
     # Example: 
     #--- sorted_vals_arr = [1,1,2,2,3]
-    #--- N=5, say r=3 
+    #--- N=5, say regions=3 
     #--- entries_per_reg=1.667, entries_per_reg_roundup=2, entries_per_reg_rounddown=1
     #--- num_regions_with_more=2, num_regions_with_fewer=1
     #--- make 3 regions: [1,1 | 2,2 | 3]  
@@ -722,7 +858,7 @@ def find_equal_hist_regions_unbinned(vals_arr, r, algo=("normal", -1), verbose=F
         print("entries_per_reg:           {:.2f}".format(entries_per_reg))
         print("entries_per_reg_roundup:   {:.2f}".format(entries_per_reg_roundup))
         print("entries_per_reg_rounddown: {:.2f}".format(entries_per_reg_rounddown))
-        print("[INFO] Making {} regions on {} total entries.".format(r, entries_total))
+        print("[INFO] Making {} regions on {} total entries.".format(regions, entries_total))
         print("[INFO] Looking for {:.2f} entries per region.".format(entries_per_reg))
         
     def scan_arr_get_index(arr, start_elem, entries_to_scan):
@@ -782,7 +918,7 @@ def find_equal_hist_regions_unbinned(vals_arr, r, algo=("normal", -1), verbose=F
     if (verbose):
         print("[INFO] Final bin region list is:\n{}\n".format(bin_reg_ls))
 
-    return bin_reg_ls, r
+    return (bin_reg_ls, regions)
 
 def collapse_eta_bin_edges(bin_ls, round_to_n_decimals=2):
     """
