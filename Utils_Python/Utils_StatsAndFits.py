@@ -5,10 +5,13 @@ from scipy.optimize import curve_fit, OptimizeWarning
 # Local imports. 
 from d0_Utils.d0_fns import centers_of_binning_array, get_subset_mask, print_header_message
 from d0_Utils.d0_dicts import color_dict, label_LaTeX_dict
-from Utils_ROOT.ROOT_StatsAndFits import RooFit_gaus_fit_unbinned
+from Utils_ROOT.ROOT_StatsAndFits import RooFit_gaus_fit
 from Utils_Python.Utils_Plotting import make_stats_legend_for_gaus_fit
+from Utils_Python.Utils_Physics import perc_diff
 
-#--- Fitting Functions ---#
+#-----------------------------#
+#----- Fitting Functions -----#
+#-----------------------------#
 def linear_func(x, b, m):
     """
     Calculate the y-value for a given x-value along a straight line, 
@@ -189,7 +192,6 @@ def crystal_ball_doublesided_func(x_arr, coeff, alphaL, nL, alphaR, nR, mu, sigm
     # Make sure all of the x_arr values got transformed.
     # Possible bug if x_arr == 0 == y?
     assert all([a != b for a,b in zip(x_arr,y_vals)])
-    
     return y_vals
         
 def exp_gaus_exp_func(x_arr, coeff, kL, kR, mu, sigma):
@@ -740,7 +742,13 @@ def iterative_fit_gaus_unbinned(num_iters, data,
             
         # Do unbinned fit.
         trimmed_data = data[(x_min <= data) & (data <= x_max)]
-        stats_ls = RooFit_gaus_fit_unbinned(trimmed_data)
+        stats_ls, xframe = RooFit_gaus_fit(trimmed_data, 
+                                           binned_fit=True, fit_range=None, xframe=None, 
+                                           count=1, 
+                                           x_label="Independent Var", 
+                                           draw=draw_on_axes, verbose=verbose,
+                                           n_bins=100,
+                                           line_color=4, marker_color=1)
         
         bestfit_mean = stats_ls[0]
         bestfit_mean_err = stats_ls[1]
@@ -812,7 +820,7 @@ def iterative_fit_gaus_unbinned(num_iters, data,
     return stats_dict, ax
 
 #--------------------------------------#
-#----- Error propagation formulae -----#
+#----- Error Propagation Formulae -----#
 #--------------------------------------#
 def prop_err_x_plus_y(x, y, dx, dy):
     """
@@ -843,7 +851,7 @@ def prop_err_x_div_y(x, y, dx, dy):
     corresponding uncertainty (dr), depending on (x, y, dx, dy).
 
     The error propagation formula is:
-        (dr)^2 = (dr/dx)^2 * (dx)^2 + (dr/dy)^2 * (dy)^2 + 2 * dr/dx * dr/dy * dx*dy
+        (dr)^2 = (dr/dx)^2 * (dx)^2 + (dr/dy)^2 * (dy)^2 + 2*dr/dx*dr/dy * dx*dy
         but we will ignore the final cross-term (correlation factor).
             Newton says: 
             dr/dx = 1/y
@@ -865,9 +873,31 @@ def prop_err_x_div_y(x, y, dx, dy):
     dr = np.sqrt((dx / y)**2 + (x / y**2 * dy)**2)
     return r, dr
 
-def Andrey_prop_err_on_dsigoversig(sig1, sig2, sig_err1, sig_err2):
+def prop_err_on_dsigoversig(sig1, sig2, sig_err1, sig_err2):
     """
     Returns the error on (sig2 - sig1) / sig1.
+
+    If we let: 
+        r = (n - b) / b = n/b - 1
+        n +- dn
+        b +- db
+    Then the final propagation formula is:
+        dr = n/b * sqrt[ (dn/n)^2 + (db/b)^2 ]
+
+    Derivation:
+        The error propagation formula is:
+        (dr)^2 = (dr/dn)^2 * (dn)^2 + (dr/db)^2 * (db)^2 + 2*dr/dn*dr/db * dn*db
+            Newton says: 
+            dr/dn = 1/b
+            dr/db = -n/(b^2)
+        Plugging these in and ignoring the cross-term (correlation factor):
+        (dr)^2 = (1/b)^2 * (dn)^2 + [-n/(b^2)]^2 * (db)^2
+               = (1/b)^2 * (dn)^2 + 1/b^2*(n/b)^2 * (db)^2
+               = (1/b)^2 * [(dn)^2*(n/n)^2 + (n/b)^2*(db)^2]
+               = (n/b)^2 * [(dn/n)^2 + (db/b)^2]
+
+    NOTE: This formula should be able to be derived from prop_err_x_div_y()
+          above, but I haven't figured it out yet.
     """
     sig1 = np.array(sig1, dtype=float)
     sig2 = np.array(sig2, dtype=float)
@@ -877,3 +907,69 @@ def Andrey_prop_err_on_dsigoversig(sig1, sig2, sig_err1, sig_err2):
     relsig1 = sig_err1 / sig1
     relsig2 = sig_err2 / sig2
     return (sig2 / sig1) * np.sqrt(relsig1**2 + relsig2**2)
+
+#-------------------------#
+#----- Stats Helpers -----#
+#-------------------------#
+
+def check_fit_convergence(stat_ls, max_perc_diff=5, compare_to_last=3, alarm_level="warning"):
+    """Raise a warning or error if a list of subsequent fit values did not converge.
+    
+    NOTE: 
+        The idea here is to see if the final converged fit value differs 
+        too much from the average of the last few fit values.
+        This is not the most sophisticated way to check, probably assuming some 
+        kind of Gaussian distribution among the mean values and comparing the final
+        fit value to this mean would be better.
+        Another idea could be to see how far the final fit val differs from the 
+        sigma of such a Gauss dist.
+
+    Parameters
+    ----------
+    stat_ls : list
+        An ORDERED list of fit values (e.g., iterative Gaussian fit means).
+    max_perc_diff : float, optional
+        The maximum allowed percent difference (%) between: 
+            - the average of the last `compare_to_last` entries of `stat_ls`, and
+            - the final fit value (last element in stat_ls)
+    compare_to_last : int, optional
+        Take the mean of this many elements from the back of `stat_ls`
+        and compare that mean to the very last element to check for convergence.
+    alarm_level : str, optional
+        What level of complaining to print out, in case convergence seems to fail.
+        Can choose: ["warning", "error"].
+        Choosing `"error"` will raise a ValueError.
+    """
+    # Sanity checks.
+    assert compare_to_last >= 1
+    while len(stat_ls) < compare_to_last:
+        compare_to_last -= 1
+    alarm = alarm_level.upper()
+    assert alarm in ["WARNING", "ERROR"]
+    # Compare to the elements specified.
+    arr = np.array(stat_ls)
+    last_few_elem = arr[-compare_to_last:]
+    final_converge_val = arr[-1]
+    avg = np.mean(last_few_elem)
+    pdiff = perc_diff(final_converge_val, avg)  # Returns a percentage, not a fraction.
+    if pdiff > max_perc_diff:
+        print(
+            f"[{alarm}] A percent difference of {pdiff:.3f}% between the final convergence value ({final_converge_val})\n"
+            f"  and the mean ({avg:.3f}) of the last {compare_to_last} fit values was found.\n"
+            f"  However, a maximum percent difference of {max_perc_diff:.3f}% was specified.\n"
+            f"  Subsequent fit values list:\n"
+            f"    {stat_ls}\n"
+            )
+        if alarm in "ERROR":
+            raise ValueError
+
+def get_bestfit_vals_from_statsdict(d, check_convergence=False):
+    """Return the best-fit mean, mean_err, std, std_err from a dict."""
+    if check_convergence:
+        raise RuntimeError("Jake, update this section!")
+        # check_fit_convergence(FIXME: put stuff here)
+    bf_mean     = d["mean_ls"][-1]
+    bf_mean_err = d["mean_err_ls"][-1]
+    bf_std      = d["std_ls"][-1]
+    bf_std_err  = d["std_err_ls"][-1]
+    return (bf_mean, bf_mean_err, bf_std, bf_std_err)

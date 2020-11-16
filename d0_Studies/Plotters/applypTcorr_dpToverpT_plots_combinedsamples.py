@@ -25,7 +25,7 @@ from ROOT import TFile, TH1F, TCanvas, gROOT, kTRUE, TLatex
 from Utils_Python.Utils_Files import makeDirs, make_str_title_friendly, check_overwrite
 from Utils_Python.Utils_Selections import Selector
 from Utils_Python.Utils_Physics import calc_dphi, calc_dR
-from Utils_Python.Plot_Styles_ROOT.tdrstyle_official import fixOverlay, setTDRStyle, tdrGrid
+from Utils_Python.Plot_Styles_ROOT.tdrstyle_official import setTDRStyle, tdrGrid
 
 from Utils_ROOT.ROOT_StatsAndFits import RooFit_iterative_gaus_fit
 from Utils_ROOT.ROOT_fns import (fill_dpToverpT_hist, make_hist_lookuptable, 
@@ -142,7 +142,7 @@ makeDirs(outdir_pkl)
 # Handle naming of files. 
 full_extra = (
     f"_{num_sigmas:.2f}sigmas"
-    f"__{min(eta_ls):.1f}_eta_{max(eta_ls):.1f}"
+    f"__{min(eta_ls)}_eta_{max(eta_ls)}"
     f"__{min(pT_ls):.1f}_pT_{max(pT_ls):.1f}_GeV"
 )
 full_extra = make_str_title_friendly(full_extra)
@@ -370,7 +370,7 @@ for h,h_corr in zip(HD.hist_dict.values(), HD_corr.hist_dict.values()):
     latex_str = sample_dict[HD.sample]["fancy_font"]["ROOT"]
     title_str = (
         f"MC {year} {latex_str}    binning=("
-        f"{h_name_parts[0]:.1f} < #left|#eta#right| < {h_name_parts[1]:.1f}    "
+        f"{h_name_parts[0]} < #left|#eta#right| < {h_name_parts[1]}    "
         )
     title_str += r"%.1f < p_{T} < %.1f GeV), " % (h_name_parts[2], h_name_parts[3])
     title_str += "fit_range=#mu#pm{:.2f}#sigma".format(num_sigmas)
@@ -384,6 +384,7 @@ for h,h_corr in zip(HD.hist_dict.values(), HD_corr.hist_dict.values()):
 
     x_roofit = ROOT.RooRealVar("x_roofit","x_roofit", -1.0, 1.0)
     xframe = x_roofit.frame(ROOT.RooFit.Title("Some title here?"))
+    raise RuntimeError("THIS CODE MUST BE UPDATED HERE. Update: RooFit_iterative_gaus_fit() in this script.")
     fit_stats_dict      = RooFit_iterative_gaus_fit(h,  x_roofit,    xframe, iters=iters, num_sigmas=num_sigmas, 
                                                 binned_data=do_binned_fit, draw_stats=draw_stats, 
                                                 only_draw_last=only_draw_last, 
@@ -411,8 +412,8 @@ for h,h_corr in zip(HD.hist_dict.values(), HD_corr.hist_dict.values()):
     latex_corr = ROOT.TLatex()
     latex.SetNDC()
     latex_corr.SetNDC()
-    latex.SetTextSize(0.013) 
-    latex_corr.SetTextSize(0.013) 
+    latex.SetTextSize(0.013)
+    latex_corr.SetTextSize(0.013)
     def shift_y(y, go_down):
         return y - go_down
     x_coord = 0.185
@@ -434,7 +435,6 @@ for h,h_corr in zip(HD.hist_dict.values(), HD_corr.hist_dict.values()):
     latex_corr.DrawText(x_coord, new_y, "mean  = %.5E +- %.5E" % (bestfit_mean_corr, bestfit_mean_err_corr))
     new_y = shift_y(new_y, go_down)
     latex_corr.DrawText(x_coord, new_y, "sigma = %.5E +- %.5E" % (bestfit_std_corr, bestfit_std_err_corr))
-    
 
     dict_of_fit_stats_dict[h.GetName()] = fit_stats_dict
     dict_of_fit_stats_dict[h_corr.GetName()] = fit_stats_dict_corr

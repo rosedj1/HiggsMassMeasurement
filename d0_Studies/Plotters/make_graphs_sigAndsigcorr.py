@@ -40,7 +40,7 @@ sample_str = r"$J/\psi$, DY"
 plt.style.use("/ufrc/avery/rosedj1/HiggsMassMeasurement/Utils_Python/Plot_Styles_Matplotlib/cmsstyle_plot.mplstyle")
 
 suffix   = (
-    f"__{min(eta_ls):.1f}eta{max(eta_ls):.1f}"
+    f"__{min(eta_ls)}eta{max(eta_ls)}"
     f"__{min(pT_ls):.1f}pT{max(pT_ls):.1f}_GeV"
 )
 suffix = make_str_title_friendly(suffix)

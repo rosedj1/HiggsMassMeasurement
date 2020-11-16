@@ -1,14 +1,33 @@
+/**
+This code produces a PDF which shows an m4mu distribution,
+before and after pT corrections have been applied per muon.
+This is part of the GeoFit study (also called "ad hoc pT correction").
+
+Both the uncorr and corr m4mu dists are then fit with DSCB
+functions. These are unbinned fits.
+The fit parameters are put on the plot.
+
+A root file is used as an input.
+Inside the root file, you should have a TTree with 2 branches:
+- m4mu and m4mu_corr
+
+Author: Jake Rosenzweig
+OG Date: 2020-07ish
+Updated: 2020-11-09
+**/
 #include "RooMyPDF_DSCB.h"
 #include "RooRealVar.h"
-
-// using namespace RooFit;
 
 void DSCB_fit_synchwithFilippo(Bool_t draw = false) {
 
 //----- User Params -----//
 Double_t m4mu_min = 105;
 Double_t m4mu_max = 140;
-string year = "2017";
+Int_t n_bins = 100;
+string year = "2018";
+string fs = "ggH";
+string derive_from_sample = "ggH"; // Sample from which pT corr factors were derived.
+bool plot_residuals = true;  // If false, then ratio of hists will be plotted.
 
 // This is the color of the fits.
 // The data points will be darker (+2).
@@ -24,8 +43,9 @@ Int_t color_marker_corr = color_line_corr + color_increm;
 if (!draw) gROOT->SetBatch();  // Do not draw plots to screen.
 
 // Open the file and set the TTree. 
-TString infile_path = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/root_files/MC2017_ggF_synchwithFilippo_basiccuts_usingFSR_absd0cut0p010.root";
-TString outfile_path = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/Plots/m4mu_DSCB_fits/MC2017_ggF_synchwithFilippo_basiccuts_usingFSR_absd0cut0p010_DSCBfits.pdf";
+// TString infile_path = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/root_files/MC2017_ggF_synchwithFilippo_basiccuts_usingFSR_absd0cut0p010.root";
+TString infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2018_m4mu_m4mucorr_vals_fullstats.root";
+TString outfile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/Plots/applypTcorrplots/MC2018_m4mu_ggH_DSCBfit.pdf";
 TFile* infile = TFile::Open(infile_path);
 
 TTree* tree;
@@ -51,8 +71,10 @@ Float_t ptr_m4mu;
 Float_t ptr_m4mu_corr;
 tree->SetBranchAddress("m4mu", &ptr_m4mu);
 tree->SetBranchAddress("m4mu_corr", &ptr_m4mu_corr);
-TH1D* h_m4mu = new TH1D("h_m4mu", "h_m4mu", 100, m4mu_min, m4mu_max);
-TH1D* h_m4mu_corr = new TH1D("h_m4mu_corr", "h_m4mu_corr", 100, m4mu_min, m4mu_max);
+TH1D* h_m4mu = new TH1D("h_m4mu", "h_m4mu", n_bins, m4mu_min, m4mu_max);
+TH1D* h_m4mu_corr = new TH1D("h_m4mu_corr", "h_m4mu_corr", n_bins, m4mu_min, m4mu_max);
+h_m4mu->Sumw2();
+h_m4mu_corr->Sumw2();
 for (int i = 0; i < n_tot; i++) {
 // for (int i = 0; i < 5000; i++) {
     tree->GetEntry(i);
@@ -100,11 +122,12 @@ TPad* pbot = new TPad("pbot", "pad ratio", 0.0, 0.0, 1.0, 0.25);
 // c_MC->SetFrameFillColor(0);
 // c_MC->cd(1)->SetBottomMargin(0.2);  // Moves bottom margin up to y_low = 0.2.
 // c_MC->SetLogy();
-
-TString title = Form("MC %s, Double-Sided CB Fit (Unbinned)", year.c_str());
+TString title1 = Form("%s MC %s, Unbinned Double-Sided CB Fit \n", fs.c_str(), year.c_str());
+TString title2 = "(using p_{T} corr. factors derived from %s muons)", derive_from_sample.c_str();
+TString title = title1 + title2;
 RooPlot* xframe = m4mu.frame(RooFit::Title(title));
 RooPlot* xframe_corr = m4mu_corr.frame(RooFit::Title(title));
-RooPlot* framePull = m4mu.frame(RooFit::Title("")); // Ratio plot
+RooPlot* framePull = m4mu.frame(RooFit::Title("")); // Ratio plot 
 RooPlot* framePull_corr = m4mu_corr.frame(RooFit::Title("")); // Ratio plot
 
 rds.plotOn(xframe, RooFit::MarkerColor(color_marker));
@@ -158,36 +181,57 @@ xframe_corr->Draw("same");
 // Add to ratio plots.
 pbot->cd();
 pbot->SetTicks(1,1);
-framePull->addObject((TObject*)xframe->pullHist(), "p");
-framePull_corr->addObject((TObject*)xframe_corr->pullHist(), "p");
 
-// TPad* padPull = new TPad("padPull", "padPull", 0., 0., 1., 0.2);
-// padPull->cd(2);
-// padPull->Draw();
+// On the lower pad, either plot the residuals or make a hist ratio.
 Float_t text_size_ratioplot = 0.10;
-framePull->GetXaxis()->SetLabelSize(text_size_ratioplot);
-framePull->GetYaxis()->SetLabelSize(text_size_ratioplot);
-framePull->GetXaxis()->SetTitleSize(text_size_ratioplot);
-framePull->GetYaxis()->SetTitleSize(text_size_ratioplot);
-framePull->SetTitle("");
-framePull->SetYTitle("Residuals");
-framePull->SetMinimum(-5.);
-framePull->SetMaximum(5.);
-framePull->SetNdivisions(207, "Y");
-framePull->getAttMarker()->SetMarkerColor(color_marker);
-framePull->Draw();
+if (plot_residuals) {
+    framePull->addObject((TObject*)xframe->pullHist(), "p");
+    framePull_corr->addObject((TObject*)xframe_corr->pullHist(), "p");
 
-framePull_corr->GetXaxis()->SetLabelSize(text_size_ratioplot);
-framePull_corr->GetYaxis()->SetLabelSize(text_size_ratioplot);
-framePull_corr->GetXaxis()->SetTitleSize(text_size_ratioplot);
-framePull_corr->GetYaxis()->SetTitleSize(text_size_ratioplot);
-framePull_corr->SetTitle("");
-framePull_corr->SetMinimum(-5.);
-framePull_corr->SetMaximum(5.);
-framePull_corr->SetTickLength(0.04, "XY");
-framePull_corr->getAttMarker()->SetMarkerColor(color_marker_corr);
-framePull_corr->Draw("same");
+    // TPad* padPull = new TPad("padPull", "padPull", 0., 0., 1., 0.2);
+    // padPull->cd(2);
+    // padPull->Draw();
+    framePull->GetXaxis()->SetLabelSize(text_size_ratioplot);
+    framePull->GetYaxis()->SetLabelSize(text_size_ratioplot);
+    framePull->GetXaxis()->SetTitleSize(text_size_ratioplot);
+    framePull->GetYaxis()->SetTitleSize(text_size_ratioplot);
+    framePull->SetTitle("");
+    framePull->SetYTitle("Residuals");
+    framePull->SetMinimum(-5.);
+    framePull->SetMaximum(5.);
+    framePull->SetNdivisions(207, "Y");
+    framePull->getAttMarker()->SetMarkerColor(color_marker);
+    framePull->Draw();
 
+    framePull_corr->GetXaxis()->SetLabelSize(text_size_ratioplot);
+    framePull_corr->GetYaxis()->SetLabelSize(text_size_ratioplot);
+    framePull_corr->GetXaxis()->SetTitleSize(text_size_ratioplot);
+    framePull_corr->GetYaxis()->SetTitleSize(text_size_ratioplot);
+    framePull_corr->SetTitle("");
+    framePull_corr->SetMinimum(-5.);
+    framePull_corr->SetMaximum(5.);
+    framePull_corr->SetTickLength(0.04, "XY");
+    framePull_corr->getAttMarker()->SetMarkerColor(color_marker_corr);
+    framePull_corr->Draw("same");
+} 
+else {
+    ratio->GetXaxis()->SetLabelSize(text_size_ratioplot);
+    ratio->GetYaxis()->SetLabelSize(text_size_ratioplot);
+    ratio->GetXaxis()->SetTitleSize(text_size_ratioplot);
+    ratio->GetYaxis()->SetTitleSize(text_size_ratioplot);
+    ratio->GetYaxis()->SetTitleOffset(0.3);  // Default is 0.005.
+    ratio->SetXTitle("m_{4#mu} (GeV)");
+    ratio->SetYTitle("corrected / uncorr.");
+    ratio->SetMinimum(0.);
+    ratio->SetMaximum(2.);
+    ratio->SetNdivisions(207, "Y");
+    ratio->GetXaxis()->SetTickLength(0.12);
+    ratio->SetLineColor(kGreen+2);
+    gStyle->SetOptStat(0);
+    ratio->Draw();
+}
+
+// Add a line at x = 1 onto ratio plot.
 TLine* lineRef = new TLine(105.,0.,140.,0.);
 lineRef->Draw("same");
 
