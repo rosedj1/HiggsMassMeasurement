@@ -13,18 +13,20 @@ Inside the root file, you should have a TTree with 2 branches:
 
 Author: Jake Rosenzweig
 OG Date: 2020-07ish
-Updated: 2020-11-09
+Updated: 2020-11-18
 **/
 #include "RooMyPDF_DSCB.h"
 #include "RooRealVar.h"
 
-void DSCB_fit_synchwithFilippo(Bool_t draw = false) {
+using namespace RooFit;
+
+void DSCB_fit_m4mu_beforeafterpTcorr(Bool_t draw = false) {
 
 //----- User Params -----//
 Double_t m4mu_min = 105;
 Double_t m4mu_max = 140;
 Int_t n_bins = 100;
-string year = "2018";
+string year = "2017";
 string fs = "ggH";
 string derive_from_sample = "ggH"; // Sample from which pT corr factors were derived.
 bool plot_residuals = true;  // If false, then ratio of hists will be plotted.
@@ -44,8 +46,8 @@ if (!draw) gROOT->SetBatch();  // Do not draw plots to screen.
 
 // Open the file and set the TTree. 
 // TString infile_path = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/root_files/MC2017_ggF_synchwithFilippo_basiccuts_usingFSR_absd0cut0p010.root";
-TString infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2018_m4mu_m4mucorr_vals_fullstats.root";
-TString outfile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/Plots/applypTcorrplots/MC2018_m4mu_ggH_DSCBfit.pdf";
+TString infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2017_m4mu_m4mucorr_vals_fullstats.root";
+TString outfile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/Plots/applypTcorrplots/CorrFromMCggH/MC2017_m4mu_ggH_DSCBfit_corrfromMC2017ggH.pdf";
 TFile* infile = TFile::Open(infile_path);
 
 TTree* tree;
@@ -123,7 +125,7 @@ TPad* pbot = new TPad("pbot", "pad ratio", 0.0, 0.0, 1.0, 0.25);
 // c_MC->cd(1)->SetBottomMargin(0.2);  // Moves bottom margin up to y_low = 0.2.
 // c_MC->SetLogy();
 TString title1 = Form("%s MC %s, Unbinned Double-Sided CB Fit \n", fs.c_str(), year.c_str());
-TString title2 = "(using p_{T} corr. factors derived from %s muons)", derive_from_sample.c_str();
+TString title2 = Form("(using p_{T} corr. factors derived from %s muons)", derive_from_sample.c_str());
 TString title = title1 + title2;
 RooPlot* xframe = m4mu.frame(RooFit::Title(title));
 RooPlot* xframe_corr = m4mu_corr.frame(RooFit::Title(title));
@@ -214,22 +216,22 @@ if (plot_residuals) {
     framePull_corr->getAttMarker()->SetMarkerColor(color_marker_corr);
     framePull_corr->Draw("same");
 } 
-else {
-    ratio->GetXaxis()->SetLabelSize(text_size_ratioplot);
-    ratio->GetYaxis()->SetLabelSize(text_size_ratioplot);
-    ratio->GetXaxis()->SetTitleSize(text_size_ratioplot);
-    ratio->GetYaxis()->SetTitleSize(text_size_ratioplot);
-    ratio->GetYaxis()->SetTitleOffset(0.3);  // Default is 0.005.
-    ratio->SetXTitle("m_{4#mu} (GeV)");
-    ratio->SetYTitle("corrected / uncorr.");
-    ratio->SetMinimum(0.);
-    ratio->SetMaximum(2.);
-    ratio->SetNdivisions(207, "Y");
-    ratio->GetXaxis()->SetTickLength(0.12);
-    ratio->SetLineColor(kGreen+2);
-    gStyle->SetOptStat(0);
-    ratio->Draw();
-}
+// else {
+//     ratio->GetXaxis()->SetLabelSize(text_size_ratioplot);
+//     ratio->GetYaxis()->SetLabelSize(text_size_ratioplot);
+//     ratio->GetXaxis()->SetTitleSize(text_size_ratioplot);
+//     ratio->GetYaxis()->SetTitleSize(text_size_ratioplot);
+//     ratio->GetYaxis()->SetTitleOffset(0.3);  // Default is 0.005.
+//     ratio->SetXTitle("m_{4#mu} (GeV)");
+//     ratio->SetYTitle("corrected / uncorr.");
+//     ratio->SetMinimum(0.);
+//     ratio->SetMaximum(2.);
+//     ratio->SetNdivisions(207, "Y");
+//     ratio->GetXaxis()->SetTickLength(0.12);
+//     ratio->SetLineColor(kGreen+2);
+//     gStyle->SetOptStat(0);
+//     ratio->Draw();
+// }
 
 // Add a line at x = 1 onto ratio plot.
 TLine* lineRef = new TLine(105.,0.,140.,0.);

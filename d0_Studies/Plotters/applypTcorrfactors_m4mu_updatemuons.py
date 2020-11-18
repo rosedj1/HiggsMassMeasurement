@@ -1,5 +1,9 @@
 """Muon pT Corrector
 
+NOTE: This script has been superceded by
+MuonCollection.extract_muons_from_Higgs_file().
+Per muon pT correction can be performed inside that function.
+
 Use a dictionary of pT correction factors
 to correct the muon pT for a dictionary of MyMuon objects.
 

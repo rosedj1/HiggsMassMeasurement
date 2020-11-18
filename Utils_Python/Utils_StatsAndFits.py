@@ -875,7 +875,7 @@ def prop_err_x_div_y(x, y, dx, dy):
 
 def prop_err_on_dsigoversig(sig1, sig2, sig_err1, sig_err2):
     """
-    Returns the error on (sig2 - sig1) / sig1.
+    Returns the error on (sig2 - sig1) / sig1 (as a fraction, not percentage).
 
     If we let: 
         r = (n - b) / b = n/b - 1

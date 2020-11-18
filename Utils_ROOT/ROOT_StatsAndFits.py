@@ -123,7 +123,7 @@ def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None,
     x_var = r.RooRealVar("x_var", x_label, x_min, x_max, units)  # (name, title, min, max, units)
     # x_var.setRange("test_range", x_min, x_max)
     mean = r.RooRealVar("mean","Mean of Gaussian", x_avg, x_min, x_max)
-    sigma = r.RooRealVar("sigma","Width of Gaussian", x_std, 0, 9999)
+    sigma = r.RooRealVar("sigma","Width of Gaussian", abs(x_std), 0, abs(x_std)*10)
     gauss = r.RooGaussian("gauss","The Gaussian Itself", x_var, mean, sigma)
     
     # Prepare appropriate RooFit data container.
@@ -173,6 +173,7 @@ def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None,
     if verbose:
         # result = gauss.fitTo(roodata, r.RooFit.Range(fit_x_min, fit_x_max))
         result = gauss.fitTo(roodata, r.RooFit.Range(fit_x_min, fit_x_max), r.RooFit.PrintLevel(3),
+        # r.RooFit.NumCPU(4, 3) # (num_cpus, strategy)  # This just hangs...
         # r.RooFit.Timer(True),
         # r.RooFit.BatchMode(True), # Compute batch of likelihood values. Computations are faster.
         # r.RooFit.Offset(True)
@@ -180,6 +181,7 @@ def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None,
         print(f"JAKE: find the fit range error2")
     else:
         result = gauss.fitTo(roodata, r.RooFit.Range(fit_x_min, fit_x_max), r.RooFit.PrintLevel(-1),
+        # r.RooFit.NumCPU(4, 3) # (num_cpus, strategy)  # This just hangs...
         # r.RooFit.Timer(True),
         # r.RooFit.BatchMode(True) # Compute batch of likelihood values. Computations are faster.
         )
@@ -243,8 +245,6 @@ def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None,
     #     gauss.plotOn(xframe,   r.RooFit.LineColor(line_color), r.RooFit.Range(fit_x_min, fit_x_max), r.RooFit.LineWidth(0))
 
     # Put fit stats on plot.
-    # text_y_min = 0.95 - 0.11*(count-1)  # In the top left corner of TCanvas("c","c",600,600).
-    # text_y_min = 0.92 - 0.11*(count-1)
     text_y_min = 0.88 - 0.11*(count-1)
     pave = r.TPaveText(0.13, text_y_min-0.11, 0.33, text_y_min, "NDC")
     pave.SetFillColor(0)

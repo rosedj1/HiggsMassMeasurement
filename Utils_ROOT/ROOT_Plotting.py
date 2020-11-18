@@ -1,4 +1,5 @@
 import ROOT as r
+from Utils_Python.Plot_Styles_ROOT.tdrstyle_official import setTDRStyle, tdrGrid
 
 def Root_Hist_GetLastBinRightEdge(hist):
     """Returns the right-most bin edge of a ROOT.TH1 object."""
@@ -70,3 +71,10 @@ def make_TPave(w, h, topright_corner_pos=(0.33, 0.62)):#, when="Before"):
     # pave.AddText(f"  #sigma = {sigma.getVal():.4g} #pm {sigma.getError():.4g}")
     # pave.AddText(r"  #chi^{2}/ndf = %.4g" % xframe.chiSquare())
     return pave
+
+def set_plot_styles(gridOn=True):
+    """Make your plots consistently pretty."""
+    # r.gROOT.SetBatch(r.kTRUE)
+    # Plotting info.
+    tdrStyle = setTDRStyle()
+    tdrGrid(tdrStyle, gridOn=gridOn)
