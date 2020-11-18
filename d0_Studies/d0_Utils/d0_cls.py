@@ -1173,7 +1173,7 @@ class KinBin2D:
             print(
                 f"...Analyzing KinBin{self.kinbin_dim}D: {self.get_bin_key()}...\n"
                 f"...which has {self.n_entries} muons.\n"
-                f"...Performing {iters} Gaussian fit iterations using RooFit..."
+                f"...Performing {iters} Gaussian fit iterations using RooFit...\n\n"
                 )
         # self.qd0_avg = self.calc_avg_qd0()
 
@@ -1184,10 +1184,10 @@ class KinBin2D:
 
         if use_mu_pT_corr:
             # Perform iter Gauss fit on corrected reco pT vals.
-            dpTOverpT_ls = [(mu.pT_corr - mu.gen_pT)/mu.gen_pT for mu in self.muon_ls]
+            dpTOverpT_corr_ls = [(mu.pT_corr - mu.gen_pT)/mu.gen_pT for mu in self.muon_ls]
 
             self.fit_stats_dict_dpTOverpT_corr, self.frame_dpTOverpT_corr = RooFit_iterative_gaus_fit(
-                                dpTOverpT_ls, 
+                                dpTOverpT_corr_ls, 
                                 binned_fit=False, switch_to_binned_fit=switch_to_binned_fit, 
                                 iters=iters, num_sigmas=num_sigmas, 
                                 n_bins=bins_dpTOverpT, x_lim=x_lim_dpTOverpT,

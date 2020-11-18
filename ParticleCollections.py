@@ -1,7 +1,9 @@
 import time
 import pickle
+import threading
 import ROOT as r
 from array import array
+from pprint import pprint
 # Local imports.
 from Utils_Python.Selections import build_muons_from_HZZ4mu_event
 from Utils_Python.Utils_Physics import calc_Hmass
@@ -294,6 +296,39 @@ class MyMuonCollection:
         If use_mu_pT_corr is True, then another set of iter Gauss fits
         is performed on the muon.pT_corr data.
         """
+        if verbose:
+            # Make a dict to record the KinBin2Ds which have been processed.
+            kb2d_checkdct = {key : "" for key in self.KinBin2D_dict.keys()}
+            print("...Performing iterated fits on the following KinBin2Ds:")
+            pprint(kb2d_checkdct)
+        
+        # arg_tup = (
+        #     bins_dpTOverpT, bins_qd0,
+        #     x_lim_dpTOverpT, x_lim_qd0,
+        #     fit_whole_range_first_iter,
+        #     iters, num_sigmas,
+        #     switch_to_binned_fit,
+        #     verbose, alarm_level,
+        #     use_mu_pT_corr, only_draw_last
+        #     )
+        # thread_ls = []
+
+        #--- Multithreading not yet implemented!
+        #--- Look into the 'multiprocessing' module.
+        ## Option 1: Start all threads at once. Join all at once.
+        # for kb2d in self.KinBin2D_dict.values():
+        #     thread_ls.append(threading.Thread(target=kb2d.do_itergausfit, args=arg_tup))
+        #     thread_ls[-1].start()
+        # for thread in thread_ls:
+        #     thread_ls.join()
+
+        ## Option 2: Start then join each thread.
+        # thread_ls = []
+        # for kb2d in self.KinBin2D_dict.values():
+            # thread_ls.append(threading.Thread(target=kb2d.do_itergausfit, args=arg_tup))
+            # thread_ls[-1].start()
+            # thread_ls[-1].join()
+
         for kb2d in self.KinBin2D_dict.values():
             kb2d.do_itergausfit(bins_dpTOverpT=bins_dpTOverpT, bins_qd0=bins_qd0,
                        x_lim_dpTOverpT=x_lim_dpTOverpT, x_lim_qd0=x_lim_qd0,
@@ -302,6 +337,10 @@ class MyMuonCollection:
                        switch_to_binned_fit=switch_to_binned_fit,
                        verbose=verbose, alarm_level=alarm_level,
                        use_mu_pT_corr=use_mu_pT_corr, only_draw_last=only_draw_last)
+            if verbose:
+                # Show which KB2Ds are completed.
+                kb2d_checkdct[kb2d.get_bin_key()] = "FITS COMPLETE"
+                pprint(kb2d_checkdct)
 
     def do_3D_iter_gaus_fits(self, bins_dpTOverpT=100, bins_qd0=100, 
                              x_lim_dpTOverpT=[-0.4,0.4], x_lim_qd0=[-0.01,0.01],
@@ -515,6 +554,7 @@ class MyMuonCollection:
                     ...
             }
         """
+        self.pT_corr_factor_dict = {}
         for kb2d in self.KinBin2D_dict.values():
             key = kb2d.get_bin_key(title_friendly=False)
             self.pT_corr_factor_dict[key] = {
@@ -523,14 +563,6 @@ class MyMuonCollection:
                 "slope"         : kb2d.slope_and_err[0],
                 "slope_err"     : kb2d.slope_and_err[1],
                 }
-
-    # DELETE BELOW
-    # def make_plots_beforeafterpTcorr(self):
-    #     """Per KinBin2D, store a TCanvas showing before/after pT corr."""
-    #     assert self.do_mu_pT_corr, "Has pT correction been performed?"
-    #     for kb2d in self.KinBin2D_dict.values():
-    #         kb2d.make_beforeafterpTcorr_canvas()
-    # DELETE ABOVE
 
     def collect_all_plots(self):
         """Stores all plots associated with this MuonCollection."""
@@ -554,6 +586,8 @@ class MyMuonCollection:
         """Write m4mu and m4mu_corr info to root file for DSCB fits, etc."""
         # New file, TTree, and TH1Fs.
         check_overwrite(outpath_rootfile, overwrite)
+        print(f"[INFO] Writing m4mu and m4mu_corr vals to root file:")
+        print(f"  {outpath_rootfile}")
         outf = r.TFile(outpath_rootfile, "recreate")
         newtree = r.TTree("tree", "tree_m4mu_vals")
 

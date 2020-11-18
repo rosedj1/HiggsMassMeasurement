@@ -1,9 +1,62 @@
-# Using ad hoc pT corrections to improve muon momentum resolution
+# Ad hoc pT corrections to improve muon momentum resolution
 
 ## Analysis Steps
 
-1. Use muons (from Drell-Yan, J/psi, Higgs decays, Upsilon samples, etc.) and bin the muons in eta and pT.
-2. For this analysis I used 
+1. Derive pT corrections by studying muons in different regions of phase space
+(|eta|, pT, q*d0).
+2. Apply the linear pT corrections per muon to see the improvement on dpT/pT
+and m4mu.
+
+### Step 1: Derive pT corrections
+
+Do:
+
+```bash
+python HiggsMassMeasurement/d0_Studies/d0_Analyzers/derive_pTcorrfactors_from_ggH_sample.py
+```
+
+- Make sure all the 'User Parameters' are correct for your purpose.
+
+For very big jobs... This script can take a _very_ long time.
+This is due to analyzing something like 12 eta
+bins, 13 pT bins, ~10 q*d0 bins and performing ~5 iterated Gaussian fits each
+(~7800 unbinned fits!).
+To get around this, you can break the job up in several jobs, where each job
+will work on a single eta bin:
+
+```bash
+# So modify and run this script:
+HiggsMassMeasurement/d0_Studies/d0_Analyzers/submit_to_slurm_inbatch.py
+# which will call this script, so check the parameters beforehand.
+HiggsMassMeasurement/d0_Studies/d0_Analyzers/derive_pTcorrfactors_from_ggH_sample_template.py
+```
+
+Your pT correction factors should be saved in `.pkl` files.
+
+- If you have individual `.pkl` files (say one for each eta bin),
+then you can combine them into a single **combined pT corr factor** `.pkl` by:
+
+```bash
+python HiggsMassMeasurement/d0_Studies/d0_Analyzers/merge_pT_corr_dcts.py
+```
+
+### Step 2: Apply pT corrections
+
+Run the script:
+
+```bash
+python HiggsMassMeasurement/d0_Studies/Plotters/plot_m4mu_kinematics_withpTcorr_MC2017ggH.py
+```
+
+- This script can make a root file which contains m4mu and m4mu_corr vals.
+  - Then a DSCB script can be run: 
+
+---
+
+## Aternative method: Deriving and applying corrections from DY and J/psi samples using Vaex
+
+1. Use muons (from Drell-Yan, J/psi, Upsilon samples, etc.) and bin the muons in eta and pT.
+2. For this analysis I used:
 
 `HiggsMassMeasurement/d0_Studies/Plotters_vaex/make_pdf_qd0_hists_multiplesamples_etapTbins.py`
 

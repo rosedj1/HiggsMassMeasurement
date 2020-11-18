@@ -20,11 +20,11 @@ import os
 #-----------------------#
 #--- User Parameters ---#
 #-----------------------#
-template_main_script = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/derive_pTcorrfactors_from_ggF_sample_template.py"
+template_main_script = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/derive_pTcorrfactors_from_ggH_sample_template.py"
 template_slurm_script = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/submit_derive_bigmem_template.sbatch"
 
-# full_eta_ls = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.25, 1.5, 1.75, 2.0, 2.1, 2.2, 2.3, 2.4]
-full_eta_ls = [1.5, 1.75, 2.0]
+full_eta_ls = [0.00, 0.20, 0.40, 0.60, 0.80, 1.00, 1.25, 1.50, 1.75, 2.00, 2.10, 2.20, 2.30, 2.40]
+# full_eta_ls = [1.5, 1.75, 2.0]
 
 delete_copies = False
 #------------------------#
@@ -41,7 +41,7 @@ def replace_value(old, new, script):
     cmd = ["sed", "-i", f"s|{old}|{new}|g", script]
     output = subprocess.run(cmd)
 
-def make_new_files(eta_ls):
+def make_new_files(eta_ls, template_main_script, template_slurm_script):
     """Use eta_ls in string form to name files, make copies, and return the new names."""
     eta_name = make_eta_name(eta_ls)
     suffix = f"_{eta_name}.py"
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     for eta_min,eta_max in zip(full_eta_ls[:-1], full_eta_ls[1:]):
         eta_ls = [eta_min, eta_max]
         print(f"[INFO] Making copies of scripts and submitting SLURM script for eta range: {eta_ls}")
-        new_main, new_slurm = make_new_files(eta_ls)
+        new_main, new_slurm = make_new_files(eta_ls, template_main_script, template_slurm_script)
         submit_slurm_script(new_main, new_slurm, eta_ls)
         if delete_copies:
             print(f"[INFO] Removing copies of scripts.")
