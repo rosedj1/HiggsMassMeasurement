@@ -5,24 +5,50 @@ import numpy as np
 import ROOT as r
 from array import array
 
-class HitPlotOrg:
+
+
+class MuonTrack:
     """
     This class represents a muon trajectory.
     """
 
-    def __init__(self, pT, position_ls):
-        """Plot and fit the muon track."""
-        self.pT_true = pT
-        self.position_ls = position_ls 
-        self.n_hits = len(position_ls)
+    def __init__(self, pT, hits_ls, yerr_ls, shift_yvals=(True, 0.01)):
+        """Plot and fit the muon track.
         
+        hits_ls : list
+            The x-vals of hits in Tracker layers (cm).
+        yerr_ls : list
+            The uncertainties on the y-vals (um).
+        shift_yvals : 2-tuple (bool, float)
+            The random Gaussian shift in y-vals of each hit.
+            The float is the sigma of the Gaussian (cm)
+        """
+        self.pT_true = pT
+        self.hits_ls = hits_ls       # x-vals of Tracker/Pixel hits.
+        self.n_hits = len(hits_ls)
+        self.xerr_ls = None
+        self.yerr_ls = np.array(yerr_ls) / 10000. # Uncertainty on y-vals. Convert to cm.
+        self.smear = shift_yvals[0]  # 
+        self.sigma = shift_yvals[1]  # sigma from Gaussian used to shift y-val.
+
+        # Since we know true pT, we know what true track should look like.
         self.a_true = self.convert_pT_to_a(pT)
+        self.y_vals = self.find_parabolic_y_vals(self.a_true, hits_ls)
+        self.y_vals_smear = self.smear_hits(sigma=self.sigma)
+
+        # Beam spot info.
+        self.constrain_to_BS = False
+        
         self.a_fit = None
         self.a_fit_err = None
-        self.d0 = None
+        self.d0 = None      # Same as p0 from fit.
+        self.d0_err = None 
+
+        self.a_fit_BS = None
+        self.a_fit_BS_err = None
+        self.d0_BS = None      # Same as p0 from fit.
+        self.d0_BS_err = None 
         self.pT_fit = None
-        self.y_vals = None
-        self.y_vals_smear = None
         
         self.dpTOverpT = None
         self.daOvera = None
@@ -42,7 +68,8 @@ class HitPlotOrg:
         
         Returns `a` in cm^(-1).
         """
-        return 0.3 * abs(q) * B / float(2.0 * pT * 100)
+        # Factor of 100 to go from m^(-1) to cm^(-1).
+        return 0.3 * abs(q) * B / float(2.0 * pT * 100.)
     
     def convert_a_to_pT(self, a, q=-1, B=3.8):
         """
@@ -50,7 +77,7 @@ class HitPlotOrg:
         Assumes a is in cm^(-1).
         Returns pT in GeV/c.
         """
-        return 0.3 * abs(q) * B / float(2.0 * a * 100)
+        return 0.3 * abs(q) * B / float(2.0 * a * 100.)
     
     def calc_daOvera(self):
         """Return (a_fit - a_true) / a_true."""
@@ -62,65 +89,95 @@ class HitPlotOrg:
         
     def find_parabolic_y_vals(self, a, x_arr):
         """Return the y-values, assuming a parabolic trajectory."""
+        x_arr = np.array(x_arr)
         return a * x_arr**2
     
-    def plot_hit_trajectory(self, leg=None, color=1, smear=False, sigma=0.01):
+    def add_BS(self, pos=(0,0), bs_unc_y=10):
+        """Add the BS info to start of list of hits, y-vals, and y-errors.
+        
+        pos : 2-tuple
+            Location of BS. 
+            (x-val, y-val) in cm
+        bs_unc_y : float
+            The y-uncertainty on the BS in um.
         """
-        Draw the muon track as it hits the Pixel and Strip layers.
+        self.constrain_to_BS = True
+        bs_xval, bs_yval = pos[0], pos[1]
+        self.hits_ls = [bs_xval] + self.hits_ls
+        self.y_vals = [bs_yval] + self.y_vals
+        self.yerr_ls = [bs_unc_y] + self.yerr_ls
+
+    def plot_trajectory(self, leg=None, color=1):
+        """
+        Draw a TGraph with the muon track as it hits the Pixel/Strip layers.
         Return (TGraph, TLegend) tuple.
+
+        Parameters
+        ----------
+        sigma : float
+            The uncertainty (cm) on all y-vals.
         """
         # Add to the legend.
         if leg is None:
-            leg = r.TLegend()
-        leg_text = r"p_{T} = %.0f GeV" % self.pT_true
+            leg = r.TLegend(0.15, 0.50, 0.45, 0.65)
+            # leg = r.TLegend()
+        leg_text = r"p_{T}^{gen} = %.0f GeV" % self.pT_true
             
-        n_pts = len(self.position_ls)
+        n_pts = len(self.hits_ls)
         
         # Use y = a*x^2 to model the trajectory of the muon.
         # For high pT this is reasonable. 
         # Radius of curvature goes like: R = 1 / (2*a)
-        x_vals = np.array(self.position_ls)
-        y_vals = self.find_parabolic_y_vals(self.a_true, x_vals)
-        self.y_vals = y_vals.copy()  # self.y_vals will get smear later. 
+        x_vals = np.array(self.hits_ls)
+        y_vals = self.y_vals
+        # y_vals = self.find_parabolic_y_vals(self.a_true, x_vals)
+        # self.y_vals = y_vals.copy()  # self.y_vals will get smear later. 
         
         # Then convert them to array.arrays afterward.
         x_arr = array('f', x_vals)
         
-        graph_title = "Hits along muon path"
-        if (smear):
-            graph_title += " (y-val smeared)"
-            leg_text += " (y-val smeared)"
-            self.y_vals_smear = self.smear_hits(sigma=sigma)
+        graph_title = r" Muon trajectory for %s" % leg_text
+        if self.smear:
+            toppiece = graph_title
+            botpiece = r"y-vals shifted by G(#mu=0, #sigma=%.4g #mum)" % (self.sigma * 1E4)
+            graph_title  = r"#splitline{%s}{%s}" % (toppiece, botpiece)
             y_arr = array('f', self.y_vals_smear)
         else:
             y_arr = array('f', y_vals)
 
         # Make the graph.
-        gr = r.TGraph(n_pts, x_arr, y_arr)
+        xerr_arr = array('f', np.zeros_like(self.yerr_ls)) if self.xerr_ls is None else array('f', self.xerr_ls)
+        yerr_arr = array('f', self.yerr_ls)
+        gr = r.TGraphErrors(n_pts, x_arr, y_arr, xerr_arr, yerr_arr)
+        # Clean up the title a bit.
+        toppiece = graph_title
+        str_err_ls = ', '.join([r"%.0f"%x for x in yerr_arr])
+        botpiece = r"#sigma_{y} = [%s] #mum" % str_err_ls
+        graph_title  = r"#splitline{%s}{%s}" % (toppiece, botpiece)
+        # Pretty up the graph.
         gr.SetLineColor(color)
         gr.SetLineWidth(1)
         gr.SetMarkerColor(color)
         gr.SetMarkerStyle( 21 )
         gr.SetTitle(graph_title)
-        gr.GetXaxis().SetTitle('Transverse Pixel/Strip Positions [cm]')
-        gr.GetYaxis().SetTitle('Distance from x-axis [cm]')
+        gr.GetXaxis().SetTitle('Transverse Pixel/Strip Positions (x) (cm)')
+        gr.GetYaxis().SetTitle('y (cm)')
         gr.GetYaxis().SetTitleOffset(1.5)
-        
-        leg.AddEntry(gr, leg_text, "lp")
-#         leg.SetTextColor(color)
-        return gr, leg
+        return (gr, leg)
 
     def smear_hits(self, sigma=0.01):
         """
-        Return the y-value of each hit after adding a small Gaussian uncertainty.
-        By default, sigma of Gaus is 100 um = 0.01 cm (since positions are measured in cm).
+        Return the y-value of each hit in vals after adding a small Gaussian 
+        uncertainty. 
+        
+        sigma should be given in cm.
+        By default, sigma of Gaus is 100 um = 0.01 cm (since 
+        positions are measured in cm).
         """
         smears = np.random.normal(loc=0, scale=sigma, size=self.n_hits)
-#         rng = np.random.default_rng(1)
-#         smears = rng.normal(loc=0, scale=sigma, size=self.n_hits)
         return self.y_vals + smears
 
-    def fit_hits_pol2(self, graph):
+    def fit_hits_pol2(self, graph, color=2):
         """Return the pol2 fit parameters for a set of (x,y) coordinates.
         
         Parameters
@@ -133,38 +190,45 @@ class HitPlotOrg:
         fit_func : TF1
             The fitting function whose best-fit parameters are obtained from `graph`.
         """
-        x_min = min(self.position_ls) 
-        x_max = max(self.position_ls)
-        fit_func = r.TF1('f1', '[0]+[1]*x+[2]*x^2', x_min, x_max)
-        fit_func.SetLineColor(1)
+        x_min = min(self.hits_ls) 
+        x_max = max(self.hits_ls)
+        fit_func = r.TF1(f'f1_{graph.GetName()}', '[0]+[1]*x+[2]*x^2', x_min, x_max)
+        fit_func.SetLineColor(color)
         fit_func.SetLineWidth(2)
         fit_func.SetLineStyle(2)
         # Fit it onto a histogram `h1`:
-        graph.Fit(fit_func,'S')
+        result = graph.Fit(fit_func,'S')
         # The option 'S' saves the fit results into a pointer.
         r.gStyle.SetOptFit(111)
         
         self.set_fit_vals(fit_func)
         
-        return fit_func
+        return (fit_func, result)
     
     def set_fit_vals(self, fit_func):
         """Check that the best-fit params are reasonable and set attributes."""
-        self.a_fit = fit_func.GetParameter(2)
-        self.a_fit_err = fit_func.GetParError(2)
-        self.d0 = fit_func.GetParameter(0)
-        assert self.a_fit is not None
-        assert self.a_fit_err is not None
+        a_fit = fit_func.GetParameter(2)
+        a_fit_err = fit_func.GetParError(2)
+        d0 = fit_func.GetParameter(0)
+        d0_err = fit_func.GetParError(0)
+        assert a_fit is not None
+        assert a_fit_err is not None
         
         self.pT_fit = self.convert_a_to_pT(self.a_fit)
         self.dpTOverpT = self.calc_dpTOverpT()
         self.daOvera = self.calc_daOvera()
 
+        # May need to set: self.a_fit, self.a_fit_err, self.d0
+
+        return ()
+
+
+
 class BiasPlotter:
-    def __init__(self, pT, position_ls, smear=True):
+    def __init__(self, pT, hits_ls, smear=True):
         """Toss n_toys to test the theoretical bias of da/a or dpT/pT vs. d0."""
         self.pT = pT
-        self.position_ls = position_ls
+        self.hits_ls = hits_ls
         self.smear = smear
         
         # Attribute which will eventually be filled.
@@ -181,7 +245,7 @@ class BiasPlotter:
         dpTOverpT_ls = []
         
         for n in range(n_toys):
-            hitplotorg = HitPlotOrg(pT=self.pT, position_ls=self.position_ls)
+            hitplotorg = HitPlotOrg(pT=self.pT, hits_ls=self.hits_ls)
             gr_smear, leg_smear = hitplotorg.plot_hit_trajectory(smear=self.smear)
             fit_func = hitplotorg.fit_hits_pol2(gr_smear)
             # Append new values. 

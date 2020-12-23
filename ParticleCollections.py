@@ -5,13 +5,13 @@ import ROOT as r
 from array import array
 from pprint import pprint
 # Local imports.
-from Utils_Python.Selections import build_muons_from_HZZ4mu_event
+from Utils_Python.Selections import build_muons_from_HZZ4mu_event, build_muons_from_Hmumu_event
 from Utils_Python.Utils_Physics import calc_Hmass
 from Utils_Python.Utils_Files import check_overwrite
 from d0_Studies.d0_Utils.d0_cls import KinBin2D
 from d0_Studies.d0_Utils.d0_fns import (correct_muon_pT, parse_etapT_key,
                                        get_binedges_from_keys, make_key_from_binedges)
-from d0_Utils.d0_fns import find_bin_edges_of_value
+from d0_Utils.d0_fns import find_bin_edges_of_value, print_header_message
 
 class MyMuonCollection:
     """A class to handle a list of MyMuon objects."""
@@ -21,6 +21,7 @@ class MyMuonCollection:
         self.muon_ls = []
         self.m4mu_ls = []
         self.m4mu_corr_ls = []
+        # self.m4mu_corr_geofit_ls = []
 
         self.KinBin2D_dict = {}
         self.pT_corr_factor_dict = None
@@ -30,17 +31,23 @@ class MyMuonCollection:
         self.hist_inclusive_ls = []  # All muons in same plot.
         self.kinbin2d_plot_ls = []   # dpTOverpT vs. qd0 plots.
         self.kinbin3d_plot_ls = []   # KinBin3D distributions, like qd0 and dpTOverpT.
+        self.multigraph_ls = []
+        self.multigraph_leg_ls = []
 
     def get_prod_modes_str(self):
         """Return a title string of all the production modes of the muons."""
         return ', '.join(self.prod_mode_ls)
 
-    def extract_muons_from_Higgs_file(self, infile_path, n_evts=-1, print_out_every=10000,
+    def extract_muons_from_H4mu_file(self, infile_path, n_evts=-1, print_out_every=10000,
+                                      eta_min=0.0, eta_max=2.4,
+                                      pT_min=5, pT_max=1000,
+                                      d0_max=1,
                                       do_mu_pT_corr=False, 
                                       pT_corr_factor_dict=None,
+                                      use_GeoFit_algo=False,
                                       verbose=False):
         """Fill self.muon_ls with all MyMuon muons from infile_path
-        which pass Higgs selections. Also fills self.m4mu_ls per event.
+        which pass H->ZZ->4mu selections. Also fills self.m4mu_ls per event.
         
         If do_mu_pT_corr, then use pT_corr_factor_dict to
         correct the per muon pT.
@@ -75,9 +82,13 @@ class MyMuonCollection:
         verbose : bool
             Print juicy debug info.
         """
+        self.sample = r"H #rightarrow ZZ #rightarrow 4#mu"
+
         if do_mu_pT_corr:
             self.do_mu_pT_corr = True
-
+            if use_GeoFit_algo:
+                msg = "Using GeoFit Correction Algorithm"
+                print_header_message(msg, pad_char="@", n_center_pad_chars=5)
         print(f"...Opening root file:\n{infile_path}")
         f = r.TFile(infile_path, "read")
         t = f.Get("Ana/passedEvents")
@@ -93,43 +104,181 @@ class MyMuonCollection:
                 print(f"  Running over evt: {evt_num}")
             # Check if this event passes Higgs selections.
             # Build the 4 MyMuons from the event.
-            mu_tup = build_muons_from_HZZ4mu_event(t, evt_num)
+            mu_tup = build_muons_from_HZZ4mu_event(t, evt_num,
+                                                  eta_bin=[eta_min, eta_max],
+                                                  pT_bin=[pT_min, pT_max],
+                                                  d0_max=d0_max)
             if None in mu_tup: 
                 continue
 
             if do_mu_pT_corr:
                 # Correct each muon's pT according to the
-                # ad hoc pT correction factors.
+                # ad hoc pT correction factors given.
                 # Save the muons with old and new pTs.
                 if pT_corr_factor_dict is None:
                     pT_corr_factor_dict = self.pT_corr_factor_dict
                 assert pT_corr_factor_dict is not None
                 corr_mu_ls = []
+                # corr_mu_geofit_ls = []
                 for mu in mu_tup:
                     # For all 4 muons in this event, correct the muon pT.
                     # Then evaluate the m4mu_corr for this event.
                     mu.pT_corr = correct_muon_pT(
                         mu.eta, mu.pT, mu.charge, mu.d0, 
                         pT_corr_factor_dict, detection="auto",
-                        verbose=verbose
-                    )
+                        use_GeoFit_algo=use_GeoFit_algo,
+                        print_all_muon_info=False,
+                        verbose=verbose)
                     lorentzvec_mu_corr = r.Math.PtEtaPhiMVector(mu.pT_corr, mu.eta, mu.phi, mu.mass)
                     corr_mu_ls.append(lorentzvec_mu_corr)
+
+                    # if use_GeoFit_algo:
+                    #     mu.pT_corr_geofit = correct_muon_pT(
+                    #         mu.eta, mu.pT, mu.charge, mu.d0, 
+                    #         pT_corr_factor_dict, detection="auto",
+                    #         use_GeoFit_algo=True,
+                    #         verbose=verbose)
+                    #     lorentzvec_mu_corr_geofit = r.Math.PtEtaPhiMVector(mu.pT_corr_geofit, mu.eta, mu.phi, mu.mass)
+                    #     corr_mu_geofit_ls.append(lorentzvec_mu_corr_geofit)
                 assert len(corr_mu_ls) == 4
-                m4mu_corr = calc_Hmass(*corr_mu_ls)
+                m4mu_corr = calc_Hmass(corr_mu_ls)
                 self.m4mu_corr_ls.append(m4mu_corr)
+                # if use_GeoFit_algo:
+                #     m4mu_corr_geofit = calc_Hmass(corr_mu_geofit_ls)
+                #     self.m4mu_corr_geofit_ls.append(m4mu_corr_geofit)
 
             # Add the good muons to the final muon list.
             self.muon_ls.extend(mu_tup)
             # Save the m4mu info.
             lorentzvector_mu_ls = [mu.get_LorentzVector("reco") for mu in mu_tup]
-            m4mu = calc_Hmass(*lorentzvector_mu_ls)
+            m4mu = calc_Hmass(lorentzvector_mu_ls)
             self.m4mu_ls.append(m4mu)
         # End evt loop.
         assert len(self.muon_ls) > 0, "[ERROR] No muons were found!"
         assert len(self.muon_ls) / len(self.m4mu_ls) == 4
         if do_mu_pT_corr:
             assert len(self.m4mu_ls) == len(self.m4mu_corr_ls)
+
+    def extract_muons_from_Hmumu_file(self, infile_path, n_evts=-1, print_out_every=10000,
+                                      eta_min=0.0, eta_max=2.4,
+                                      pT_min=20, pT_max=1000,
+                                      d0_max=1,
+                                      do_mu_pT_corr=False, 
+                                      pT_corr_factor_dict=None,
+                                      use_GeoFit_algo=False,
+                                      verbose=False):
+        """Fill self.muon_ls with all MyMuon muons from infile_path
+        which pass certain selections. Also fills self.m4mu_ls per event.
+
+        NOTE: 
+        - self.m4mu_ls in this case is actually m2mu_ls
+        - If do_mu_pT_corr, then use pT_corr_factor_dict to
+        correct the per muon pT.
+
+        Parameters
+        ----------
+        infile_path : str
+            Absolute file path to root file.
+        n_evts : int
+            Number of events to scan over.
+            Default of `-1` runs over all events.
+        print_out_every : int
+            Show which event number is being processed in batches
+            of `print_out_every`.
+        do_mu_pT_corr : bool
+            If True, perform muon pT correction based on ad hoc d0 studies.
+            If no pT_corr_factor_dict is given, will default to
+            self.pT_corr_factor_dict.
+        pT_corr_factor_dict : dict, optional
+            Example:
+            {'1.25eta1.5_75.0pT100.0': {
+                'intercept': 0.0035652354181878324,
+                'intercept_err': 0.0017553367492442711,
+                'slope': 8.787601605129735,
+                'slope_err': 1.6856807294196279},
+            '1.25eta1.5_100.0pT1000.0': {
+                'intercept': 0.002248465529246451,
+                'intercept_err': 0.002921444195364061,
+                'slope': 14.523473508569932,
+                'slope_err': 3.4317499063149564}
+            }
+        verbose : bool
+            Print juicy debug info.
+        """
+        self.sample = r"H #rightarrow #mu#mu"
+        if do_mu_pT_corr:
+            self.do_mu_pT_corr = True
+
+        print(f"...Opening root file:\n{infile_path}")
+        f = r.TFile(infile_path, "read")
+        t = f.Get("passedEvents")
+
+        all_evts = t.GetEntries()
+        if n_evts == -1:
+            n_evts = all_evts
+        print(f"...Running over {n_evts} events...")
+
+        # Event loop.
+        for evt_num in range(n_evts):
+            if evt_num % print_out_every == 0:
+                print(f"  Running over evt: {evt_num}")
+            # Check if this event passes H->2mu selections.
+            # Build the 2 MyMuons from the event.
+            mu_tup = build_muons_from_Hmumu_event(t, evt_num,
+                                                  eta_bin=[eta_min, eta_max],
+                                                  pT_bin=[pT_min, pT_max],
+                                                  d0_max=d0_max)
+            if None in mu_tup: 
+                continue
+
+            if do_mu_pT_corr:
+                # Correct each muon's pT according to the
+                # ad hoc pT correction factors given.
+                # Save the muons with old and new pTs.
+                if pT_corr_factor_dict is None:
+                    pT_corr_factor_dict = self.pT_corr_factor_dict
+                assert pT_corr_factor_dict is not None
+                corr_mu_ls = []
+                # corr_mu_geofit_ls = []
+                for mu in mu_tup:
+                    # For both muons in this event, correct the muon pT.
+                    # Then evaluate the m4mu_corr for this event.
+                    mu.pT_corr = correct_muon_pT(
+                        mu.eta, mu.pT, mu.charge, mu.d0, 
+                        pT_corr_factor_dict, detection="auto",
+                        use_GeoFit_algo=use_GeoFit_algo,
+                        verbose=verbose)
+                    lorentzvec_mu_corr = r.Math.PtEtaPhiMVector(mu.pT_corr, mu.eta, mu.phi, mu.mass)
+                    corr_mu_ls.append(lorentzvec_mu_corr)
+
+                    # if use_GeoFit_algo:
+                    #     mu.pT_corr_geofit = correct_muon_pT(
+                    #         mu.eta, mu.pT, mu.charge, mu.d0, 
+                    #         pT_corr_factor_dict, detection="auto",
+                    #         use_GeoFit_algo=True,
+                    #         verbose=verbose)
+                    #     lorentzvec_mu_corr_geofit = r.Math.PtEtaPhiMVector(mu.pT_corr_geofit, mu.eta, mu.phi, mu.mass)
+                    #     corr_mu_geofit_ls.append(lorentzvec_mu_corr_geofit)
+                assert len(corr_mu_ls) == 2
+                m4mu_corr = calc_Hmass(corr_mu_ls)
+                self.m4mu_corr_ls.append(m4mu_corr)
+                # if use_GeoFit_algo:
+                #     m4mu_corr_geofit = calc_Hmass(corr_mu_geofit_ls)
+                #     self.m4mu_corr_geofit_ls.append(m4mu_corr_geofit)
+
+            # Add the good muons to the final muon list.
+            self.muon_ls.extend(mu_tup)
+            # Save the m4mu info.
+            lorentzvector_mu_ls = [mu.get_LorentzVector("reco") for mu in mu_tup]
+            m4mu = calc_Hmass(lorentzvector_mu_ls)
+            self.m4mu_ls.append(m4mu)
+        # End evt loop.
+        self.m2mu_ls = self.m4mu_ls
+        self.m2mu_corr_ls = self.m4mu_corr_ls
+        assert len(self.muon_ls) > 0, "[ERROR] No muons were found!"
+        assert len(self.muon_ls) / len(self.m2mu_ls) == 2
+        if do_mu_pT_corr:
+            assert len(self.m2mu_ls) == len(self.m2mu_corr_ls)
 
     def sort_muons(self, eta_ls=None, pT_ls=None,
                    pT_corr_factor_dict=None,
@@ -582,11 +731,92 @@ class MyMuonCollection:
         self.kinbin3d_plot_ls.extend([kb3d.h_qd0 for kb2d in self.KinBin2D_dict.values() for kb3d in kb2d.KinBin3D_dict.values()])
         # self.kinbin3d_plot_ls.extend([kb3d.frame_qd0 for kb2d in self.KinBin2D_dict.values() for kb3d in kb2d.KinBin3D_dict.values()])
 
-    def write_m4muinfo_to_rootfile(self, outpath_rootfile, overwrite=False):
+    def make_multigraph(self, eta_min, eta_max):
+        """Combine all KinBin2D TGraphs of a given eta bin into one plot."""
+        mg = r.TMultiGraph(f"{eta_min}eta{eta_max}","")
+        mg.SetMinimum(-0.04)
+        mg.SetMaximum(0.04)
+        # gr_ls = [kb2d. for kb2d in self.KinBin2D_dict.values()]
+        # for ct,gr in enumerate(gr_ls, 1):
+        ct = 0
+        for kb2d in self.KinBin2D_dict.values():
+            # Only add the KinBin2Ds within this eta bin.
+            if (eta_min != kb2d.eta_min) or (eta_max != kb2d.eta_max):
+                continue
+            ct += 1
+            gr = kb2d.gr_dpTOverpT_vs_qd0
+            gr.fit_line = kb2d.fit_line
+            gr.eta_min = eta_min
+            gr.eta_max = eta_max
+            gr.pT_min = kb2d.pT_min
+            gr.pT_max = kb2d.pT_max
+            if ct == 1:
+                x_label = gr.GetXaxis().GetTitle()
+                y_label = gr.GetYaxis().GetTitle()
+                title  = r"#splitline{Ad hoc p_{T} corrections derived from %s}" % self.sample
+                title += r"{%.2f < #left|#eta#right| < %.2f}" % (eta_min, eta_max)
+                all_titles = r"%s;%s;%s" % (title, x_label, y_label)
+                mg.SetTitle(all_titles)
+            color = ct
+            if color >= 5:
+                # Avoid obnoxious yellow.
+                color += 1
+            gr.SetMarkerColor(color)
+            gr.SetLineColor(color)
+            gr.fit_line.SetLineColor(color)
+            gr.fit_line.text_color = color
+            # The `0` allows for error bars outside of range to still plot.
+            # The `p` plots the points.
+            mg.Add(gr, "0p")
+        self.multigraph_ls.append(mg)
+
+    def draw_mg_and_fits(self, mg):
+        """Draw the multigraph and then all corresponding fit lines."""
+        gr_ls = list(mg.GetListOfGraphs())
+        fitline_ls = [gr.fit_line for gr in gr_ls]
+        assert len(gr_ls) == len(fitline_ls)
+
+        # Add box for all fit stats.
+        n_graphs = len(gr_ls)
+        # Give each graph text on TPaveStats height of 0.05.
+        gr_height = 0.04
+        max_height = n_graphs * gr_height
+        y_max = 0.88
+        y_min = y_max - max_height
+        pave = r.TPaveText(0.12, y_min, 0.51, y_max, "NDC")  # NDC = normalized coord.
+        pave.SetFillColor(0)
+        pave.SetFillStyle(1001)  # Solid fill = 1001.
+        pave.SetBorderSize(1) # Use 0 for no border.
+        pave.SetTextAlign(11) # 11 is against left side, 22 is centered vert and horiz.
+        pave.SetTextSize(0.015)
+
+        # Don't show stats box on multigraph.
+        r.gStyle.SetOptStat(0)
+        r.gStyle.SetOptFit(0)
+        # Draw all graphs at once using TMultiGraph.
+        mg.Draw("a")
+        r.gPad.Modified()  # Necessary to change multigraph's x-axis.
+        mg.GetXaxis().SetLimits(-0.005, 0.005)
+        # Draw fit lines.
+        # Turn stats box back on.
+        # r.gStyle.SetOptStat("iouRMe")
+        # r.gStyle.SetOptFit(1)
+        for fit,gr in zip(fitline_ls, gr_ls):
+            interc = fit.GetParameter(0)
+            slope = fit.GetParameter(1)
+            eqn  = r"%.0f < p_{T} < %.0f GeV: " % (gr.pT_min, gr.pT_max)
+            eqn += r"#Deltap_{T}/p_{T} = %.3E + (%.3f/cm)*qd_{0}" % (interc, slope)
+            txt = pave.AddText(eqn)
+            txt.SetTextColor(fit.text_color)
+            fit.Draw("same")
+        pave.Draw("same")
+        self.multigraph_leg_ls.append(pave)
+
+    def write_m4muinfo_to_rootfile(self, outpath_rootfile, overwrite=False):#, write_geofit_vals=False, ):
         """Write m4mu and m4mu_corr info to root file for DSCB fits, etc."""
         # New file, TTree, and TH1Fs.
         check_overwrite(outpath_rootfile, overwrite)
-        print(f"[INFO] Writing m4mu and m4mu_corr vals to root file:")
+        print(f"  Writing m4mu and m4mu_corr vals to root file:")
         print(f"  {outpath_rootfile}")
         outf = r.TFile(outpath_rootfile, "recreate")
         newtree = r.TTree("tree", "tree_m4mu_vals")
@@ -597,10 +827,33 @@ class MyMuonCollection:
         newtree.Branch("m4mu", ptr_m4mu, "m4mu/F")
         newtree.Branch("m4mu_corr", ptr_m4mu_corr, "m4mu_corr/F")
 
+        # if write_geofit_vals:
+        #     ptr_m4mu_geofit_corr = array('f', [0.])
+        #     newtree.Branch("m4mu_geofit_corr", ptr_m4mu_geofit_corr, "m4mu_geofit_corr/F")
+        
         # Loop over stored values inside MyMuonCollection.
         print(f"...Filling m4mu and m4mu_corr values...")
         start = time.perf_counter()
         assert len(self.m4mu_ls) == len(self.m4mu_corr_ls) != 0
+        # if write_geofit_vals:
+        #     assert len(self.m4mu_ls) == len(self.m4mu_corr_geofit_ls)
+
+        # if write_geofit_vals:
+        #     for ct,(m4mu,m4mu_corr,m4mu_corr_geofit) in enumerate(zip(self.m4mu_ls, self.m4mu_corr_ls, self.m4mu_corr_geofit_ls)):
+        #         m4mu_diff = m4mu_corr - m4mu
+        #         m4mu_diff_geofit = m4mu_corr_geofit - m4mu
+        #         rel_diff = m4mu_diff / m4mu
+        #         rel_diff_geofit = m4mu_diff_geofit / m4mu
+
+        #         if (abs(rel_diff) > 0.05) or (abs(rel_diff_geofit) > 0.05):
+        #             print(f"event {ct}:")
+        #             print(f"  m4mu={m4mu}, m4mu_corr={m4mu_corr}, rel_diff={rel_diff}, rel_diff_geofit={rel_diff_geofit}")
+
+        #         ptr_m4mu[0] = m4mu
+        #         ptr_m4mu_corr[0] = m4mu_corr
+        #         ptr_m4mu_geofit_corr[0] = m4mu_corr_geofit
+        #         newtree.Fill()
+        # else:
         for ct,(m4mu,m4mu_corr) in enumerate(zip(self.m4mu_ls, self.m4mu_corr_ls)):
             m4mu_diff = m4mu_corr - m4mu
             rel_diff = m4mu_diff / m4mu
@@ -612,8 +865,9 @@ class MyMuonCollection:
             ptr_m4mu[0] = m4mu
             ptr_m4mu_corr[0] = m4mu_corr
             newtree.Fill()
+        print(f"  Number of good events found: {len(self.m4mu_ls)}")
         end = time.perf_counter()
-        print(f"(Took {end - start:.3f} seconds.)")
+        print(f"  (Took {end - start:.4f} seconds.)")
 
         # Save tree and close file.
         newtree.Write()

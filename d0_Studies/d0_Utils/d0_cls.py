@@ -1024,8 +1024,8 @@ class KinBin2D:
         gr.SetTitle(graph_title)
         gr.GetXaxis().SetTitle(r"qd_{0} [cm]")
         gr.GetYaxis().SetTitle(y_label)
-        gr.GetXaxis().SetLimits(-0.004, 0.004)
-        gr.GetYaxis().SetRangeUser(-0.05, 0.05)
+        gr.GetXaxis().SetLimits(-0.005, 0.005)
+        gr.GetYaxis().SetRangeUser(-0.04, 0.04)
         self.gr_dpTOverpT_vs_qd0 = gr
 #         gr.GetYaxis().SetTitleOffset(1.5)
         # Must do 2 Draw() calls to set TGraphs properly...

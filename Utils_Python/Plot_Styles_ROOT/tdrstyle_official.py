@@ -8,7 +8,7 @@ def tdrGrid(tdrStyle, gridOn=True):
 def fixOverlay(): 
   ROOT.gPad.RedrawAxis()
 
-def setTDRStyle():
+def setTDRStyle(show_statsbox=True):
   # ROOT.gROOT.Reset()
   font_num = 42 #132
   # ROOT.gROOT.SetStyle("Plain")
@@ -65,23 +65,30 @@ def setTDRStyle():
   tdrStyle.SetOptFile(0)
   # tdrStyle.SetOptStat(0) # To display the mean and RMS:   SetOptStat("mr")
   # tdrStyle.SetOptStat(112210)  # ksiourmen: kurt,skew,integr,overf,underf,RMS,mean,entries,name
-  tdrStyle.SetOptStat("iouRMe")
+  if show_statsbox:
+    tdrStyle.SetOptStat("iouRMe")
+  else:
+    tdrStyle.SetOptStat(0)
+    tdrStyle.SetOptFit(0)
   tdrStyle.SetStatColor(ROOT.kWhite)
   tdrStyle.SetStatFont(font_num) 
-  tdrStyle.SetStatFontSize(0.025)
+  tdrStyle.SetStatFontSize(0.025)  # 0.03
   tdrStyle.SetStatTextColor(1)
-  tdrStyle.SetStatFormat("6.4g")  # width?.<num_sig_figs>
+  tdrStyle.SetStatFormat(".4f")  # width?.<num_sig_figs>
+  # tdrStyle.SetStatFormat("6.4g")
   tdrStyle.SetStatBorderSize(1)
-  tdrStyle.SetStatH(0.05)  # 0.02 is too small
-  # tdrStyle.SetStatW(0.25)
+  # tdrStyle.SetStatH(0.05)  # 0.05 is pretty good. 0.02 is too small
+  # tdrStyle.SetStatW(0.20)  # 0.15 is pretty good.
   # tdrStyle.SetStatStyle(Style_t style = 1001)
   tdrStyle.SetStatX(0.90)  # x-pos of top-right corner of stats box.
+  # tdrStyle.SetStatX(0.46)
   tdrStyle.SetStatY(0.90)  # y-pos of top-right corner of stats box.
 
 #For the fit/function:
   tdrStyle.SetOptFit(1)
   # tdrStyle.SetOptFit(0111)
-  tdrStyle.SetFitFormat("6.4g")
+  # tdrStyle.SetFitFormat("6.4g")
+  tdrStyle.SetFitFormat(".4f")
   tdrStyle.SetFuncColor(2)
   tdrStyle.SetFuncStyle(1)
   tdrStyle.SetFuncWidth(1)
@@ -105,6 +112,8 @@ def setTDRStyle():
   tdrStyle.SetTitleY(0.965) # Set the position of the title box. Default=0.985
   # tdrStyle.SetTitleStyle(Style_t style = 1001)
   tdrStyle.SetTitleBorderSize(0)
+  tdrStyle.SetTitleAlign(13) # 11 is against left side, 22 is centered vert and horiz.
+  # tdrStyle.SetTitleAlign(21)
 
 # For the axis titles:
   tdrStyle.SetTitleColor(1, "XYZ")
@@ -130,6 +139,9 @@ def setTDRStyle():
   tdrStyle.SetPadTickX(1)  # To get tick marks on the opposite side of the frame
   tdrStyle.SetPadTickY(1)
 
+# For the legend:
+  tdrStyle.SetLegendFont(font_num)
+  tdrStyle.SetLegendTextSize(0.025)
 # Change for log plots:
   tdrStyle.SetOptLogx(0)
   tdrStyle.SetOptLogy(0)

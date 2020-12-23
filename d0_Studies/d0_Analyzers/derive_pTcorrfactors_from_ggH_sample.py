@@ -35,12 +35,12 @@ from Utils_Python.Utils_Files import check_overwrite, makeDirs
 from Utils_ROOT.Printer import CanvasPrinter
 from ParticleCollections import MyMuonCollection
 from Particles import MyMuon
-from d0_Studies.KinBin_Info.kinematic_bins import (equal_entry_bin_edges_eta_mod1_wholenum, bin_edges_pT_sevenfifths_to1000GeV_wholenum)
+from d0_Studies.kinematic_bins import (equal_entry_bin_edges_eta_mod1_wholenum, bin_edges_pT_sevenfifths_to1000GeV_wholenum)
 from d0_Studies.d0_Utils.d0_cls import KinBin2D
 from d0_Studies.d0_Utils.d0_fns import find_bin_edges_of_value
 #----- User Parameters -----#
 # Input.
-infile_path = f"/cmsuf/data/store/user/t2/users/ferrico/Full_RunII/Production_10_2_18/Higgs_VX_BS/125/GluGluHToZZTo4L_M125_2017.root"
+infile_path = f"/cmsuf/data/store/user/t2/users/ferrico/Full_RunII/Production_10_2_18/Higgs_VX_BS/125/GluGluHToZZTo4L_M125_2018.root"
 # Output.
 # outpdf_dir    = f"/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/root_files/"
 # outpdf_dir    = f"/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/plots/ggF_m4mu/"
@@ -50,14 +50,12 @@ outpkl_dir = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_s
 outfile_prefix = f"MC2017_ggH_dpTOverpT_fewstats_test01"
 
 eta_ls = equal_entry_bin_edges_eta_mod1_wholenum[0:2]
-# eta_ls = [0.00, 1.25, 1.5, 1.75]
 # eta_ls = REPLACE_ETA_LS
 # eta_ls = [0.00, 0.20, 0.40, 0.60, 0.80, 1.00, 1.25, 1.50, 1.75, 2.00, 2.20, 2.40]
 # pT_ls = [5.0, 7.0, 10.0, 14.0, 20.0, 27.0, 38.0, 50.0, 75.0, 100.0, 150.0, 200.0]#, 1000.0] #bin_edges_pT_sevenfifths_to1000GeV_wholenum
 # pT_ls = [5.0, 7.0, 10.0, 14.0, 20.0, 27.0, 38.0, 50.0, 75.0, 100.0, 1000.0] #bin_edges_pT_sevenfifths_to1000GeV_wholenum
 # pT_ls = [5.0, 10.0, 14.0, 20.0, 27.0, 38.0, 50.0, 75.0, 1000.0] #bin_edges_pT_sevenfifths_to1000GeV_wholenum
-# pT_ls = [5.0, 10.0, 20.0, 30.0, 40.0, 50.0, 75.0, 100.0, 1000.0] # Merging 100-150-200-1000 GeV bins.
-pT_ls = [5.0, 30.0, 1000.0]
+pT_ls = [5.0, 10.0, 20.0, 30.0, 40.0, 50.0, 75.0, 100.0, 1000.0] # Merging 100-150-200-1000 GeV bins.
 
 overwrite = True
 verbose = True

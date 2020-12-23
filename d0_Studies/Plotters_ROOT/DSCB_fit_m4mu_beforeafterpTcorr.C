@@ -13,7 +13,7 @@ Inside the root file, you should have a TTree with 2 branches:
 
 Author: Jake Rosenzweig
 OG Date: 2020-07ish
-Updated: 2020-11-18
+Updated: 2020-12-17
 **/
 #include "RooMyPDF_DSCB.h"
 #include "RooRealVar.h"
@@ -23,20 +23,22 @@ using namespace RooFit;
 void DSCB_fit_m4mu_beforeafterpTcorr(Bool_t draw = false) {
 
 //----- User Params -----//
-Double_t m4mu_min = 105;
-Double_t m4mu_max = 140;
+Double_t m4mu_min = 105.0;  // 121.2, 128.4
+Double_t m4mu_max = 140.0;
 Int_t n_bins = 100;
-string year = "2017";
+string year = "2018";
 string fs = "ggH";
-string derive_from_sample = "ggH"; // Sample from which pT corr factors were derived.
+string derive_from_sample = "GeoFit"; // Sample from which pT corr factors were derived.
 bool plot_residuals = true;  // If false, then ratio of hists will be plotted.
-
+TString infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2018ggH_m4muvals_fullstats_usingXunwuHmumucorrfactorsfrommacro_withoutFSR.root";
+TString outfile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/Plots/applypTcorrplots/CorrFromMC/MC2018_m4mu_ggH_DSCBfit_corrfromMCDY2018Xunwusmacro_withoutFSR.pdf";
 // This is the color of the fits.
 // The data points will be darker (+2).
 Int_t color_line = kBlue;
 Int_t color_line_corr = kRed;
 Int_t color_increm = 2;
 
+Double_t size_text = 0.020;
 //----- Automatons -----//
 Int_t color_marker = color_line + color_increm;
 Int_t color_marker_corr = color_line_corr + color_increm;
@@ -45,9 +47,6 @@ Int_t color_marker_corr = color_line_corr + color_increm;
 if (!draw) gROOT->SetBatch();  // Do not draw plots to screen.
 
 // Open the file and set the TTree. 
-// TString infile_path = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/root_files/MC2017_ggF_synchwithFilippo_basiccuts_usingFSR_absd0cut0p010.root";
-TString infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2017_m4mu_m4mucorr_vals_fullstats.root";
-TString outfile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/Plots/applypTcorrplots/CorrFromMCggH/MC2017_m4mu_ggH_DSCBfit_corrfromMC2017ggH.pdf";
 TFile* infile = TFile::Open(infile_path);
 
 TTree* tree;
@@ -124,23 +123,27 @@ TPad* pbot = new TPad("pbot", "pad ratio", 0.0, 0.0, 1.0, 0.25);
 // c_MC->SetFrameFillColor(0);
 // c_MC->cd(1)->SetBottomMargin(0.2);  // Moves bottom margin up to y_low = 0.2.
 // c_MC->SetLogy();
+// c_MC->Draw();
 TString title1 = Form("%s MC %s, Unbinned Double-Sided CB Fit \n", fs.c_str(), year.c_str());
-TString title2 = Form("(using p_{T} corr. factors derived from %s muons)", derive_from_sample.c_str());
+TString title2 = Form("(using p_{T} corr. factors derived from %s)", derive_from_sample.c_str());
 TString title = title1 + title2;
 RooPlot* xframe = m4mu.frame(RooFit::Title(title));
 RooPlot* xframe_corr = m4mu_corr.frame(RooFit::Title(title));
 RooPlot* framePull = m4mu.frame(RooFit::Title("")); // Ratio plot 
 RooPlot* framePull_corr = m4mu_corr.frame(RooFit::Title("")); // Ratio plot
 
-rds.plotOn(xframe, RooFit::MarkerColor(color_marker));
-rds_corr.plotOn(xframe_corr, RooFit::MarkerColor(color_marker_corr));
 // Reisize y-axis.
 Double_t max_val = max(h_m4mu->GetMaximum(), h_m4mu_corr->GetMaximum());
 xframe->SetMaximum(max_val * 1.1);
+xframe_corr->SetMaximum(max_val * 1.1);
+xframe_corr->GetYaxis()->SetTitle(Form("Events / %.2f", h_m4mu->GetBinWidth(1)));
 
-Double_t size_text = 0.020;
+rds.plotOn(xframe, RooFit::MarkerColor(color_marker), RooFit::Binning(n_bins));
+rds_corr.plotOn(xframe_corr, RooFit::MarkerColor(color_marker_corr), RooFit::Binning(n_bins));
+
 DSCB.fitTo(rds, RooFit::Range(m4mu_min, m4mu_max), RooFit::PrintLevel(-1));
-DSCB.plotOn(xframe, RooFit::LineColor(color_line));
+// DSCB.plotOn(xframe, RooFit::LineColor(color_line));
+DSCB.plotOn(xframe, RooFit::LineColor(color_line), RooFit::Binning(n_bins));
 DSCB.paramOn(xframe, RooFit::Layout(0.14, 0.34, 0.88));
 xframe->getAttText()->SetTextSize(size_text);
 xframe->getAttText()->SetTextColor(color_line);
@@ -155,7 +158,7 @@ xframe_corr->getAttText()->SetTextColor(color_line_corr);
 // string cuts = Form("m4mu > %.1f && m4mu < %.1f", m4mu_min, m4mu_max);
 // Double_t integral = tree->GetEntries(cuts.c_str());
 Double_t integral = h_m4mu->Integral();
-TString integ = Form("Integral = %.1f", integral);
+TString integ = Form("Integral = %.0f", integral);
 TLatex* tex = new TLatex(0.12, 0.45, integ);
 tex->SetNDC();
 tex->SetTextColor(color_marker);
@@ -173,7 +176,7 @@ tex->Draw("same");
 // string cuts_corr = Form("m4mu_corr > %.1f && m4mu_corr < %.1f", m4mu_min, m4mu_max);
 // Double_t integral_corr = tree->GetEntries(cuts_corr.c_str());
 Double_t integral_corr = h_m4mu_corr->Integral();
-TString integ_corr = Form("Integral = %.1f", integral_corr);
+TString integ_corr = Form("Integral = %.0f", integral_corr);
 TLatex* tex_corr = new TLatex(0.65, 0.45, integ_corr);
 tex_corr->SetNDC();
 tex_corr->SetTextColor(color_marker_corr);
@@ -198,10 +201,11 @@ if (plot_residuals) {
     framePull->GetXaxis()->SetTitleSize(text_size_ratioplot);
     framePull->GetYaxis()->SetTitleSize(text_size_ratioplot);
     framePull->SetTitle("");
-    framePull->SetYTitle("Residuals");
+    framePull->GetYaxis()->SetTitle("Residuals");
     framePull->SetMinimum(-5.);
     framePull->SetMaximum(5.);
     framePull->SetNdivisions(207, "Y");
+    framePull->SetTickLength(0.04, "XY");
     framePull->getAttMarker()->SetMarkerColor(color_marker);
     framePull->Draw();
 
@@ -210,8 +214,11 @@ if (plot_residuals) {
     framePull_corr->GetXaxis()->SetTitleSize(text_size_ratioplot);
     framePull_corr->GetYaxis()->SetTitleSize(text_size_ratioplot);
     framePull_corr->SetTitle("");
+    // framePull_corr->SetYTitle("Residuals");
+    framePull_corr->GetYaxis()->SetTitle("Residuals");
     framePull_corr->SetMinimum(-5.);
     framePull_corr->SetMaximum(5.);
+    framePull_corr->SetNdivisions(207, "Y");
     framePull_corr->SetTickLength(0.04, "XY");
     framePull_corr->getAttMarker()->SetMarkerColor(color_marker_corr);
     framePull_corr->Draw("same");
@@ -234,7 +241,7 @@ if (plot_residuals) {
 // }
 
 // Add a line at x = 1 onto ratio plot.
-TLine* lineRef = new TLine(105.,0.,140.,0.);
+TLine* lineRef = new TLine(m4mu_min, 0., m4mu_max, 0.);
 lineRef->Draw("same");
 
 c_MC->Print(outfile_path);// + ".pdf");

@@ -23,7 +23,7 @@ TO DO:
 import os
 import ROOT as r
 # Package imports.
-from Toy_Model.utils.classes import HitPlotOrg, BiasPlotter
+from Toy_Model.utils.classes import MuonTrack, BiasPlotter
 from Utils_Python.Plot_Styles_ROOT.tdrstyle_official import setTDRStyle, tdrGrid
 
 #--- User Parameters ---#
@@ -36,7 +36,9 @@ do_th2f_scatterplots =        (1, os.path.join(pdf_outpath, "h2d_withbestfitline
 
 n_toys = 5000
 pT_ls = [5, 10, 20, 40, 50, 75, 100]
-new_pixel_pos = [2.9, 6.8, 10.5, 16.0, 25.5, 33.9, 41.9, 49.8, 60.8, 69.2, 78.0, 86.8, 96.5, 108.0]  # cm
+# On 2020-11-24 Neha gave presentation showing 10.9 cm.
+new_pixel_pos = [2.9, 6.8, 10.9, 16.0, 25.5, 33.9, 41.9, 49.8, 60.8, 69.2, 78.0, 86.8, 96.5, 108.0]  # cm
+# new_pixel_pos = [2.9, 6.8, 10.5, 16.0, 25.5, 33.9, 41.9, 49.8, 60.8, 69.2, 78.0, 86.8, 96.5, 108.0]  # cm
 
 #------------------------#
 #--- Script functions ---#

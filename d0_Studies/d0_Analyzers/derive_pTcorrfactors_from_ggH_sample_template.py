@@ -35,7 +35,7 @@ from Utils_Python.Utils_Files import check_overwrite, makeDirs
 from Utils_ROOT.Printer import CanvasPrinter
 from ParticleCollections import MyMuonCollection
 from Particles import MyMuon
-from d0_Studies.KinBin_Info.kinematic_bins import (equal_entry_bin_edges_eta_mod1_wholenum, bin_edges_pT_sevenfifths_to1000GeV_wholenum)
+from d0_Studies.kinematic_bins import (equal_entry_bin_edges_eta_mod1_wholenum, bin_edges_pT_sevenfifths_to1000GeV_wholenum)
 from d0_Studies.d0_Utils.d0_cls import KinBin2D
 from d0_Studies.d0_Utils.d0_fns import find_bin_edges_of_value
 #----- User Parameters -----#
