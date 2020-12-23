@@ -1,0 +1,22 @@
+# These correction factors have modified pT bin values
+# Original file is: MC2018_Xunwu_pT_corrfactors_derivedfromZjets_20pT1000.txt
+# Correction factors come from p.200 in AN-19-124 v7. You can find the
+# numbers in the legend in the lines labelled DY. Since the intercept did not
+# have an error associated with it, I chose a relative error of 6%.
+# There are also lines derived using a ttH sample but the best-fit lines are
+# nearly identical to those derived from the DY sample.
+
+{'0.0eta0.9_5.0pT1000.0': {'intercept': -0.10,
+  'intercept_err': 0.006,
+  'slope': 635.59,
+  'slope_err': 31.16},
+
+ '0.9eta1.7_5.0pT1000.0': {'intercept': -0.24,
+  'intercept_err': 0.0144,
+  'slope': 993.38,
+  'slope_err': 54.68},
+
+ '1.7eta2.4_5.0pT1000.0': {'intercept': -0.44,
+  'intercept_err': 0.0264,
+  'slope': 1463.67,
+  'slope_err': 85.41}}

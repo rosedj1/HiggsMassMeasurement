@@ -77,7 +77,7 @@ class Selector():
 
 #----------------------------#
 
-def passed_Higgs_selections(evt):
+def passed_Higgs_evt_selection(evt):
     """
     Returns True, if this event passes the given selections.
 
@@ -92,6 +92,18 @@ def passed_Higgs_selections(evt):
     selec_ls.append(evt.finalState == 1)
     selec_ls.append((105 < evt.mass4l) & (evt.mass4l < 140))
 #     selec_ls.append(evt.passedFiducialSelection)
+    return all(selec_ls)
+
+def passed_Hmumu_evt_selection(evt):
+    """
+    TODO: implement Hmumu selections here, if any. 
+
+    Returns True, if this event passes the given selections.
+
+    evt : TTree
+        NOTE: evt must have attributes:
+    """
+    selec_ls = [True]
     return all(selec_ls)
 
 def initialize_muon(evt, reco_ndx, gen_ndx):
@@ -118,10 +130,64 @@ def initialize_muon(evt, reco_ndx, gen_ndx):
     charge = evt.lep_id[reco_ndx] / -13.
     mu = MyMuon(charge)
     # Set reco and gen kinematics.
-    mu.set_PtEtaPhiMass(evt.lepFSR_pt[reco_ndx], evt.lepFSR_eta[reco_ndx], evt.lepFSR_phi[reco_ndx], evt.lepFSR_mass[reco_ndx])
     mu.set_GENPtEtaPhiMass(evt.GENlep_pt[gen_ndx], evt.GENlep_eta[gen_ndx], evt.GENlep_phi[gen_ndx], evt.GENlep_mass[gen_ndx])
+    # On 2020-12-16 Filippo says we should use WITHOUT FSR quantities.
+    # mu.set_PtEtaPhiMass(evt.lepFSR_pt[reco_ndx], evt.lepFSR_eta[reco_ndx], evt.lepFSR_phi[reco_ndx], evt.lepFSR_mass[reco_ndx])
+    mu.set_PtEtaPhiMass(evt.lep_pt[reco_ndx], evt.lep_eta[reco_ndx], evt.lep_phi[reco_ndx], evt.lep_mass[reco_ndx])
     # Set other kinematic quantities.
     mu.d0 = evt.lep_d0BS[reco_ndx]
+    mu.dpTOverpT = (mu.pT - mu.gen_pT) / mu.gen_pT
+    return mu
+
+def initialize_Htomumu_muons_fromliteskim(evt, num):
+    """
+    For a given event (evt), build a muon (mu) using: 
+        - the reco values in the lep_kinem vectors
+        - the gen values in the GENlep_kinem vectors. 
+
+    NOTE:
+        - The reco values are retrieved using ROOT.Math.LorentzVector methods (mu.Pt(), mu.Phi(), etc.)
+        - If you use this muon in ROOT calculations like: mu1 + mu2,
+          then be sure that the kinematics are stored using ROOT.Math.SetPtEtaPhiM(pt,eta,phi,m).
+
+    Additionally: 
+    - checks ID to make sure it is a muon.
+    - Stores: pT, eta, phi, mass, charge, d0_BS.
+
+    Parameters
+    ----------
+    evt : TTree event
+    
+    num : int
+        Which muon in this 2 mu event. Either `1` or `2`.
+    Returns
+    -------
+    mu : MyMuon object
+    """
+    assert num in [1, 2]
+    # Record reco info. 
+    # mu = ROOT.Math.PtEtaPhiMVector(evt.lepFSR_pt[reco_ndx], evt.lepFSR_eta[reco_ndx], evt.lepFSR_phi[reco_ndx], evt.lepFSR_mass[reco_ndx])
+    charge = getattr(evt, f"Id{num}") / -13.0
+    mu = MyMuon(charge)
+    # Set reco and gen kinematics.
+    # mu.set_PtEtaPhiMass(getattr(evt, f"pT_FSR{num}"),
+    #                     getattr(evt, f"eta_FSR{num}"),
+    #                     getattr(evt, f"phi_FSR{num}"),
+    #                     getattr(evt, f"m_FSR{num}")
+    #                     )
+    # On 2020-12-16 Filippo says we should use WITHOUT FSR quantities.
+    mu.set_PtEtaPhiMass(getattr(evt, f"pT{num}"),
+                        getattr(evt, f"eta{num}"),
+                        getattr(evt, f"phi{num}"),
+                        getattr(evt, f"m{num}")
+                        )
+    mu.set_GENPtEtaPhiMass(getattr(evt, f"genLep_pt{num}"),
+                           getattr(evt, f"genLep_eta{num}"),
+                           getattr(evt, f"genLep_phi{num}"),
+                           getattr(evt, f"genLep_mass{num}")
+                           )
+    # Set other kinematic quantities.
+    mu.d0 = getattr(evt, f"d0BS{num}")
     mu.dpTOverpT = (mu.pT - mu.gen_pT) / mu.gen_pT
     return mu
 
@@ -146,40 +212,49 @@ def make_muon_ls(evt, rec_ndcs_ls, gen_ndcs_ls):
     # return mu_ls
     return [initialize_muon(evt, reco_ndx, gen_ndx) for reco_ndx,gen_ndx in zip(rec_ndcs_ls, gen_ndcs_ls)]
 
-def check_muon_kinem(mu):
-    """Make sure that this muon has reco info:
-        0.0 < abs(eta) < 2.4
-        5 < pT < 200
-    """
-    passed_eta = True
-    passed_pT =  True
-    # passed_eta = (0 < abs(mu.Eta())) and (abs(mu.Eta()) < 2.4)
-    # passed_pT = (5 < mu.Pt()) and (mu.Pt() < 200)
-    passed_d0 = True #(abs(mu.d0) < 0.010)
-    return all([passed_eta, passed_pT, passed_d0])
+def make_muon_ls_fromliteskim(evt):
+    """Return a 2-elem list of MyMuon objects with stored reco and gen info.
 
-def verify_all_muons(mu_ls):
+    This function assumes that reco-gen index matching (via lep_genindex)
+    was already done in a lite skim (like MioSkim_2L.C).
+    
+    Parameters
+    ----------
+    evt : TTree event (e.g. tree.GetEntry(2))
+    """
+    return [initialize_Htomumu_muons_fromliteskim(evt, num) for num in [1,2]]
+
+# def check_muon_kinem(mu):
+#     """Make sure that this muon has reco info:
+#         0.0 < abs(eta) < 2.4
+#         5 < pT < 200
+#     """
+    
+#     return 
+
+def apply_kinem_selections(mu_ls, eta_bin=[0,2.4], pT_bin=[5,200], d0_max=1):
     """
     Make sure all muons passed selections and do final pT checks.
     Returns True if all muons passed, False otherwise.
+
+    Parameters
+    ----------
+    eta_bin : 2-elem list
+        Keep muons with reco abs(eta) in range: [eta_min, eta_max]
+    pT_bin : 2-elem list
+        Keep muons with reco pT in range: [pT_min, pT_max] (GeV)
+    d0_max : float
+        Keep muons with abs(d0) < d0_max (cm).
     """
-    # count_pT_gt10_for2mu = 0
-    # count_pT_gt20_for1mu = 0
+    eta_min, eta_max = eta_bin[0], eta_bin[1]
+    pT_min, pT_max = pT_bin[0], pT_bin[1]
     for mu in mu_ls:
-        pass_kinem = check_muon_kinem(mu)
+        passed_eta = (eta_min < abs(mu.eta)) and (abs(mu.eta) < eta_max)
+        passed_pT = (pT_min < mu.pT) and (mu.pT < pT_max)
+        passed_d0 = abs(mu.d0) < d0_max
+        pass_kinem = all([passed_eta, passed_pT, passed_d0])
         if not pass_kinem:
             return False
-        # if mu.Pt() > 10:
-        #     count_pT_gt10_for2mu += 1
-        # if mu.Pt() > 20:
-        #     count_pT_gt20_for1mu += 1
-    # End loop over muons.
-    # if count_pT_gt10_for2mu < 2:
-    #     return False
-    # elif count_pT_gt20_for1mu < 1:
-    #     return False
-    # else:
-        # return True
     return True
 
 def get_ndcs_gen(rec_ndcs_ls, lep_genindex):
@@ -193,8 +268,10 @@ def get_ndcs_gen(rec_ndcs_ls, lep_genindex):
     """
     return [lep_genindex[ndx] for ndx in rec_ndcs_ls]
 
-def build_muons_from_HZZ4mu_event(t, evt_num):
-    """Return a 4-tuple of MyMuon objects which pass muon selections in Higgs sample.
+def build_muons_from_HZZ4mu_event(t, evt_num, eta_bin=[0,2.4], pT_bin=[5,200], d0_max=1):
+    """Return a 4-tuple of MyMuon objects which pass muon selections in H->ZZ->4mu sample.
+
+    NOTE: This function works for post-UFHZZ4L analyzer, not lite skim.
     
     Parameters
     ----------
@@ -202,6 +279,12 @@ def build_muons_from_HZZ4mu_event(t, evt_num):
         The TTree which holds all data for each event.
     evt_num : int
         Which event in the TTree.
+    eta_bin : 2-elem list
+        Keep muons with reco eta in range: [eta_min, eta_max]
+    pT_bin : 2-elem list
+        Keep muons with reco pT in range: [pT_min, pT_max] (GeV)
+    d0_max : float
+        Keep muons with d0 < d0_max (cm).
 
     Returns
     -------
@@ -214,7 +297,7 @@ def build_muons_from_HZZ4mu_event(t, evt_num):
     bad_muons = (None, None, None, None)
     t.GetEntry(evt_num)
     
-    if not passed_Higgs_selections(t):
+    if not passed_Higgs_evt_selection(t):
         return bad_muons
 
     rec_ndcs_ls = list(t.lep_Hindex)  # Elements that correspond to 4 leptons which build Higgs candidate.
@@ -239,7 +322,7 @@ def build_muons_from_HZZ4mu_event(t, evt_num):
     # Event looks good so far. 
     # Now check kinematics of muons.
     mu_ls = make_muon_ls(t, rec_ndcs_ls, gen_ndcs_ls)
-    all_muons_passed = verify_all_muons(mu_ls)
+    all_muons_passed = apply_kinem_selections(mu_ls, eta_bin=eta_bin, pT_bin=pT_bin, d0_max=d0_max)
     if not all_muons_passed:
         return bad_muons
 
@@ -249,4 +332,61 @@ def build_muons_from_HZZ4mu_event(t, evt_num):
     # Return the 4 good muons.
     good_muons = tuple(mu_ls)
     assert len(good_muons) == 4
+    return good_muons
+
+def build_muons_from_Hmumu_event(t, evt_num, eta_bin=[0,2.4], pT_bin=[20,200], d0_max=1):
+    """Return a 2-tuple of MyMuon objects which pass muon selections in H->2mu sample.
+    
+    Parameters
+    ----------
+    t : ROOT.TTree
+        The TTree which holds all data for each event.
+    evt_num : int
+        Which event in the TTree.
+    eta_bin : 2-elem list
+        Keep muons with reco eta in range: [eta_min, eta_max]
+    pT_bin : 2-elem list
+        Keep muons with reco pT in range: [pT_min, pT_max] (GeV)
+    d0_max : float
+        Keep muons with d0 < d0_max (cm).
+
+    Returns
+    -------
+    If event passes selections: 
+        2-tuple of MyMuon objects.
+    If event does NOT pass selections: 
+        2-tuple of NoneType (None, None).
+    """
+    # global n_evts_passed
+    bad_muons = (None, None)
+    t.GetEntry(evt_num)
+    
+    if not passed_Hmumu_evt_selection(t):
+        return bad_muons
+
+    # Filippo's MioSkim_2L.C already accounts for lep_genindex.
+    # gen_ndcs_ls = get_ndcs_gen(rec_ndcs_ls, lep_genindex_ls)
+
+    # rec_ID_ls = list(t.lep_id)
+    # gen_ID_ls = list(t.GENlep_id)
+    # if not check_matched_IDs(rec_ndcs_ls, gen_ndcs_ls, rec_ID_ls, gen_ID_ls):
+    #     continue
+    # if not check_2_OSSF_muon_pairs(gen_ID_ls):
+    #     continue
+    # if not check_2_OSSF_muon_pairs(rec_ID_ls):
+    #     continue
+
+    # Event looks good so far. 
+    # Now check kinematics of muons.
+    mu_ls = make_muon_ls_fromliteskim(t)
+    all_muons_passed = apply_kinem_selections(mu_ls, eta_bin=eta_bin, pT_bin=pT_bin, d0_max=d0_max)
+    if not all_muons_passed:
+        return bad_muons
+
+    # NOW event is good.
+    # n_evts_passed += 1
+
+    # Return the 2 good muons.
+    good_muons = tuple(mu_ls)
+    assert len(good_muons) == 2
     return good_muons

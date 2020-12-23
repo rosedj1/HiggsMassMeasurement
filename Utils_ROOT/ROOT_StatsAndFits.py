@@ -256,7 +256,7 @@ def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None,
     pave.AddText(f"Fit {count}:")  # Accommodates LaTeX!
     pave.AddText(f"  #mu = {mean.getVal():.4g} #pm {mean.getError():.4g}")
     pave.AddText(f"  #sigma = {sigma.getVal():.4g} #pm {sigma.getError():.4g}")
-    pave.AddText("  #chi^{2}/ndf = %.4g" % xframe.chiSquare())
+    pave.AddText("  #chi^{2}/ndf = %.4f" % xframe.chiSquare())
     pave.Draw("same")
 
     # latex = r.TLatex()
@@ -305,7 +305,7 @@ def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None,
     fit_stats_ls = [mean.getVal(), mean.getError(), sigma.getVal(), sigma.getError(), xframe.chiSquare()]
     return (fit_stats_ls, xframe)
 
-def RooFit_iterative_gaus_fit(data, binned_fit=False, switch_to_binned_fit=2000, iters=1, num_sigmas=2, 
+def RooFit_iterative_gaus_fit(data, binned_fit=False, switch_to_binned_fit=2000, iters=1, num_sigmas=2.5, 
                               n_bins=100, x_lim=None, fit_whole_range_first_iter=True,
                               xframe=None, x_label="Independent var", title="", units="",
                               marker_color=1, force_last_line_color=None, only_draw_last=False, 

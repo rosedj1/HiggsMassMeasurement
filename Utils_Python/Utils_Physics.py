@@ -68,13 +68,21 @@ def perc_diff(num, ref):
     """
     return (num - ref) / ref * 100.
 
-def calc_Hmass(mu1, mu2, mu3, mu4):
+def calc_Hmass(mu_ls):
     """
-    Return the invariant mass of 4 particles.
+    Return the invariant mass of the muons in mu_ls (len must be 2 or 4).
+
     NOTE: 
     - This method relies on calls like: mu.Pt(), mu.Eta(), etc. 
       So you must change the muon kinematics by doing: mu.SetPt(val), e.g.
     - The particles must have type ROOT.Math.LorentzVector.
     """
-    H = mu1 + mu2 + mu3 + mu4
+    len_ = len(mu_ls)
+    if len_ == 2:
+        H = mu_ls[0] + mu_ls[1]
+    elif len_ == 4:
+        H = mu_ls[0] + mu_ls[1] + mu_ls[2] + mu_ls[3]
+    else:
+        msg = f"mu_ls must have length 2 or 4, but has length {len_}."
+        return ValueError(msg)
     return H.M()

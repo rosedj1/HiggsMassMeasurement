@@ -88,12 +88,16 @@ def make_key_from_binedges(binedge_tup):
 
 def correct_muon_pT(eta, pT, q, d0, 
                     pT_corr_factor_dict, detection="manual",
+                    use_GeoFit_algo=False,
                     eta_binedge_ls=None, pT_binedge_ls=None,
                     verbose=False, print_all_muon_info=False):
     """Return the corrected pT of a muon, by comparing the muon's kinematics
     to a dictionary of correction factors.
 
     Kinematics required to determine correction: (eta, pT, charge, d0)
+
+    # FIXME: Need to also retrieve and implement uncertainties on slope and
+    intercept.
 
     Parameters
     ----------
@@ -120,6 +124,15 @@ def correct_muon_pT(eta, pT, q, d0,
         bins from etabin2.
         If 'manual', then eta_binedge_ls and pT_binedge_ls
         must be provided.
+    use_GeoFit_algo : bool
+        Returns corrected pT of a muon using the following logic:
+            - (pTreco - pTgen)/(pTgen^2) * 10000 = a + b * qd0 := C
+            - {a, b} are the linear best-fit parameters, provided
+            by pT_corr_factor_dict.
+            - Plug in a muon's {q, d0} and get C.
+            - (pTrec - pTgen) / (pTgen)^2 * 10000 = C
+            - Assume that (pTgen)^2 = (pTrec)^2.
+            - Solve: pTgen = pTrec - C * (pTrec)^2 / 10000
     eta_binedge_ls : list
         A list of all eta bin edges.
         The muon eta should fall into one of these bins.
@@ -144,11 +157,19 @@ def correct_muon_pT(eta, pT, q, d0,
         eta_min, eta_max = find_bin_edges_of_value(abs(eta), np.array(eta_binedge_ls))
         pT_min,  pT_max  = find_bin_edges_of_value(pT,       np.array(pT_binedge_ls))
     else:
-        raise ValueError(f"Parameter `detection` must be either 'manual' or 'auto'.")
+        raise ValueError("Parameter `detection` must be either 'manual' or 'auto'.")
     
     if all([x is not None for x in [eta_min, eta_max, pT_min, pT_max]]):
+        # Bin edges seem OK. Proceed to corrections.
+        # FIXME: Need to also retrieve and implement uncertainties on slope
+        # and interc.
         slope, interc = get_pT_corr_factors(pT_corr_factor_dict, eta_min, eta_max, pT_min, pT_max)
-        delta_pT = pT * (interc + slope * q * d0)
+        C = interc + slope * q * d0
+        if use_GeoFit_algo:
+            delta_pT = C * pT * pT / 10000.
+        else:
+            # Use "Ad Hoc" algorithm.
+            delta_pT = pT * C
     else:
         slope, interc = None, None
         delta_pT = 0
@@ -160,16 +181,16 @@ def correct_muon_pT(eta, pT, q, d0,
         if (rel_pT > 0.05):
             print(f"[WARNING] delta_pT ({rel_pT}) > 5%")
         print("This muon's info:")
-        print("  eta = {}".format(eta))
-        print("  pT  = {}".format(pT))
-        print("  q   = {}".format(q))
-        print("  d0  = {}".format(d0))
-        print("  eta bin: [{}, {}]".format(eta_min, eta_max))
-        print("  pT bin:  [{}, {}]".format(pT_min, pT_max))
-        print("  slope:  {}".format(slope))
-        print("  interc: {}".format(interc))
-        print("  delta_pT: {}".format(delta_pT))
-        print("  pT - delta_pT = pT_corr : {} - {} = {}\n".format(pT, delta_pT, pT_corr))
+        print(f"  pT       = {pT}")
+        print(f"  pT_corr  = {pT_corr} (pT - delta_pT)")
+        print(f"  delta_pT = {delta_pT}")
+        print(f"  eta = {eta}")
+        print(f"  q   = {q}")
+        print(f"  d0  = {d0}")
+        print(f"  eta bin: [{eta_min}, {eta_max}]")
+        print(f"  pT bin:  [{pT_min}, {pT_max}]")
+        print(f"  slope:  {slope}")
+        print(f"  interc: {interc}")
     return pT_corr
     
 def get_subset_mask(x_vals, x_min, x_max):
@@ -498,14 +519,12 @@ def account_for_underoverflow_entries(data, x_min, x_max, bin_edges):
         # So put overflow entries into last bin shown on plot by going
         # back 1 bin.
         mod_data = np.clip(mod_data, min(mod_data), x_max - last_bin_width)
-
     return mod_data
 
 def print_header_message(msg, pad_char="-", n_center_pad_chars=5):
-    pad_char_long = pad_char * (len(msg) + n_center_pad_chars*2 + 2)
+    banner = pad_char * (len(msg) + n_center_pad_chars*2 + 2)
     pad_char_short = pad_char * n_center_pad_chars
-    banner = "#{}#".format(pad_char_long)
-    middle = "#{} {} {}#".format(pad_char_short, msg, pad_char_short)
+    middle = f"{pad_char_short} {msg} {pad_char_short}"
     print(banner)
     print(middle)
     print(banner)
