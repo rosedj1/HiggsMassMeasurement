@@ -319,7 +319,7 @@ def calc_x_err_bins_from_bin_edges(binedge_ls):
     low_err_arr = centers - bin_edges_low
     high_err_arr = bin_edges_high - centers
     
-    return low_err_arr, high_err_arr
+    return (low_err_arr, high_err_arr)
 
 def calc_x_err_bins_from_bin_centers(x_val_center_list):
     """

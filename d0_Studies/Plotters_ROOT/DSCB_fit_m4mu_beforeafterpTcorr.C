@@ -15,10 +15,78 @@ Author: Jake Rosenzweig
 OG Date: 2020-07ish
 Updated: 2020-12-17
 **/
+#include <iostream>
+#include <iomanip>
+#include <string>
+#include <cstdlib>
+#include <stdio.h>
+#include <map>
+#include <utility>
+#include <iterator>
+
+#include "TROOT.h"
+#include "TFile.h"
+#include "TString.h"
+#include "TH1.h"
+#include "TGraph.h"
+#include "TGraphErrors.h"
+#include "TF1.h"
+#include "TLegend.h"
+#include "TMultiGraph.h"
+#include "THStack.h"
+#include "TCanvas.h"
+#include "TPad.h"
+#include "TMath.h"
+#include "TTree.h"
+#include "TTreeIndex.h"
+#include "TH2F.h"
+#include "TLatex.h"
+#include "TLine.h"
+#include "TGraphAsymmErrors.h"
+#include "Math/QuantFuncMathCore.h"
+
+#include "TSystem.h"
+#include "TStyle.h"
+#include "TPaveText.h"
+
+#include "TPaveLabel.h"
+#include "TLegend.h"
+
+#include "TLorentzRotation.h"
+#include "TVector3.h"
+#include "TLorentzVector.h"
+//
+//#include <vector>
+//#include <fstream>
+////
+//#include "TRandom3.h"
+//
+//#include "RooRealVar.h"
+//#include "RooArgSet.h"
+//#include "RooGaussian.h"
+//#include "RooBreitWigner.h"
+//#include "RooProdPdf.h"
+//#include "RooDataSet.h"
+//#include "RooGlobalFunc.h"
+//#include "RooDataHist.h"
+//#include "RooHistPdf.h"
+//#include "RooCBShape.h"
+//#include "RooMinuit.h"
+//#include "RooFormulaVar.h"
+//#include "RooAddPdf.h"
+//#include "RooGenericPdf.h"
+//
+//#include "RooPlot.h"
+//
+//using namespace std;
+//
+//void MioSkim(){
+//
+////   std::vector<float>* Z_mass
 #include "RooMyPDF_DSCB.h"
 #include "RooRealVar.h"
 
-using namespace RooFit;
+//using namespace RooFit;
 
 void DSCB_fit_m4mu_beforeafterpTcorr(Bool_t draw = false) {
 
@@ -32,7 +100,9 @@ string derive_from_sample = "GeoFit"; // Sample from which pT corr factors were 
 bool plot_residuals = true;  // If false, then ratio of hists will be plotted.
 TString infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2018ggH_m4muvals_fullstats_usingXunwuHmumucorrfactorsfrommacro_withoutFSR.root";
 TString outfile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/Plots/applypTcorrplots/CorrFromMC/MC2018_m4mu_ggH_DSCBfit_corrfromMCDY2018Xunwusmacro_withoutFSR.pdf";
-// This is the color of the fits.
+/* TString infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2018ggH_m4muvals_fullstats_usingXunwuHmumucorrfactorsfrommacro_withoutFSR.root";
+TString outfile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/Plots/applypTcorrplots/CorrFromMC/MC2018_m4mu_ggH_DSCBfit_corrfromMCDY2018Xunwusmacro_withoutFSR.pdf"; */
+// This is the color of the fits. 
 // The data points will be darker (+2).
 Int_t color_line = kBlue;
 Int_t color_line_corr = kRed;

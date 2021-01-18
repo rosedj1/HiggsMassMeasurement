@@ -1,6 +1,7 @@
 #!/bin/bash
 
 export PYTHONPATH=${PYTHONPATH}:${PWD}
+export PYTHONPATH=${PYTHONPATH}:${PWD}/d0_Studies
 export PYTHONPATH=$PYTHONPATH:/blue/avery/rosedj1/HiggsMassMeasurement
 export PYTHONPATH=$PYTHONPATH:/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies
 #export PYTHONPATH=$PYTHONPATH:${PWD}/leptonPtErrorCorrector/
