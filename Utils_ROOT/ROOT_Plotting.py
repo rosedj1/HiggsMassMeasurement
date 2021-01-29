@@ -1,6 +1,21 @@
 import ROOT as r
 from Utils_Python.Plot_Styles_ROOT.tdrstyle_official import setTDRStyle, tdrGrid
 
+def make_ratio_pads():
+    """Create an upper pad (for hists), and a lower pad (for a ratio plot)."""
+    ptop = r.TPad("ptop", "pad main", 0.0, 0.25, 1.0, 1.0)
+    pbot = r.TPad("pbot", "pad ratio", 0.0, 0.0, 1.0, 0.25)
+    ptop.SetBottomMargin(0)
+    pbot.SetTopMargin(0)
+    pbot.SetBottomMargin(0.25)
+    # ptop.Draw()
+    # pbot.Draw()
+    # ptop.cd()
+    # ptop.SetTicks(1,1)
+    # pbot.cd()
+    # pbot.SetTicks(1,1)
+    return (ptop, pbot)
+
 def Root_Hist_GetLastBinRightEdge(hist):
     """Returns the right-most bin edge of a ROOT.TH1 object."""
     n_bins = hist.GetNbinsX()

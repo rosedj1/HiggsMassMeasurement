@@ -3,9 +3,10 @@ import numpy as np
 from array import array
 
 from Utils_Python.Plot_Styles_ROOT.tdrstyle_official import fixOverlay
+from Utils_Python.Utils_StatsAndFits import prop_err_on_dsigoversig
 from Utils_ROOT.ROOT_Plotting import Root_Hist_GetLastBinRightEdge, make_new_xframe
 from Utils_ROOT.ROOT_fns import skip_black_yellow_fit_line_colors
-
+from Utils_ROOT.ROOT_classes import make_TGraphErrors, make_TLegend
 from d0_Studies.d0_Utils.d0_dicts import color_dict_RooFit
 
 def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None, 
@@ -284,17 +285,17 @@ def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None,
     r.gPad.Update()
     # c.Update()
 
-# Make a legend.
-#     leg_text  = "#splitline{#mu = %.5f #pm %.5f}" % (mean.getVal(),  mean.getError())
-#     leg_text += "{#sigma = %.5f #pm %.5f}" % (sigma.getVal(),  sigma.getError())
-#     leg = r.TLegend(0.10, 0.75, 0.35, 0.9)
-#     leg = r.TLegend(0.03, 0.80, 0.20, 0.9)
-#     leg = r.TLegend()
-#     leg.AddEntry("hist", leg_text, "pel")
-#     leg.Draw("same")
+    # Make a legend.
+    #     leg_text  = "#splitline{#mu = %.5f #pm %.5f}" % (mean.getVal(),  mean.getError())
+    #     leg_text += "{#sigma = %.5f #pm %.5f}" % (sigma.getVal(),  sigma.getError())
+    #     leg = r.TLegend(0.10, 0.75, 0.35, 0.9)
+    #     leg = r.TLegend(0.03, 0.80, 0.20, 0.9)
+    #     leg = r.TLegend()
+    #     leg.AddEntry("hist", leg_text, "pel")
+    #     leg.Draw("same")
 
-#     leg_text  = "#splitline{#mu = %.3f #pm %.3f}" % (mean.getVal(),  mean.getError())
-#     leg_text += "{#sigma = %.3f #pm %.3f}" % (sigma.getVal(),  sigma.getError())
+    #     leg_text  = "#splitline{#mu = %.3f #pm %.3f}" % (mean.getVal(),  mean.getError())
+    #     leg_text += "{#sigma = %.3f #pm %.3f}" % (sigma.getVal(),  sigma.getError())
 
     # fixOverlay()
 
@@ -565,7 +566,7 @@ def RooFit_CBxBWplusExp_fit_binned(hist, x_lim, fit_range=None, show_params=True
         The frame object which holds the plots. 
         Can be drawn to a TCanvas.
     """
-#     r.RooMsgService.instance().setStreamStatus(1,False)
+    #     r.RooMsgService.instance().setStreamStatus(1,False)
 
     BW_MEAN_PDG = 91.19
     BW_SIGMA_PDG = 2.44
@@ -621,15 +622,493 @@ def RooFit_CBxBWplusExp_fit_binned(hist, x_lim, fit_range=None, show_params=True
     xframe.getAttText().SetTextColor(linecolor)
     # xframe.getAttText().SetTextColor(color_line_corr)
 
-#     leg_text  = "#splitline{#mu = %.3f #pm %.3f}" % (mean.getVal(),  mean.getError())
-#     leg_text += "{#sigma = %.3f #pm %.3f}" % (sigma.getVal(),  sigma.getError())
-    
-#     leg = r.TLegend(0.03, 0.80, 0.20, 0.9)
-#     leg.AddEntry("gauss", leg_text, "lep")
-#     leg.Draw("same")
+    #     leg_text  = "#splitline{#mu = %.3f #pm %.3f}" % (mean.getVal(),  mean.getError())
+    #     leg_text += "{#sigma = %.3f #pm %.3f}" % (sigma.getVal(),  sigma.getError())
+        
+    #     leg = r.TLegend(0.03, 0.80, 0.20, 0.9)
+    #     leg.AddEntry("gauss", leg_text, "lep")
+    #     leg.Draw("same")
 
     fit_stats_dict = get_BWxCBplusExp_fit_stats(Mean, Sigma, CB_alpha, CB_exp, tau, fsig)
     return xframe, fit_stats_dict
+
+class DSCBFitter:
+    """Organizer for an unbinned single DSCB fit."""
+
+    def __init__(self):
+        """Instantiate a DSCB fit object."""
+        self.m4mu_min = None
+        self.m4mu_max = None
+        self.relm4muerr_min = None
+        self.relm4muerr_max = None
+        self.n_bins = None
+        self.fit_result = None
+        self.integral = None
+        # Attributes below are useful when doing before/after pT corr.
+        self.sigma_improv = None  # Fraction, not percent.
+        self.sigma_improv_err = None  # Fraction, not percent
+        self.mean_shift   = None  # MeV.
+        self.mean_shift_err = None  # MeV
+
+    def do_DSCB_fit(self, tree, canv, outfile_pdf,
+        m4mu_min, m4mu_max, relm4muerr_min, relm4muerr_max, n_bins=100, method="AdHoc", year="2018",
+        show_after_corr=False, make_new_page_after=True, mean_before_corr=0, sigma_before_corr=0, zoom=False):
+        """Draw a DSCB fit to a canvas, store the info, and return the fit results.
+        
+        NOTE: Make sure you have an open TCanvas on which to draw.
+
+        Parameters
+        ----------
+        tree : TTree
+            Contains either set of branches: 
+            - Set 1: mass4mu, mass4muErr, passedFullSelection, finalState
+            - Set 2: m4mu, m4mu_corr
+        canv : ROOT.TCanvas
+            The canvas on which to draw the plots.
+        outfile_pdf : str
+            The full filepath to store the pdf.
+        m4mu_min : float
+            The starting point of your binning range.
+        m4mu_max : float
+            The ending point of your binning range.
+        relm4muerr_min : float
+            The min cut on mass4muErr.
+        relm4muerr_max : float
+            The max cut on mass4muErr.
+        n_bins : int, default=100
+            The number of bins in which to bin the mass4mu distribution.
+            NOTE: It's actually an unbinned DSCB fit, but the binning
+            is just for plotting purposes (can't see an unbinned fit!).
+        method : str, default="AdHoc"
+            Either "AdHoc" or "GeoFit".
+        year : str, default="2018"
+            The year of the sample.
+        show_after_corr : bool, default=False
+            If True, show a second DSCB fit on the same canvas.
+            Controls positioning of labels in the C++ fit script.
+        make_new_page_after : bool, default=True
+            If True, then the canvas will save the page to the growing PDF
+            and start a new page.
+        mean_before_corr : float, default=0
+            The mean of the previous DSCB fit which will be compared
+            to a new fit.
+            Useful when show_after_corr=True.
+        sigma_before_corr : float, default=0
+            The sigma of the previous DSCB fit which will be compared
+            to a new fit.
+            Useful when show_after_corr=True.
+        zoom : bool, default=False
+            If True, then x-axis range on plot will be same as fit range.
+            Else, x-axis range will be [105, 145] GeV.
+
+        Returns
+        -------
+        result : ROOT.RooFitResult
+            A pointer which stores the results from a DSCB fit.
+        """
+        assert method in ["AdHoc", "GeoFit"]
+        msg = "  * Performing DSCB fit: "
+        if show_after_corr:
+            msg = msg.replace(": ", "s - before and after pT corr:")
+            color_line = r.kRed
+        else:
+            color_line = r.kBlue
+        print(msg)
+        self.info_printer(m4mu_min, m4mu_max, relm4muerr_min, relm4muerr_max, n_bins)
+        # Perform selections and draw to canvas.
+        integral = r.vector('Double_t')()
+        result = r.fit_and_draw_DSCB(
+                        tree, m4mu_min, m4mu_max, relm4muerr_min, relm4muerr_max,
+                        integral, method, year, canv, outfile_pdf,
+                        n_bins, color_line, show_after_corr, mean_before_corr, sigma_before_corr, zoom)
+        if make_new_page_after:
+            canv.Print(outfile_pdf)
+        self.m4mu_min = m4mu_min
+        self.m4mu_max = m4mu_max
+        self.relm4muerr_min = relm4muerr_min
+        self.relm4muerr_max = relm4muerr_max
+        self.n_bins = n_bins
+        self.fit_result = result
+        self.integral = integral[0]
+        return result
+
+    def info_printer(self, m4mu_min, m4mu_max, relm4muerr_min, relm4muerr_max, n_bins):
+        """Print useful debug info."""
+        print("  * Unbinned fit show on plot with n_bins = {}".format(n_bins))
+        print("  * mass4mu range =         [{}, {}]".format(m4mu_min, m4mu_max))
+        print("  * rel_mass4mu_err range = [{}, {}]".format(relm4muerr_min, relm4muerr_max))
+
+    def parse_DSCBfit_result(self, res, name_mean="mean", name_sigma="sigma"):
+        """
+        Return a 4-tuple of the fit results from a DSCB fit.
+        Store the fit result info.
+        
+        Parameters
+        ----------
+        res : RooFitResult* (pointer to a RooFitResult)
+        name_mean : str
+            The internal ROOT name of the RooRealVar mean.
+        name_sigma : str
+            The internal ROOT name of the RooRealVar sigma.
+        """
+        try:
+            mean = res.floatParsFinal().find(name_mean).getVal()
+            mean_err = res.floatParsFinal().find(name_mean).getError()
+            sigma = res.floatParsFinal().find(name_sigma).getVal()
+            sigma_err = res.floatParsFinal().find(name_sigma).getError()
+        except AttributeError:
+            mean = res.floatParsFinal().find("#mu").getVal()
+            mean_err = res.floatParsFinal().find("#mu").getError()
+            sigma = res.floatParsFinal().find("#sigma").getVal()
+            sigma_err = res.floatParsFinal().find("#sigma").getError()
+        self.mean = mean
+        self.mean_err = mean_err
+        self.sigma = sigma
+        self.sigma_err = sigma_err
+        assert all([x is not None for x in (mean, mean_err, sigma, sigma_err)])
+        return (mean, mean_err, sigma, sigma_err)
+
+class DSCBFitScanner:
+    """
+    Class to organize various DSCB fits across different mass4mu ranges.
+    NOTE: Fits are all within a single rel_m4mu_err bin.
+    """
+    def __init__(self, relm4muerr_min, relm4muerr_max):
+        self.relm4muerr_min = relm4muerr_min
+        self.relm4muerr_max = relm4muerr_max
+        self.dscb_ls = []
+        self.dscb_beforeaftercorr_ls = []
+
+    def do_DSCB_fits_over_mass4mu_range(self, x_min, x_max, stepsize,
+                                              max_lower_edge, min_upper_edge,
+                                              tree, canv, outfile_pdf, n_bins,
+                                              method, year,
+                                              verbose=False,
+                                              draw_beforeafter_corr=False,
+                                              zoom=False):
+        """
+        Draw multiple DSCB fits over a mass4mu range to a TCanvas.
+
+        Example for explanation of parameters:
+            fit_range_edges = [1,2,3,4,5,6,7,8]
+            So fit1 has starting range: [1,8]
+            So fit2 has starting range: [2,7]
+            So fit3 has starting range: [3,6]
+        Parameters
+        ----------
+        x_min : float
+            The starting point of your binning range.
+        x_max : float
+            The ending point of your binning range.
+        stepsize : float
+            The bin width.
+        max_lower_edge : float
+            An x value which terminates the fitting procedure.
+            Triggers when the (increasing) lower bound of the fit > max_lower_edge.
+            In the above example, if max_lower_edge == 2, then fit3 would not happen.
+        min_upper_edge : float
+            An x value which terminates the fitting procedure.
+            Triggers when the (decreasing) upper bound of the fit < min_upper_edge.
+            In the above example, if min_upper_edge == 8, then fits2,3 would not happen.
+        tree : TTree
+            Contains branches: mass4mu, mass4muErr, passedFullSelection, finalState
+        canv : ROOT.TCanvas
+            The canvas on which to draw the plots.
+        outfile_pdf : str
+            The full filepath to store the pdf.
+        n_bins : int
+            The number of bins in which to bin the mass4mu distribution.
+        method : str
+            Either "AdHoc" or "GeoFit".
+        year : str
+            The year of the sample.
+        zoom : bool
+            If True, then x-axis range on plot will be same as fit range.
+            Else, x-axis range will be [105, 145] GeV.
+        """
+        # Make sure n_bins can be represented as an int.
+        if not isinstance(n_bins, int):
+            assert (n_bins).is_integer() 
+        fit_range_edges = self.make_binedges_from_stepsize(x_min, x_max, stepsize)
+        if verbose:
+            print("This scanner made fit_range_edges:\n", fit_range_edges)
+        for m4mu_min, m4mu_max in zip(fit_range_edges, fit_range_edges[::-1]):
+            if (m4mu_min >= max_lower_edge) or (m4mu_max < min_upper_edge):
+                break
+            if draw_beforeafter_corr:
+                # Drawing 2 DSCBs: one before pT corr and one after.
+                dscb_before = DSCBFitter()
+                dscb_after = DSCBFitter()
+                # Plot m(4mu) before pT corr.
+                res_before = dscb_before.do_DSCB_fit(tree, canv, outfile_pdf,
+                          m4mu_min, m4mu_max, self.relm4muerr_min, self.relm4muerr_max, n_bins,
+                          method=method, year=year,
+                          show_after_corr=False, make_new_page_after=False, zoom=zoom)
+                mean, mean_err, sigma, sigma_err = dscb_before.parse_DSCBfit_result(
+                                                       res_before, name_mean="#mu", name_sigma="#sigma")
+                # Plot m(4mu) after pT corr.
+                # Also use the old sigma to calculate the improvement.
+                # Also also, use the old mean to calculate the mass shift.
+                res_after = dscb_after.do_DSCB_fit(tree, canv, outfile_pdf,
+                          m4mu_min, m4mu_max, self.relm4muerr_min, self.relm4muerr_max, n_bins,
+                          method=method, year=year,
+                          show_after_corr=True, make_new_page_after=True, mean_before_corr=mean, sigma_before_corr=sigma, zoom=zoom)
+                mean_corr, mean_corr_err, sigma_corr, sigma_corr_err = dscb_after.parse_DSCBfit_result(
+                                                        res_after, name_mean="#mu^{corr.}", name_sigma="#sigma^{corr.}")
+                dscb_after.sigma_improv = abs(sigma_corr - sigma) / float(sigma)
+                dscb_after.sigma_improv_err = prop_err_on_dsigoversig(sigma, sigma_corr, sigma_err, sigma_corr_err)
+                dscb_after.mean_shift = (mean_corr - mean) * 1000.0  # MeV.
+                dscb_after.mean_shift_err = np.sqrt(mean_err**2 + mean_corr_err**2)
+                self.dscb_beforeaftercorr_ls.append((dscb_before, dscb_after))
+            else:
+                # Draw one instance of a DSCB.
+                dscb = DSCBFitter()
+                res = dscb.do_DSCB_fit(tree, canv, outfile_pdf,
+                          m4mu_min, m4mu_max, self.relm4muerr_min, self.relm4muerr_max, n_bins,
+                          method=method, year=year,
+                          show_after_corr=False, make_new_page_after=True, zoom=zoom)
+                mean, mean_err, sigma, sigma_err = dscb.parse_DSCBfit_result(res)
+                self.dscb_ls.append(dscb)
+
+    def calc_num_bins(self, x_min, x_max, stepsize, allow_rebinning=False):
+        """Return the number of bins from x_min to x_max in bin widths of `stepsize`.
+        
+        NOTE: 
+          - If the parameters do not yield an int number of bins,
+            then the number of bins will be rounded to nearest int.
+          - This fn will not change x_min or x_max, but you are not guaranteed
+            to get the stepsize you requested
+
+        Parameters
+        ----------
+        x_min : float
+            The starting point of your binning range.
+        x_max : float
+            The ending point of your binning range.
+        stepsize : float
+            The bin width.
+        allow_rebinning : bool
+            If True, then will round stepsize to the nearest int to make sure
+            there are an int number of bins between x_min, x_max.
+        """
+        bins = (x_max - x_min) / float(stepsize)
+        if not isinstance(bins, int):
+            try:
+                assert bins.is_integer()  # If float is close to int, then good.
+                bins = int(bins)
+            except AssertionError:
+                msg = "  Cannot create int number of bins using:\n"
+                msg += "  x_min={}, x_max={}, stepsize={}".format( x_min, x_max, stepsize)
+                if allow_rebinning:
+                    print("...Warning! You will not get the stepsize you requested")
+                    print(msg)
+                    bins = int(round(bins))
+                else:
+                    raise ValueError(msg)
+        return bins
+    
+    def make_binedges_from_stepsize(self, x_min, x_max, stepsize):
+        """Return an array of bin edges: [x_min, x_max, stepsize]."""
+        bins = self.calc_num_bins(x_min, x_max, stepsize, allow_rebinning=True)
+        # if not isinstance(bins, int):
+        #     assert (bins).is_integer()  # If float is close to int, then good.
+        return np.linspace(x_min, x_max, bins+1)
+
+class DSCBFitPlotter:
+    """Class to show how DSCB fit parameters change over different fit ranges."""
+    
+    def __init__(self):
+        pass
+        # self.relmass4mu_ls = relmass4mu_ls
+
+    def plot_X_vs_GeVfitrange(self, var, scanner, canv, outfile_pdf, make_new_page_after=True, corrected_dscb=False):
+        """Draw plots of var vs. different GeV fit ranges,
+        where var is something like: mean(DSCB) and sigma(DSCB).
+
+        Example:
+            Fit 1 range: [105, 145] GeV
+            Fit 2 range: [110, 135] GeV
+
+        Parameters
+        ----------
+        var : str
+            Attribute of DSCBFitter() object to be plotted as the y-coord.
+            Supports: "mean", "sigma", "integral", "sigma_improv", "mean_shift"
+        scanner : DSCBFitScanner obj
+            A collection of DSCBFitter objects that fit over various ranges.
+        corrected_dscb : bool
+            If True, assumes you are using a DSCB with corrected pTs.
+
+        Returns
+        -------
+
+        """
+        # Get the data from the fits.
+        dscb_tup_ls = scanner.dscb_beforeaftercorr_ls
+        if len(dscb_tup_ls) == 0:
+            # Not doing before and after pT corrections.
+            assert len(np.shape(scanner.dscb_ls)) == 1
+            x = [dscb.m4mu_min for dscb in scanner.dscb_ls]
+            y_vals = [getattr(dscb, var) for dscb in scanner.dscb_ls]  # E.g., dscb.mean, dscb.sigma.
+            y_vals_err = [getattr(dscb, var+"_err") for dscb in scanner.dscb_ls] if var not in ["integral"] else np.zeros_like(y_vals)
+        else:
+            # Before and after pT corrections! Two DSCBs per fit range.
+            assert len(np.shape(dscb_tup_ls)) == 2
+            x = [dscb_tup[0].m4mu_min for dscb_tup in dscb_tup_ls]
+            which_dscb = 1 if corrected_dscb else 0
+            # Set y vals.
+            y_vals = [getattr(dscb_tup[which_dscb], var) for dscb_tup in dscb_tup_ls]  # E.g., mean, sigma, integral, sigma_improve, mean_shift.
+            y_vals_err = [getattr(dscb_tup[which_dscb], var+"_err") for dscb_tup in dscb_tup_ls] if var not in ["integral"] else np.zeros_like(y_vals)
+            if var in ["sigma_improv"]:
+                # Convert to percent.
+                y_vals = np.array(y_vals) * 100.0  # As %.
+                y_vals_err = y_vals * 0.01
+                # y_vals_err = np.array(y_vals_err) * 100.0  # As %.
+
+                
+                # y_vals = [dscb_tup[1].sigma_improv * 100.0 for dscb_tup in dscb_tup_ls]
+                # y_vals = [dscb_tup[1].sigma_improv_err * 100.0 for dscb_tup in dscb_tup_ls]
+
+                # for dscb_tup in dscb_tup_ls:
+                #     dscb_bef, dscb_aft = dscb_tup[0], dscb_tup[1]
+                #     y_err = prop_err_on_dsigoversig(dscb_bef.sigma, dscb_aft.sigma,
+                #                                     dscb_bef.sigma_err, dscb_aft.sigma_err)
+                #     y_vals_err.append(y_err * 100.0)  # As %.
+                #     y_vals.append(dscb_aft.sigma_improv * 100.0)  # As %.
+            # else:
+                # Either mean, sigma, integral, or mean_shift.
+                # if corrected_dscb:
+                    # Corrected DSCB.
+                #     y_vals = [getattr(dscb_tup[1], var) for dscb_tup in dscb_tup_ls]  # E.g., dscb.mean, dscb.sigma, dscb.integral, dscb.mean_shift.
+                #     y_vals_err = [getattr(dscb_tup[1], var+"_err") for dscb_tup in dscb_tup_ls] if var not in ["integral"] else np.zeros_like(y_vals)
+                # else:
+                #     # Uncorrected DSCB.
+                #     y_vals = [getattr(dscb_tup[0], var) for dscb_tup in dscb_tup_ls]  # E.g., dscb.mean, dscb.sigma, dscb.integral, dscb.mean_shift.
+                #     y_vals_err = [getattr(dscb_tup[0], var+"_err") for dscb_tup in dscb_tup_ls] if var not in ["integral"] else np.zeros_like(y_vals)
+
+        if var in ["mean"]:
+            var_latex = r"#mu"
+            y_min = 124.8 # 124.7
+            y_max = 124.96
+            y_units = "GeV"
+        elif var in ["sigma"]:
+            var_latex = r"#sigma"
+            y_min = 0.85  # 0.85, min(y_vals) * 0.80  
+            y_max = 1.25   # 1.25, max(y_vals) * 1.20    
+            y_units = "GeV"
+        elif var in ["integral"]:
+            var_latex = r"integral"
+            y_min = min(y_vals) * 0.90  # 37000  # 
+            y_max = max(y_vals) * 1.10  # 50000  # 
+            y_units = ""
+        elif var in ["sigma_improv"]:
+            var_latex = r"#frac{#Delta#sigma}{#sigma}"
+            y_min = 0  # 3.5 # min(y_vals) * 0.90  # , 6.2 
+            y_max = 10 # 7.5  # max(y_vals) * 1.10  # 7.6
+            y_units = r"%"
+        elif var in ["mean_shift"]:
+            var_latex = r"#Deltam_{4#mu}"
+            y_min = min(y_vals) * 0.9  # 3.5 # min(y_vals) * 0.90  # , 6.2 
+            y_max = max(y_vals) * 1.1 # 7.5  # max(y_vals) * 1.10  # 7.6
+            y_units = r"MeV"
+        else:
+            raise ValueError
+        print(f"var ({var}) vals:\n{y_vals}")
+        print(f"var ({var}) vals err:\n{y_vals_err}")
+
+        relmin = scanner.relm4muerr_min
+        relmax = scanner.relm4muerr_max
+        # Prepare the plot decor.
+        title_template = r"Variation of DSCB fit %s over different fit ranges" % var_latex
+        # title_template = r"#splitline{Variation of DSCB fit  ? over different fit ranges}"
+        # title_template += r"{%.2f <   #deltam_{4#mu}/m_{4#mu} < %.2f%%}" % (relmin, relmax)
+        x_label = r"lower bound of fit range"
+        y_label = r"%s(DSCB)" % var_latex
+        x_min = min(x) - 1
+        x_max = max(x) + 1  # = 102, 118
+        x_units = "GeV"
+        line_color = r.kRed if corrected_dscb else r.kBlack
+        line_width = 1
+        marker_color = r.kRed if corrected_dscb else r.kBlack
+        marker_style = 20
+        marker_size = 0.5
+        # Make the plot and draw it to the canvas.
+        gr = make_TGraphErrors(x, y_vals, x_err=None, y_err=y_vals_err,
+                        use_binwidth_xerrs=False,
+                        title=title_template,
+                        x_label=x_label, x_min=x_min, x_max=x_max, x_units=x_units,
+                        y_label=y_label, y_min=y_min, y_max=y_max, y_units=y_units,
+                        line_color=line_color, line_width=line_width,
+                        marker_color=marker_color, marker_style=marker_style, marker_size=marker_size)
+        gr.x_vals = x
+        gr.y_vals = y_vals
+        gr.y_vals_err = y_vals_err
+        return gr
+
+        #--- Code below is for drawing the plot ---#
+        # draw_options = "AP" if make_new_page_after else "AP same"
+        # gr.Draw(draw_options)
+        # if corrected_dscb:
+        #     # Add corrected DSCB to uncorrected using a TMultiGraph.
+        #     leg = make_TLegend(x_dim=(0,1), y_dim=(0,1),
+        #                     screenshot_dim=(878,872), buffer_dim=(176,438,610,131))
+        #     # leg = ROOT.TLegend(0.20, 0.70, 0.50, 0.85)
+
+        #     # leg_text = r"%.2f < #deltam_{4#mu}/m_{4#mu} < %.2f%%" % (relmin, relmax)
+        #     leg_text = r"After p_{T} corr."
+        #     leg.SetTextSize(0.02)
+        #     leg.AddEntry(gr, leg_text, "lpfe")
+        #     # leg.SetLineWidth(3)
+        #     leg.SetBorderSize(1)
+        #     leg.Draw("same")
+
+        # if make_new_page_after:
+        #     canv.Print(outfile_pdf)
+
+
+
+
+
+
+
+    # def make_plot_mean_vs_GeVfitrange(self, scanner, canv, outfile_pdf, make_new_page_after=True, corrected_dscb=False):
+    #     """Return a TGraphErrors of the mean vs. changing fit range."""
+    #     # Get the data from the fits.
+    #     dscb_tup_ls = scanner.dscb_beforeaftercorr_ls
+    #     y_vals = [getattr(dscb_tup[1], "mean") for dscb_tup in dscb_tup_ls]  # E.g., dscb.mean, dscb.sigma.
+    #     y_vals_err = [getattr(dscb_tup[1], var+"_err") for dscb_tup in dscb_tup_ls] if var not in ["integral", "sigma_improv"] else np.zeros_like(y_vals)
+
+    #     var_latex = r"#mu"
+    #     x_min, x_max = 102, 118
+    #     y_min = 124.8 # 124.7
+    #     y_max = 124.96
+    #     y_units = "GeV"
+
+    #     relmin = scanner.relm4muerr_min
+    #     relmax = scanner.relm4muerr_max
+    #     # Prepare the plot decor.
+    #     title_template = r"Variation of DSCB fit %s over different fit ranges" % var_latex
+    #     # title_template = r"#splitline{Variation of DSCB fit  ? over different fit ranges}"
+    #     # title_template += r"{%.2f <   #deltam_{4#mu}/m_{4#mu} < %.2f%%}" % (relmin, relmax)
+    #     x_label = r"lower bound of fit range"
+    #     y_label = r"%s(DSCB)" % var_latex
+    #     x_units = "GeV"
+    #     line_color=1
+    #     line_width=2
+    #     marker_color = r.kRed if corrected_dscb else r.kBlack
+    #     marker_style=20
+    #     marker_size=1
+    #     # Make the plot and draw it to the canvas.
+    #     gr = make_TGraphErrors(x, y_vals, x_err=None, y_err=y_vals_err,
+    #                     use_binwidth_xerrs=False,
+    #                     title=title_template,
+    #                     x_label=x_label, x_min=x_min, x_max=x_max, x_units=x_units,
+    #                     y_label=y_label, y_min=y_min, y_max=y_max, y_units=y_units,
+    #                     line_color=line_color, line_width=line_width,
+    #                     marker_color=marker_color, marker_style=marker_style, marker_size=marker_size,
+    #                     )
+    #     draw_options = "AP" if make_new_page_after else "AP same"
+    #     gr.Draw(draw_options)
 
 # def RooFit_hist_DSCB_fit(hist, canv, fit_range=None, count=1):
     

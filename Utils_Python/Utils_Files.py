@@ -84,3 +84,20 @@ def root2feather(infile_root, outfile_fullpath):
     """
     arr = root_numpy.root2array(infile_root)
     pd.DataFrame(arr).to_feather(outfile_fullpath)
+
+class Py3toPy2Converter:
+    """
+    Class to insert the proper encoding line in Python2 files
+    but take them away in Python3 files.
+    # FIXME: Not complete.
+    """
+    def __init__(self, file_ls):
+        import subprocess
+        self.file_ls = file_ls
+
+    def insert_fstring_coding(self, file_ls):
+        """Insert f-string encoding at the top of each file."""
+        fstring_code_str = "# -*- coding: future_fstrings -*-"
+        # NOTE: The code below is under development.
+        # Not sure if the `sed` cmd will interfere with regex.
+        # sed '1 s/^/# -*- coding: future_fstrings -*-\n/' file1

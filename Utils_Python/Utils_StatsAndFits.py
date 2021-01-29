@@ -5,7 +5,7 @@ from scipy.optimize import curve_fit, OptimizeWarning
 # Local imports. 
 from d0_Utils.d0_fns import centers_of_binning_array, get_subset_mask, print_header_message
 from d0_Utils.d0_dicts import color_dict, label_LaTeX_dict
-from Utils_ROOT.ROOT_StatsAndFits import RooFit_gaus_fit
+# from Utils_ROOT.ROOT_StatsAndFits import RooFit_gaus_fit  # FIXME: Giving circular import error.
 from Utils_Python.Utils_Plotting import make_stats_legend_for_gaus_fit
 from Utils_Python.Utils_Physics import perc_diff
 

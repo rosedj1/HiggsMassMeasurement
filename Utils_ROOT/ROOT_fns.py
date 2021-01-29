@@ -5,6 +5,22 @@ from Utils_Python.Selections import Selector
 from Utils_Python.Utils_Physics import calc_dphi, calc_dR  
 from d0_Studies.d0_Utils.d0_fns import find_bin_edges_of_value, correct_muon_pT, calc_num_bins, print_header_message
 
+def read_cpp_as_txt(cpp_file):
+    """Return a string of all the C++ code store in cpp_file."""
+    with open(cpp_file, "r") as f:
+        line_ls = f.readlines()
+        # Each element in the list is proceeded by '\n'.
+        clean_line_ls = [x.rstrip('\n') for x in line_ls]
+        # Turn into a single string:
+        code_str = '\n'.join(clean_line_ls)
+        return code_str
+
+def load_cpp_code(dot_so_filepath, cpp_code_path):
+    """Load the C++ code stored in cpp_code_path and a corresponding .so file."""
+    code_str = read_cpp_as_txt(cpp_code_path)
+    ROOT.gSystem.Load(dot_so_filepath)
+    ROOT.gInterpreter.Declare(code_str)
+
 def get_bin_centers_from_TH1(hist):
     """Return a list of the centers of each bin."""
     n_bins = hist.GetNbinsX()

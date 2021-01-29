@@ -88,6 +88,7 @@ def make_key_from_binedges(binedge_tup):
 
 def correct_muon_pT(eta, pT, q, d0, 
                     pT_corr_factor_dict, detection="manual",
+                    force_zero_intercept=False,
                     use_GeoFit_algo=False,
                     eta_binedge_ls=None, pT_binedge_ls=None,
                     verbose=False, print_all_muon_info=False):
@@ -124,6 +125,8 @@ def correct_muon_pT(eta, pT, q, d0,
         bins from etabin2.
         If 'manual', then eta_binedge_ls and pT_binedge_ls
         must be provided.
+    force_zero_intercept : bool
+        If True, then a = 0 in: dpT/pT = (a + b * qd0)
     use_GeoFit_algo : bool
         Returns corrected pT of a muon using the following logic:
             - (pTreco - pTgen)/(pTgen^2) * 10000 = a + b * qd0 := C
@@ -164,12 +167,8 @@ def correct_muon_pT(eta, pT, q, d0,
         # FIXME: Need to also retrieve and implement uncertainties on slope
         # and interc.
         slope, interc = get_pT_corr_factors(pT_corr_factor_dict, eta_min, eta_max, pT_min, pT_max)
-        C = interc + slope * q * d0
-        if use_GeoFit_algo:
-            delta_pT = C * pT * pT / 10000.
-        else:
-            # Use "Ad Hoc" algorithm.
-            delta_pT = pT * C
+        C = slope * q * d0 if force_zero_intercept else interc + slope * q * d0
+        delta_pT = C * pT * pT / 10000. if use_GeoFit_algo else pT * C
     else:
         slope, interc = None, None
         delta_pT = 0

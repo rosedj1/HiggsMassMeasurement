@@ -1,6 +1,6 @@
 import time
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import ROOT as r
 
 from scipy.optimize import curve_fit
@@ -763,9 +763,9 @@ class KinBinOrganizer():
         """
         d0_bin_arr, d0_bin_width = make_binning_array(d0_bin_limits)
         
-        if d0_bin_width < 0.0005:
-            err_msg = f"WARNING: d0_bin_width ({d0_bin_width}) is too small (d0_bin_width < 0.0005).\nStopping now."
-            raise ValueError(err_msg)    
+        # if d0_bin_width < 0.0005:
+        #     err_msg = f"WARNING: d0_bin_width ({d0_bin_width}) is too small (d0_bin_width < 0.0005).\nStopping now."
+        #     raise ValueError(err_msg)    
             
         self.d0_bin_arr = d0_bin_arr
         self.d0_bin_arr_shifted = shift_binning_array(d0_bin_arr)

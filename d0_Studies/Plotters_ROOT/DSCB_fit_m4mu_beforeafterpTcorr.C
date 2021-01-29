@@ -13,7 +13,7 @@ Inside the root file, you should have a TTree with 2 branches:
 
 Author: Jake Rosenzweig
 OG Date: 2020-07ish
-Updated: 2020-12-17
+Updated: 2021-01-20
 **/
 #include <iostream>
 #include <iomanip>
@@ -96,10 +96,11 @@ Double_t m4mu_max = 140.0;
 Int_t n_bins = 100;
 string year = "2018";
 string fs = "ggH";
-string derive_from_sample = "GeoFit"; // Sample from which pT corr factors were derived.
+string derive_from_sample = "DY+J/#psi"; // Sample from which pT corr factors were derived.
 bool plot_residuals = true;  // If false, then ratio of hists will be plotted.
-TString infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2018ggH_m4muvals_fullstats_usingXunwuHmumucorrfactorsfrommacro_withoutFSR.root";
-TString outfile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/Plots/applypTcorrplots/CorrFromMC/MC2018_m4mu_ggH_DSCBfit_corrfromMCDY2018Xunwusmacro_withoutFSR.pdf";
+// TString infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2018ggH_m4muvals_fullstats_usingXunwuHmumucorrfactorsfrommacro_withoutFSR.root";
+TString infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2018_m4mu_m4mucorrfromDYJpsifactors_fullstats_noFSR.root";
+TString outfile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/plots/applypTcorrplots/CorrFromMC/tests/MC2018ggH_m4mu_DSCBfit_beforeaftercorr_GeoFitfactors_withoutFSR.pdf";
 /* TString infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2018ggH_m4muvals_fullstats_usingXunwuHmumucorrfactorsfrommacro_withoutFSR.root";
 TString outfile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/Plots/applypTcorrplots/CorrFromMC/MC2018_m4mu_ggH_DSCBfit_corrfromMCDY2018Xunwusmacro_withoutFSR.pdf"; */
 // This is the color of the fits. 
@@ -167,23 +168,24 @@ cout << "number of entries in hist after filling: " << n_hist << endl;
 
 // DSCB fit.
 RooRealVar m4mu("m4mu", "m_{4#mu}", m4mu_min, m4mu_max, "GeV");
-RooRealVar m4mu_corr("m4mu_corr", "m_{4#mu}", m4mu_min, m4mu_max, "GeV");
-RooDataSet rds("rds", "dataset with m4mu", tree, m4mu);
-RooDataSet rds_corr("rds_corr", "dataset with m4mu_corr", tree, m4mu_corr);
-
 RooRealVar Mean("#mu", "#mu", 125, 120, 130);
 RooRealVar Sigma("#sigma", "#sigma", 1, 0, 10);//sigma[decay]);
 RooRealVar AlphaL("#alpha_{L}", "#alpha_{L}", 1, 0, 30);//alphaL[decay]);
-RooRealVar ExpL("n_{L}", "n_{L}", 1, 0, 30);//expL[decay]);
 RooRealVar AlphaR("#alpha_{R}", "#alpha_{R}", 1, 0, 30);//alphaR[decay]);
+RooRealVar ExpL("n_{L}", "n_{L}", 1, 0, 30);//expL[decay]);
 RooRealVar ExpR("n_{R}", "n_{R}", 1, 1, 50);//expR[decay]);
 
+RooRealVar m4mu_corr("m4mu_corr", "m_{4#mu}", m4mu_min, m4mu_max, "GeV");
 RooRealVar Mean_corr("#mu^{corr}", "#mu^{corr}", 125, 120, 130);
 RooRealVar Sigma_corr("#sigma^{corr}", "#sigma^{corr}", 1, 0, 10);//sigma[decay]);
 RooRealVar AlphaL_corr("#alpha_{L}^{corr}", "#alpha_{L}^{corr}", 1, 0, 30);//alphaL[decay]);
 RooRealVar ExpL_corr("n_{L}^{corr}", "n_{L}^{corr}", 1, 0, 30);//expL[decay]);
 RooRealVar AlphaR_corr("#alpha_{R}^{corr}", "#alpha_{R}^{corr}", 1, 0, 30);//alphaR[decay]);
 RooRealVar ExpR_corr("n_{R}^{corr}", "n_{R}^{corr}", 1, 1, 50);//expR[decay]);
+
+RooDataSet rds("rds", "dataset with m4mu", tree, m4mu);
+RooDataSet rds_corr("rds_corr", "dataset with m4mu_corr", tree, m4mu_corr);
+
 RooMyPDF_DSCB DSCB("DSCB", "DSCB", m4mu, Mean, Sigma, AlphaL, ExpL, AlphaR, ExpR);
 RooMyPDF_DSCB DSCB_corr("DSCB_corr", "DSCB_corr", m4mu_corr, Mean_corr, Sigma_corr, AlphaL_corr, ExpL_corr, AlphaR_corr, ExpR_corr);
 
