@@ -1,0 +1,19 @@
+# These correction factors have modified pT bin values
+# The numbers come from Xunwu's macro:
+# 
+
+{'0.0eta0.9_5.0pT1000.0': {'intercept': 0.0,
+  'intercept_err': 0.0,
+  'slope': 650.84,
+  'slope_err': 0.0},
+
+ '0.9eta1.7_5.0pT1000.0': {'intercept': 0.0,
+  'intercept_err': 0.0,
+  'slope': 988.37,
+  'slope_err': 0.0},
+
+ '1.7eta2.4_5.0pT1000.0': {'intercept': 0.0,
+  'intercept_err': 0.0,
+  'slope': 1484.6,
+  'slope_err': 0.0}
+}
