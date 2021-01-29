@@ -17,7 +17,7 @@ class MyMuonCollection:
     """A class to handle a list of MyMuon objects."""
     
     def __init__(self, prod_mode_ls=[]):
-        self.prod_mode_ls = prod_mode_ls
+        self.prod_mode_ls = prod_mode_ls  # List of strings.
         self.muon_ls = []
         self.m4mu_ls = []
         self.m4mu_corr_ls = []
@@ -43,6 +43,7 @@ class MyMuonCollection:
                                       pT_min=5, pT_max=1000,
                                       d0_max=1,
                                       do_mu_pT_corr=False, 
+                                      force_zero_intercept=False,
                                       pT_corr_factor_dict=None,
                                       use_GeoFit_algo=False,
                                       verbose=False):
@@ -85,7 +86,15 @@ class MyMuonCollection:
         self.sample = r"H #rightarrow ZZ #rightarrow 4#mu"
 
         if do_mu_pT_corr:
+            print(f"...Correcting muon pT using supplied correction factors.")
             self.do_mu_pT_corr = True
+            # Make sure only one pT corr factor dict is known.
+            if isinstance(pT_corr_factor_dict, dict) and isinstance(self.pT_corr_factor_dict, dict):
+                msg = "MyMuonCollection already has a pT_corr_factor_dict, but you are supplying another."
+                raise ValueError(msg)
+            # If one was not supplied, use the one that already exists.
+            if pT_corr_factor_dict is None:
+                pT_corr_factor_dict = self.pT_corr_factor_dict
             if use_GeoFit_algo:
                 msg = "Using GeoFit Correction Algorithm"
                 print_header_message(msg, pad_char="@", n_center_pad_chars=5)
@@ -107,7 +116,8 @@ class MyMuonCollection:
             mu_tup = build_muons_from_HZZ4mu_event(t, evt_num,
                                                   eta_bin=[eta_min, eta_max],
                                                   pT_bin=[pT_min, pT_max],
-                                                  d0_max=d0_max)
+                                                  d0_max=d0_max,
+                                                  use_FSR=False)
             if None in mu_tup: 
                 continue
 
@@ -115,9 +125,6 @@ class MyMuonCollection:
                 # Correct each muon's pT according to the
                 # ad hoc pT correction factors given.
                 # Save the muons with old and new pTs.
-                if pT_corr_factor_dict is None:
-                    pT_corr_factor_dict = self.pT_corr_factor_dict
-                assert pT_corr_factor_dict is not None
                 corr_mu_ls = []
                 # corr_mu_geofit_ls = []
                 for mu in mu_tup:
@@ -126,6 +133,7 @@ class MyMuonCollection:
                     mu.pT_corr = correct_muon_pT(
                         mu.eta, mu.pT, mu.charge, mu.d0, 
                         pT_corr_factor_dict, detection="auto",
+                        force_zero_intercept=force_zero_intercept,
                         use_GeoFit_algo=use_GeoFit_algo,
                         print_all_muon_info=False,
                         verbose=verbose)
@@ -136,6 +144,7 @@ class MyMuonCollection:
                     #     mu.pT_corr_geofit = correct_muon_pT(
                     #         mu.eta, mu.pT, mu.charge, mu.d0, 
                     #         pT_corr_factor_dict, detection="auto",
+                    #         force_zero_intercept=force_zero_intercept,
                     #         use_GeoFit_algo=True,
                     #         verbose=verbose)
                     #     lorentzvec_mu_corr_geofit = r.Math.PtEtaPhiMVector(mu.pT_corr_geofit, mu.eta, mu.phi, mu.mass)
@@ -163,7 +172,8 @@ class MyMuonCollection:
                                       eta_min=0.0, eta_max=2.4,
                                       pT_min=20, pT_max=1000,
                                       d0_max=1,
-                                      do_mu_pT_corr=False, 
+                                      do_mu_pT_corr=False,
+                                      force_zero_intercept=False,
                                       pT_corr_factor_dict=None,
                                       use_GeoFit_algo=False,
                                       verbose=False):
@@ -207,6 +217,7 @@ class MyMuonCollection:
         """
         self.sample = r"H #rightarrow #mu#mu"
         if do_mu_pT_corr:
+            print(f"...Correcting muon pT using supplied correction factors.")
             self.do_mu_pT_corr = True
 
         print(f"...Opening root file:\n{infile_path}")
@@ -246,6 +257,7 @@ class MyMuonCollection:
                     mu.pT_corr = correct_muon_pT(
                         mu.eta, mu.pT, mu.charge, mu.d0, 
                         pT_corr_factor_dict, detection="auto",
+                        force_zero_intercept=force_zero_intercept,
                         use_GeoFit_algo=use_GeoFit_algo,
                         verbose=verbose)
                     lorentzvec_mu_corr = r.Math.PtEtaPhiMVector(mu.pT_corr, mu.eta, mu.phi, mu.mass)
@@ -255,6 +267,7 @@ class MyMuonCollection:
                     #     mu.pT_corr_geofit = correct_muon_pT(
                     #         mu.eta, mu.pT, mu.charge, mu.d0, 
                     #         pT_corr_factor_dict, detection="auto",
+                    #         force_zero_intercept=force_zero_intercept,
                     #         use_GeoFit_algo=True,
                     #         verbose=verbose)
                     #     lorentzvec_mu_corr_geofit = r.Math.PtEtaPhiMVector(mu.pT_corr_geofit, mu.eta, mu.phi, mu.mass)
@@ -615,7 +628,7 @@ class MyMuonCollection:
         
         print(f"Filling histograms...")
         # Loop over stored values inside MyMuonCollection.
-        start = time.perf_counter()
+        # start = time.perf_counter()
         if self.do_mu_pT_corr:
             print(f"...Filling m4mu and m4mu_corr values...")
             for ct,(m4mu,m4mu_corr) in enumerate(zip(self.m4mu_ls, self.m4mu_corr_ls)):
@@ -662,8 +675,8 @@ class MyMuonCollection:
                 h_qd0.Fill(mu.charge * mu.d0)
                 h_charge.Fill(mu.charge)
                 h_dpTOverpT.Fill(mu.dpTOverpT)
-        end = time.perf_counter()
-        print(f"Filling histograms complete. Took {end - start:.3f} seconds.")
+        # end = time.perf_counter()
+        print(f"Filling histograms complete.")  # Took {end - start:.3f} seconds.")
         self.hist_inclusive_ls = hist_inclusive_ls
 
     def save_to_pkl(self, obj, outpkl_path):
@@ -833,7 +846,7 @@ class MyMuonCollection:
         
         # Loop over stored values inside MyMuonCollection.
         print(f"...Filling m4mu and m4mu_corr values...")
-        start = time.perf_counter()
+        # start = time.perf_counter()
         assert len(self.m4mu_ls) == len(self.m4mu_corr_ls) != 0
         # if write_geofit_vals:
         #     assert len(self.m4mu_ls) == len(self.m4mu_corr_geofit_ls)
@@ -866,8 +879,8 @@ class MyMuonCollection:
             ptr_m4mu_corr[0] = m4mu_corr
             newtree.Fill()
         print(f"  Number of good events found: {len(self.m4mu_ls)}")
-        end = time.perf_counter()
-        print(f"  (Took {end - start:.4f} seconds.)")
+        # end = time.perf_counter()
+        # print(f"  (Took {end - start:.4f} seconds.)")
 
         # Save tree and close file.
         newtree.Write()

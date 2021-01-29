@@ -66,7 +66,7 @@ RooFitResult* fit_and_draw_DSCB(
     // TPad* pbot = new TPad("pbot", "pad ratio", 0.0, 0.0, 1.0, 0.25);
     TString title_p1 = Form("%s MC %s DSCB Unbinned Fit, ", fs, year);
     // Need extra spaces in title all of a sudden...
-    TString title_p2 = Form("%.2f <   #deltam_{4#mu}/m_{4#mu} < %.2f%%", m4muErr_min, m4muErr_max);
+    TString title_p2 = Form("%.2f < #deltam_{4#mu}/m_{4#mu} < %.2f%%", m4muErr_min, m4muErr_max);
     TString title = title_p1 + title_p2;
     RooPlot* xframe = mass4mu.frame(RooFit::Range(105, 140), RooFit::Title(title));
     // RooPlot* framePull = mass4mu.frame(RooFit::Title("")); // Ratio plot
@@ -85,7 +85,7 @@ RooFitResult* fit_and_draw_DSCB(
     rds.plotOn(xframe, RooFit::MarkerColor(1), RooFit::Binning(n_bins));
     // DSCB.plotOn(xframe, RooFit::LineColor(color_line));
     DSCB.plotOn(xframe, RooFit::LineColor(2), RooFit::LineWidth(3), RooFit::Range(m4mu_min, m4mu_max));  //RooFit::Binning(n_bins), 
-    DSCB.paramOn(xframe, RooFit::Layout(0.20, 0.40, 0.80));
+    DSCB.paramOn(xframe, RooFit::Layout(0.20, 0.42, 0.80));
     xframe->getAttText()->SetTextSize(size_text);
     xframe->getAttText()->SetTextColor(2);
     // h_m4mu->SetTitle(title);

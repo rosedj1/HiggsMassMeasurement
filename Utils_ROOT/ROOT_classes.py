@@ -34,8 +34,7 @@ def make_TGraphErrors(x, y, x_err=None, y_err=None,
                       x_label="", x_min=0, x_max=10, x_units=None,
                       y_label="", y_min=0, y_max=10, y_units=None,
                       line_color=1, line_width=2,
-                      marker_color=1, marker_style=21, marker_size=0.5,
-                      ):
+                      marker_color=1, marker_style=21, marker_size=0.5):
     """A function to quickly make a TGraphErrors. Return the TGraphErrors.
     
     NOTE: Don't pass in x_err yet. Not ready.
@@ -109,6 +108,30 @@ def make_TLegend(x_dim=(0,1), y_dim=(0,1), screenshot_dim=None, buffer_dim=None)
         y_min, y_max = y_dim[0], y_dim[1]
     return ROOT.TLegend(x_min, y_min, x_max, y_max)
 
+def make_TMultiGraph_and_Legend(gr_ls=[], leg_txt_ls=[], y_min=None, y_max=None):
+    """Return a (TMultiGraph, TLegend) with all the TGraphs from gr_ls added."""
+    mg = ROOT.TMultiGraph()
+    for gr in gr_ls:
+        mg.Add(gr, "p")
+    x_title = gr_ls[0].GetXaxis().GetTitle()
+    y_title = gr_ls[0].GetYaxis().GetTitle()
+    title = gr_ls[0].GetTitle()
+    all_titles = "%s;%s;%s" % (title, x_title, y_title)
+    mg.SetTitle(all_titles)
+
+    leg = make_TLegend(x_dim=(0,1), y_dim=(0,1),
+                    screenshot_dim=(878,872), buffer_dim=(176,438,610,131))
+    # leg_text = r"%.2f < #deltam_{4#mu}/m_{4#mu} < %.2f%%" % (relmin, relmax)
+    leg.SetTextSize(0.02)
+    for gr, txt in zip(gr_ls, leg_txt_ls):
+        leg.AddEntry(gr, txt, "lpfe")
+    # leg.SetLineWidth(3)
+    leg.SetBorderSize(1)
+    if (y_min is not None) and (y_max is not None):
+        mg.SetMinimum(y_min) # Change y-axis limits.
+        mg.SetMaximum(y_max)
+    return (mg, leg)
+
 def get_normcoord_from_screenshot(canv_width, canv_height,
                                   left_offset, right_offset, bot_offset, top_offset):
     """Return a 4-tup of normalized coordinates, given screenshot dimensions.
@@ -136,3 +159,6 @@ def get_normcoord_from_screenshot(canv_width, canv_height,
     y_min = bot_offset / float(canv_height)
     y_max = 1 - (top_offset / float(canv_height))
     return (x_min, x_max, y_min, y_max)
+
+# def add_branch_pTcorr_fromadhocmethod():
+#     """Copy  a '.root' file 
