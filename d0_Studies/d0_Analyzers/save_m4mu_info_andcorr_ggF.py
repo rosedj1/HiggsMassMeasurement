@@ -1,4 +1,6 @@
 """
+FIXME: This code looks like it was superceded by MyMuonCollection methods.
+    - Investigate!
 FIXME: This file needs to have its Higgs mass cuts figured out. 
     Particularly for lep_genindex! 
     [ ] Do gen indexing
@@ -17,7 +19,7 @@ Syntax:
 Notes: 
 Author: Jake Rosenzweig
 Created:
-Updated: 
+Updated: 2021-02-01
 """
 import pickle
 import ROOT

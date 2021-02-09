@@ -7,52 +7,42 @@ saving the final 'combined' pickled dict.
 
 NOTE: infile_name_template should have the globbing characters
 (e.g. '*') to grab all matching files.
+
+Author: Jake Rosenzweig
+Updated: 2021-02-05
 """
 import pickle
 import os
 from glob import glob
+from Utils_Python.Utils_Files import open_pkl, save_to_pkl, check_overwrite
 
 #-----------------------#
 #--- User Parameters ---#
 #-----------------------#
-infile_name_template = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/Pickles/2017/ggH_m4mu/BestSoFar/MC2017_ggH_dpTOverpT_fullstats_*_5itergausfit_2p5sigs.pkl"
+infile_name_template = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/RochCorr/pickles/RC_vs_NoRC_itergaussfits_fullstats_pT75then200GeV_extendedxaxis_5iters*.pkl"
 outdir = None    # If None, then put new dict in same place as src dicts.
-namebase = "combined_muon_dct"  # If None, then name of combined pickle will be: 'combined_dcts.pkl'
+namebase = "RC_vs_NoRC_itergaussfits_fullstats_pT75then200GeV_extendedxaxis_5iters.pkl"  # If None, then name of combined pickle will be: 'combined_dcts.pkl'
+overwrite = 0
 
 #------------------------#
 #--- Script Functions ---#
 #------------------------#
-def parse_paths(f, outname=None, outdir=None):
+def make_full_filepath(f, outname=None, outdir=None):
     """Return the absolute file path of where combined pickle will be placed."""
     name = "combined_dcts.pkl" if outname is None else outname
-    outdir = os.path.split(f)[0] if outdir is None else outdir
-    if not name.endswith(".pkl"):
-        name = f"{name}.pkl"
+    name = f"{name}.pkl" if not name.endswith(".pkl") else name
+    outdir = os.path.dirname(f) if outdir is None else outdir
     abs_file_path = os.path.join(outdir, name)
     return abs_file_path
 
-def get_dct_from_pkl(f):
-    """Return a single dictionary that has been pickled in file `f`."""
-    with open(f, "rb") as inpkl:
-        dct = pickle.load(inpkl)
-    return dct
-
-def save_pickle(obj, fullpath):
-    """Save obj as a pickle at fullpath/name."""
-    with open(fullpath, "wb") as pkl:
-        print(f"[INFO] Writing pickle to:\n  {fullpath}")
-        pickle.dump(obj, pkl, protocol=2)
-
-# def sort_dct():
-#     """
 if __name__ == "__main__":
-    fullpath = parse_paths(infile_name_template, outname=namebase, outdir=outdir)
+    fullpath = make_full_filepath(infile_name_template, outname=namebase, outdir=outdir)
+    check_overwrite(fullpath, overwrite)
     print(f"[INFO] Globbing files at:\n  {infile_name_template}")
     pkl_file_ls = glob(infile_name_template)
     # Make combined dict of KinBin2Ds.
     comb = {}
     for f in pkl_file_ls:
-        dct = get_dct_from_pkl(f)
+        dct = open_pkl(f)
         comb.update(dct)
-    # sorted_comb = sort_dct(comb)
-    save_pickle(comb, fullpath)
+    save_to_pkl(comb, fullpath)

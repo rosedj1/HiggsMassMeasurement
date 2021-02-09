@@ -13,6 +13,7 @@ def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None,
                     count=1, 
                     x_label="Independent Var", units="", x_lim=None,
                     fit_whole_range_first_iter=True,
+                    bins_only_across_data=False,
                     verbose=False,
                     n_bins=100,
                     line_color=4, marker_color=1, 
@@ -67,6 +68,9 @@ def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None,
     fit_whole_range_first_iter : bool, optional
         If True, the entire x-axis range will be fit over for first iteration.
         Otherwise, first fit range is: mean(data) +- num_sigmas * rms(data)
+    bins_only_across_data : bool
+        Typically, the number of bins requested go from [x_min, x_max].
+        This allows 
     verbose : bool
         If True, print juicy debug info.
     n_bins : int, optional
@@ -246,8 +250,8 @@ def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None,
     #     gauss.plotOn(xframe,   r.RooFit.LineColor(line_color), r.RooFit.Range(fit_x_min, fit_x_max), r.RooFit.LineWidth(0))
 
     # Put fit stats on plot.
-    text_y_min = 0.88 - 0.11*(count-1)
-    pave = r.TPaveText(0.13, text_y_min-0.11, 0.33, text_y_min, "NDC")
+    text_y_min = 0.86 - 0.11*(count-1)
+    pave = r.TPaveText(0.17, text_y_min-0.11, 0.37, text_y_min, "NDC")
     pave.SetFillColor(0)
     pave.SetBorderSize(0) # Use 0 for no border.
     pave.SetTextAlign(12) # 22 is centered vert and horiz.
@@ -282,8 +286,10 @@ def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None,
     xframe.addObject(pave.Clone())  # Not sure if .Clone() is necessary, but it works!
     xframe.addObject(tmp_hist.FindObject("stats").Clone())
     xframe.Draw("same")
-    r.gPad.Update()
-    # c.Update()
+    xframe.findObject("stats").Draw()
+    # r.gPad.RedrawAxis()
+    # r.gPad.Modified()
+    # r.gPad.Update()
 
     # Make a legend.
     #     leg_text  = "#splitline{#mu = %.5f #pm %.5f}" % (mean.getVal(),  mean.getError())
@@ -307,7 +313,7 @@ def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None,
     return (fit_stats_ls, xframe)
 
 def RooFit_iterative_gaus_fit(data, binned_fit=False, switch_to_binned_fit=2000, iters=1, num_sigmas=2.5, 
-                              n_bins=100, x_lim=None, fit_whole_range_first_iter=True,
+                              n_bins=100, x_lim=None, fit_whole_range_first_iter=False,
                               xframe=None, x_label="Independent var", title="", units="",
                               marker_color=1, force_last_line_color=None, only_draw_last=False, 
                               verbose=False, view_plot=False):
@@ -392,6 +398,18 @@ def RooFit_iterative_gaus_fit(data, binned_fit=False, switch_to_binned_fit=2000,
             Essentially a canvas with the data and Gaussian fit drawn on.
             Still need to do xframe.Draw() onto a TCanvas.
     """
+    if len(data) == 0:
+        fit_stats_dict = {
+            "mean_ls"      : [0] * iters,
+            "mean_err_ls"  : [0] * iters,
+            "std_ls"       : [0] * iters,
+            "std_err_ls"   : [0] * iters,
+            "chi2_ls"      : [0] * iters,
+            "fit_range_ls" : [0] * iters,
+        }
+        if xframe is None:
+            xframe = make_new_xframe(0, 1, x_lim, x_label, units, n_bins, title)[3]
+        return (fit_stats_dict, xframe)
     if isinstance(data, r.TH1):
         data_mean = data.GetMean()
         data_rms = data.GetRMS()

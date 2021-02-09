@@ -23,7 +23,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 # Local imports.
 from d0_Utils.d0_cls import KinBin3DOrganizer, GraphLineKinBin3D
-from Utils_Python.Utils_Files import makeDirs, make_str_title_friendly, check_overwrite
+from Utils_Python.Utils_Files import make_dirs, make_str_title_friendly, check_overwrite
 #---------------------------#
 #----- User Parameters -----#
 #---------------------------#
@@ -39,7 +39,7 @@ verbose = True
 scale_by_1divpT = False
 
 def prep_area(outdir_plots, outpath, overwrite):
-    makeDirs(outdir_plots)
+    make_dirs(outdir_plots)
     check_overwrite(outpath, overwrite=overwrite)
 
 def add_params_to_dict(d, param_ls, eta_range, pT_range):

@@ -21,7 +21,7 @@
 import ROOT as r
 import os
 import pickle
-from Utils_Python.Utils_Files import makeDirs, check_overwrite
+from Utils_Python.Utils_Files import make_dirs, check_overwrite
 from Utils_ROOT.ROOT_Plotting import Root_Hist_GetLastBinRightEdge
 from d0_Studies.d0_Utils.d0_fns import calc_num_bins, correct_muon_pT
 from Samples.sample_info import sample_info_dict
@@ -57,7 +57,7 @@ def prep_area(outplot_dir, filename, overwrite):
     fullpath_pdf = os.path.join(outplot_dir, filename + ".pdf")
     fullpath_rootfile = fullpath_pdf.replace(".pdf", ".root")
     check_overwrite(fullpath_pdf, overwrite)  # See if files already exist.
-    makeDirs(outplot_dir)  # Make directories, if need be.
+    make_dirs(outplot_dir)  # Make directories, if need be.
     return fullpath_rootfile, fullpath_pdf
 
 def open_pT_corr_factor_dict(inpkl_path):
@@ -370,8 +370,8 @@ if __name__ == "__main__":
 #         pT_corr_factor_dict = pickle.load(f)
 
 # # Make directories, if need be.
-# makeDirs(outplot_dir)
-# makeDirs(outpkl_dir)
+# make_dirs(outplot_dir)
+# make_dirs(outpkl_dir)
 
 # # Handle naming of files. 
 # full_extra = (

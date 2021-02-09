@@ -2,7 +2,7 @@ import numpy as np
 import ROOT
 from array import array
 
-def make_TH1F(internal_name, title=None, xlabel=None, n_bins=100, x_min=0, x_max=10, units=None):
+def make_TH1F(internal_name, title=None, n_bins=100, xlabel=None, x_min=0, x_max=10, units=None):
     """A function to quickly make TH1F. Return the TH1F.
     
     NOTE: 
@@ -28,6 +28,70 @@ def make_TH1F(internal_name, title=None, xlabel=None, n_bins=100, x_min=0, x_max
     h.SetXTitle(xlabel)
     h.SetYTitle(ylabel)
     return h
+
+def make_TH2F(internal_name, title=None, 
+              n_binsx=5, x_label="", x_units=None, x_min=0, x_max=10,
+              n_binsy=5, y_label="", y_units=None, y_min=0, y_max=10,
+              z_min=None, z_max=None, z_label_size=None,
+              n_contour=100):
+    """A function to quickly make TH2F. Return the TH2F.
+    
+    NOTE: 
+    - Don't worry about parentheses around units.
+      It will be taken care of.
+    - Accommodates ROOT LaTeX (using '#' of course).
+      Use raw strings: r'your string'.
+
+    Parameters
+    ----------
+    internal_name : str
+        asdfasdfasdf
+    title : str
+        The title of the histogram.
+    n_binsx : int or list
+        Number of bins along the x-axis.
+        If a list is provided, then the elements are the bin edges (which can
+        be non-uniform!).
+    n_binsy : int or list
+        Number of bins along the y-axis.
+        If a list is provided, then the elements are the bin edges (which can
+        be non-uniform!).
+    n_contour : int
+        Number of contour lines in color label.
+    """
+    if isinstance(n_binsx, int) and isinstance(n_binsy, int):
+        h2 = ROOT.TH2F(internal_name, "",
+                       n_binsx, x_min, x_max,
+                       n_binsy, y_min, y_max
+        )
+    elif isinstance(n_binsx, list) and isinstance(n_binsy, list):
+        nx_bin_edges = np.array(n_binsx, dtype=float)
+        ny_bin_edges = np.array(n_binsy, dtype=float)
+        h2 = ROOT.TH2F(internal_name, "",
+                       len(nx_bin_edges)-1, nx_bin_edges,
+                       len(ny_bin_edges)-1, ny_bin_edges)
+    else:
+        raise TypeError(
+            f"n_binsx and n_binsy must either both be `int` or `list`.\n"
+            f"You provided type `{type(n_binsx)}`"
+            )
+    h2.Sumw2()
+    # bin_wx = (x_max - x_min) / float(n_binsx)
+    # ylabel = r"Events / (%s)" % bin_w
+    x_label_withunits = x_label
+    y_label_withunits = y_label
+    if x_units is not None:
+        x_label_withunits += r" (%s)" % x_units
+    if y_units is not None:
+        y_label_withunits += r" (%s)" % y_units
+    h2.SetTitle(f"{y_label} vs. {x_label}") if title is None else h2.SetTitle(title)
+    h2.SetXTitle(x_label_withunits)
+    h2.SetYTitle(y_label_withunits)
+    if z_min is not None and z_max is not None:
+        h2.GetZaxis().SetRangeUser(z_min, z_max)
+    if z_label_size is not None:
+        h2.GetZaxis().SetLabelSize(z_label_size)
+    return h2
 
 def make_TGraphErrors(x, y, x_err=None, y_err=None,
                       use_binwidth_xerrs=False, title="",
@@ -131,6 +195,39 @@ def make_TMultiGraph_and_Legend(gr_ls=[], leg_txt_ls=[], y_min=None, y_max=None)
         mg.SetMinimum(y_min) # Change y-axis limits.
         mg.SetMaximum(y_max)
     return (mg, leg)
+
+def add_branch_to_TTree(tree, br):
+    """Add a branch (`br`) to `tree` and return the pointer to `br`.
+    
+    NOTE:
+    - Only works with floats/doubles.
+    - How to add a value to the TTree:
+        ptr[0] = some_val
+        tree.Fill()
+
+    - If saving the TTree to '.root', remember to open the new TFile first!
+
+    Parameters
+    ----------
+    tree : ROOT.TTree
+    br : str
+    """
+    ptr = array('f', [0.])
+    tree.Branch(br, ptr, "%s/F" % br)
+    return ptr
+
+def add_branch_pTcorr_fromadhocmethod(tree, pT_corr_factor_dict, outpath_root):
+    """
+    Add a branch to a clone of a TTree.
+    The branch is filled with pT corrected values, using ad hoc correction
+    factors from pT_corr_factor_dict.
+    The cloned tree is written to a new '.root' file (outpath_root).
+    """
+    outfile_root = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/"
+    newfile = ROOT.TFile(outfile_path, "recreate")
+    treeclone = tree.CloneTree(0)
+    ptr = array('f', [0.])
+    treeclone.Branch("pTcorr_adhoc", ptr, "m4mu/F")
 
 def get_normcoord_from_screenshot(canv_width, canv_height,
                                   left_offset, right_offset, bot_offset, top_offset):

@@ -1,54 +1,27 @@
 import os
 from shutil import copy2
+import pickle
+import subprocess
 
-##__________________________________________________________________||
-def copyFile(inDir,fileName,outDir):
-    '''
-    Make directory (outDir) if it does not exist, then copy file (inDir + filename) to outDir.
-    Also checks to see if file already exists in outDir. If so, do nothing.
-
-    inDir       = source dir which contains fileName
-    outDir      = destination dir to put fileName
-    fileName    = file name
-    '''
-    ## Make directory if it doesn't exist
-    makeDirs(outDir)
-    ## Check if file already exists in outDir
-    if not os.path.exists(outDir+fileName):
-        copy2(inDir+fileName, outDir+fileName)
-
-##______________________________________________
-def makeDirs(dir_, verbose=True):                       
+def make_dirs(d, verbose=True):                       
+    """If the directory (d) does not exist, then make it. 
+    
+    NOTE: Makes directories recursively.
     """
-    If the directory (dir_) does not exist, then make it. 
-    Makes directories recursively.
-    """
-    if not os.path.exists(dir_):
+    if not os.path.exists(d):
         if (verbose):
-            print(f"[INFO] Directory not found. Creating {dir_}.")    
-        os.makedirs(os.path.abspath(dir_))
-
-##__________________________________________________________________||
-#def mkdir_p(path):
-#    # http://stackoverflow.com/questions/600268/mkdir-p-functionality-in-python
-#    try:
-#        os.makedirs(path)
-#    except OSError as exc: # Python >2.5
-#        if exc.errno == errno.EEXIST and os.path.isdir(path):
-#            pass
-#        else: raise
+            print(f"[INFO] Directory not found.\nCreating {d}")    
+        os.makedirs(os.path.abspath(d))
 
 def check_overwrite(outfile, overwrite=False):
-    """
-    Raises an error if outfile exists and overwrite == False. 
-    """
+    """Raise an error if outfile exists and overwrite == False."""
     if os.path.exists(outfile) and not (overwrite):
-        err_msg = (
+        emsg = (
             f"Not allowed to overwrite file since it already exists"
             f"\n{outfile}\n"
             f"To write over this file, set overwrite = True.\n"
             )
-        raise RuntimeError(err_msg)
+        raise RuntimeError(emsg)
     
 def make_str_title_friendly(str_, keep_whitespace=False):
     title = str_.replace('-13','muPlus')
@@ -67,7 +40,24 @@ def make_str_title_friendly(str_, keep_whitespace=False):
     title = title.replace('||','or')
     title = title.replace('|','or')
     return title
-                  
+
+def open_pkl(inpkl_path):
+    """Open a pickled object stored in inpkl_path."""
+    with open(inpkl_path, "rb") as p: 
+        obj = pickle.load(p)
+        return obj
+
+def save_to_pkl(obj, outpkl_path):
+    """Write one obj to pickle."""
+    with open(outpkl_path, 'wb') as output:
+        pickle.dump(obj, output, protocol=2)
+    print(f"[INFO] Pickle file written:\n{outpkl_path}\n")
+
+def replace_value(old, new, script):
+    """Use the `sed` command to replace `old` with `new` in `script`"""
+    cmd = ["sed", "-i", f"s|{old}|{new}|g", script]
+    output = subprocess.run(cmd)
+
 def root2feather(infile_root, outfile_fullpath):
     """
     Convert a .root file to DataFrame (DF) and store the DF as a binary .feather file.
@@ -87,9 +77,9 @@ def root2feather(infile_root, outfile_fullpath):
 
 class Py3toPy2Converter:
     """
+    # FIXME: Not complete.
     Class to insert the proper encoding line in Python2 files
     but take them away in Python3 files.
-    # FIXME: Not complete.
     """
     def __init__(self, file_ls):
         import subprocess
@@ -101,3 +91,20 @@ class Py3toPy2Converter:
         # NOTE: The code below is under development.
         # Not sure if the `sed` cmd will interfere with regex.
         # sed '1 s/^/# -*- coding: future_fstrings -*-\n/' file1
+
+# I don't like this function.
+# Doesn't provide much flexibility.
+# def copy_file(inDir, fileName, outDir):
+#     '''
+#     Make directory (outDir) if it does not exist, then copy file (inDir + filename) to outDir.
+#     Also checks to see if file already exists in outDir. If so, do nothing.
+
+#     inDir       = source dir which contains fileName
+#     outDir      = destination dir to put fileName
+#     fileName    = file name
+#     '''
+#     ## Make directory if it doesn't exist.
+#     make_dirs(outDir)
+#     ## Check if file already exists in outDir.
+#     if not os.path.exists(outDir + fileName):
+#         copy2(inDir + fileName, outDir + fileName)

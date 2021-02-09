@@ -58,7 +58,7 @@ from d0_Utils.d0_fns import make_binning_array, print_header_message
 from d0_Utils.d0_cls import KinBin3D
 
 from Utils_Python.Utils_Physics import perc_diff
-from Utils_Python.Utils_Files import makeDirs, make_str_title_friendly, check_overwrite
+from Utils_Python.Utils_Files import make_dirs, make_str_title_friendly, check_overwrite
 from Utils_Python.Utils_Plotting import hist_y_label, make_1D_dist, ncolsrows_from_nplots, get_stats_1Dhist
 from Utils_Python.Utils_StatsAndFits import iterative_fit_gaus, iterative_fit_gaus_unbinned
 # def ParseOption():
@@ -124,8 +124,8 @@ p_str_latex = "$p_{T}$"
 #----- Automatons -----#
 #----------------------#
 # Prep directories and file names. 
-makeDirs(outdir_plots)
-makeDirs(outdir_kinbin_pkl)
+make_dirs(outdir_plots)
+make_dirs(outdir_kinbin_pkl)
 
 filename = os.path.split(inpath_equalentry_pickl_dict)[1]
 filename = filename.strip(".pkl")

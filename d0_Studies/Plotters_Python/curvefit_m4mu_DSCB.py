@@ -25,7 +25,7 @@ from matplotlib import gridspec
 from Utils_Python.Utils_Plotting import make_1D_dist
 from Utils_Python.Utils_StatsAndFits import (crystal_ball_doublesided_func, fit_with_crystal_ball_doublesided,
                                              exp_gaus_exp_func, fit_with_exp_gaus_exp, prop_err_x_div_y)
-from Utils_Python.Utils_Files import makeDirs, check_overwrite
+from Utils_Python.Utils_Files import make_dirs, check_overwrite
 from d0_Utils.d0_fns import centers_of_binning_array, make_binning_array, calc_x_err_bins_from_bin_edges
 
 # Make sure sexy Times New Roman font loads correctly.
@@ -48,7 +48,7 @@ fit_with_ExpGausExp = False
 def prep_area(outdir_plots, filename, overwrite):
     fullpath_pdf = os.path.join(outdir_plots, filename + ".pdf")
     check_overwrite(fullpath_pdf, overwrite)  # See if files already exist.
-    makeDirs(outdir_plots)  # Make directories, if need be.
+    make_dirs(outdir_plots)  # Make directories, if need be.
     return fullpath_pdf
 
 def get_data_from_TTree(infile_path):
