@@ -227,14 +227,6 @@ def make_muon_ls_fromliteskim(evt):
     """
     return [initialize_Htomumu_muons_fromliteskim(evt, num) for num in [1,2]]
 
-# def check_muon_kinem(mu):
-#     """Make sure that this muon has reco info:
-#         0.0 < abs(eta) < 2.4
-#         5 < pT < 200
-#     """
-    
-#     return 
-
 def apply_kinem_selections(mu_ls, eta_bin=[0,2.4], pT_bin=[5,200], d0_max=1):
     """
     Make sure all muons passed selections and do final pT checks.
@@ -265,9 +257,10 @@ def get_ndcs_gen(rec_ndcs_ls, lep_genindex):
     Use the good reco indices to retrieve the corresponding gen indices.
     These gen indices can be used to slice GEN vectors. 
 
-    rec_ndcs_ls = [2, 1, 0, 3]
-    lep_genindex = [2, 3, 1, 0, -1]
-    returns: [1, 3, 2, 0]  # good gen indices to slices GEN vectors.
+    Example:
+        rec_ndcs_ls = [2, 1, 0, 3]  <-- indices refer to lep_pt, e.g.
+        lep_genindex = [2, 3, 1, 0, -1]
+        returns: [1, 3, 2, 0]  # good gen indices to slices GEN vectors.
     """
     return [lep_genindex[ndx] for ndx in rec_ndcs_ls]
 

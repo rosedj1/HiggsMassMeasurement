@@ -26,7 +26,7 @@ import ROOT as r
 import os
 import pickle
 from array import array
-from Utils_Python.Utils_Files import makeDirs, check_overwrite
+from Utils_Python.Utils_Files import make_dirs, check_overwrite
 from Utils_ROOT.ROOT_Plotting import Root_Hist_GetLastBinRightEdge
 from Utils_ROOT.ROOT_StatsAndFits import RooFit_CBxBWplusExp_fit_binned
 from d0_Studies.d0_Utils.d0_fns import calc_num_bins, correct_muon_pT
@@ -67,7 +67,7 @@ def prep_area(outpath_dir, filename, ext="", overwrite=False):
     """Create PDF name, and see if the PDF and output dir exist."""
     outpath_file = os.path.join(outpath_dir, f"{filename}{ext}")
     check_overwrite(outpath_file, overwrite)  # See if files already exist.
-    makeDirs(outpath_dir)  # Make directories, if need be.
+    make_dirs(outpath_dir)  # Make directories, if need be.
     return outpath_file
 
 def open_pT_corr_factor_dict(inpkl_path):

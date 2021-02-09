@@ -3,7 +3,7 @@ import pickle
 import ROOT
 from ROOT import TFile, TH1F, TCanvas, gROOT, kTRUE
 
-from Utils_Python.Utils_Files import makeDirs, make_str_title_friendly, check_overwrite
+from Utils_Python.Utils_Files import make_dirs, make_str_title_friendly, check_overwrite
 from Utils_Python.Utils_Selections import Selector
 from Utils_Python.Utils_Physics import calc_dphi, calc_dR
 from Utils_Python.Plot_Styles_ROOT.tdrstyle_official import fixOverlay, setTDRStyle, tdrGrid
@@ -53,8 +53,8 @@ dpToverpT_str = "(p_{T}^{REC} - p_{T}^{GEN}) / p_{T}^{GEN}"
 assert do_iter_gaus_fit != do_BWconvCB_fit
 
 # Make directories, if need be.
-makeDirs(outdir_plots)
-makeDirs(outdir_pkl)
+make_dirs(outdir_plots)
+make_dirs(outdir_pkl)
 
 # Handle naming of files. 
 extra = (

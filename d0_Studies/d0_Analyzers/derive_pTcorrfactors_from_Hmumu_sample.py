@@ -31,7 +31,7 @@ import os
 import ROOT as r
 import numpy as np
 # Local imports.
-from Utils_Python.Utils_Files import check_overwrite, makeDirs
+from Utils_Python.Utils_Files import check_overwrite, make_dirs
 from Utils_ROOT.Printer import CanvasPrinter
 from ParticleCollections import MyMuonCollection
 from Particles import MyMuon
@@ -103,8 +103,8 @@ def prep_files(eta_ls, pT_ls,
     outpkl_path = os.path.join(outpkl_dir, f"{new_file_name}.pkl")
     outpkl_pT_corr_path = outpkl_path.replace(".pkl", "_pTcorrfactors.pkl")
     # See if these files already exist and overwrite if it's OK to do so.
-    makeDirs(outpdf_dir, verbose)
-    makeDirs(outpkl_dir, verbose)
+    make_dirs(outpdf_dir, verbose)
+    make_dirs(outpkl_dir, verbose)
     for f in [outpdf_path, outpkl_path, outpkl_pT_corr_path]:
         check_overwrite(f, overwrite)
     return (outpdf_path, outpkl_path, outpkl_pT_corr_path)

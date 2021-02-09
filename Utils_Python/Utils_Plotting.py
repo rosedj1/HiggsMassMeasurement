@@ -8,7 +8,7 @@ import numpy as np
 # from matplotlib import cm
 # from matplotlib.colors import ListedColormap
 
-from Utils_Python.Utils_Files import makeDirs, make_str_title_friendly
+from Utils_Python.Utils_Files import make_dirs, make_str_title_friendly
 from d0_Utils.d0_fns import account_for_underoverflow_entries
 
 def change_cmap_bkg_to_white(colormap, n=256):
@@ -38,7 +38,7 @@ def save_plots_to_outpath(save_plot=False, outpath="", file_name="DEFAULT_NAME",
         
         fullpath = os.path.join(outpath, file_name)
         
-        makeDirs(outpath)
+        make_dirs(outpath)
         
         plt.savefig(fullpath + '.pdf')
         if (verbose): print(f"Figure saved at: {fullpath + '.pdf'}")

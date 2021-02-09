@@ -344,12 +344,14 @@ class MyMuonCollection:
                     "0.2eta0.4_7.0pT10.0" : KinBin2D(0.2-0.4, 7.0-10.0),
                 }
         """
-        for eta_min,eta_max in zip(eta_ls[:-1], eta_ls[1:]):
-            for pT_min,pT_max in zip(pT_ls[:-1], pT_ls[1:]):
+        for eta_min, eta_max in zip(eta_ls[:-1], eta_ls[1:]):
+            for pT_min, pT_max in zip(pT_ls[:-1], pT_ls[1:]):
                 key = self.make_bin_key(eta_min, eta_max, pT_min, pT_max, title_friendly=False)
                 this_KinBin = KinBin2D(eta_range=[eta_min,eta_max], pT_range=[pT_min,pT_max])
                 self.KinBin2D_dict[key] = this_KinBin
-        print(f"[INFO] All KinBin2Ds have been made from given eta_ls and pT_ls.")
+        print(f"[INFO] All KinBin2Ds have been made from given eta_ls and pT_ls:")
+        print(f"  eta : {eta_ls}")
+        print(f"   pT : {pT_ls}")
 
     def create_KinBins_from_pT_corr_dict(self, pT_corr_factor_dict):
         """Create a dict of KinBin2Ds, one for each key in pT_corr_dict.
@@ -393,16 +395,37 @@ class MyMuonCollection:
             kb.make_qd0_hist(n_bins=n_bins_qd0, x_lim=x_lim_qd0)
         print(f"Done making KinBin hists")
 
+    def place_single_muon_into_KinBin(self, muon, eta_ls, pT_ls, verbose=False):
+        """Put MyMuon object into the correct KinBin2D, based on muon's (eta, pT) value."""
+        eta_min, eta_max = find_bin_edges_of_value(abs(muon.eta), eta_ls)
+        pT_min, pT_max = find_bin_edges_of_value(muon.pT, pT_ls)
+        if any([x is None for x in (eta_min, eta_max, pT_min, pT_max)]):
+            if verbose:
+                msg = f"[WARNING] Muon found with strange (eta, pT) values: eta={[eta_min, eta_max]}, pT={[pT_min, pT_max]}"
+                print(msg)
+                print("Skipping this muon, since your bins cannot hold it!")
+            # n_muons_skipped += 1
+        else:
+            # Put this muon into correct KinBin2D.
+            key = self.make_bin_key(eta_min, eta_max, pT_min, pT_max, title_friendly=False)
+            self.KinBin2D_dict[key].add_muon(muon)
+
     def place_muons_into_KinBins(self, eta_ls=None, pT_ls=None, 
-                                 pT_corr_factor_dict=None, verbose=False):
-        """Put muon into correct KinBin2D, based on muon's (eta, pT) value.
+                                 pT_corr_factor_dict=None, auto_detect=True, verbose=False):
+        """Put muons from muon_ls into correct KinBin2D, based on muon's (eta, pT) value.
         
         After muons have been assigned to KB2D, self.muon_ls is cleared.
+
+        Parameters
+        ----------
+        auto_detect : bool
+            If True, then will auto-detect the KinBin2Ds according to the keys
+            of pT_corr_factor_dict.
         """
         if verbose: 
             print(f"...Putting {len(self.muon_ls)} muons into their respective KinBin2Ds...")
         # Store muons in KinBins.
-        if (eta_ls is None) or (pT_ls is None):
+        if (eta_ls is None) or (pT_ls is None) or auto_detect:
             # Automatically decide into which KinBin2D to put muons
             # based on the pT_corr_factor_dict keys.
             assert pT_corr_factor_dict is not None
@@ -411,21 +434,9 @@ class MyMuonCollection:
                 key = make_key_from_binedges(binedge_tup)
                 self.KinBin2D_dict[key].add_muon(mu)
         else:
-            n_muons_skipped = 0
+            # n_muons_skipped = 0
             for muon in self.muon_ls:
-                # Decide which (eta, pT) bin this muon belongs to.
-                eta_min, eta_max = find_bin_edges_of_value(abs(muon.eta), eta_ls)
-                pT_min, pT_max = find_bin_edges_of_value(muon.pT, pT_ls)
-                if any([x is None for x in (eta_min, eta_max, pT_min, pT_max)]):
-                    if verbose:
-                        msg = f"[WARNING] Muon found with strange (eta, pT) values: eta={[eta_min, eta_max]}, pT={[pT_min, pT_max]}"
-                        print(msg)
-                        print("Skipping this muon, since your bins cannot hold it!")
-                    n_muons_skipped += 1
-                    continue
-                # Choose correct KinBin2D to put this muon.
-                key = self.make_bin_key(eta_min, eta_max, pT_min, pT_max, title_friendly=False)
-                self.KinBin2D_dict[key].add_muon(muon)
+                self.place_single_muon_into_KinBin(muon)
             # End muon loop.
             if verbose:
                 n_mu = len(self.muon_ls)
@@ -663,8 +674,9 @@ class MyMuonCollection:
                 h_charge.Fill(mu.charge)
                 h_dpTOverpT.Fill(mu.dpTOverpT)
         else:
-            for m4mu in self.m4mu_ls:
-                h_m4mu.Fill(m4mu)
+            if len(self.m4mu_ls) > 0:
+                for m4mu in self.m4mu_ls:
+                    h_m4mu.Fill(m4mu)
             for mu in self.muon_ls:
                 h_pT.Fill(mu.pT)
                 h_pT_gen.Fill(mu.gen_pT)
@@ -677,13 +689,7 @@ class MyMuonCollection:
                 h_dpTOverpT.Fill(mu.dpTOverpT)
         # end = time.perf_counter()
         print(f"Filling histograms complete.")  # Took {end - start:.3f} seconds.")
-        self.hist_inclusive_ls = hist_inclusive_ls
-
-    def save_to_pkl(self, obj, outpkl_path):
-        """Save one obj to pickle."""
-        with open(outpkl_path, 'wb') as output:
-            pickle.dump(obj, output, protocol=2)
-        print(f"[INFO] Pickle file written:\n{outpkl_path}\n")
+        self.hist_inclusive_ls.extend(hist_inclusive_ls)
 
     def overwrite_longlist_muon_info(self):
         """Overwrite each KinBin2D's and KinBin3D's long-listed attributes to save memory."""

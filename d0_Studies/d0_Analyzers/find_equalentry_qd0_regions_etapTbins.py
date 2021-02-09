@@ -35,7 +35,7 @@ from Samples.sample_info import Sample
 from d0_Utils.d0_fns import find_equal_hist_regions_unbinned
 from d0_Studies.KinBin_Info.kinematic_bins import (equal_entry_bin_edges_eta_mod1_wholenum,
                                                    bin_edges_pT_sevenfifths_to1000GeV_wholenum)
-from Utils_Python.Utils_Files import makeDirs, make_str_title_friendly, check_overwrite      
+from Utils_Python.Utils_Files import make_dirs, make_str_title_friendly, check_overwrite      
 
 # def ParseOption():
 #     parser = argparse.ArgumentParser(description='submit all')
@@ -92,7 +92,7 @@ massZ_max_DY = massZ_minmax_DY[1]
 massZ_min_Jpsi = massZ_minmax_Jpsi[0]
 massZ_max_Jpsi = massZ_minmax_Jpsi[1]
 
-makeDirs(outdir)
+make_dirs(outdir)
 
 total_entries = 0
 
