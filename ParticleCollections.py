@@ -1,7 +1,7 @@
 import time
 import pickle
 import threading
-import ROOT as r
+import ROOT
 from array import array
 from pprint import pprint
 # Local imports.
@@ -99,7 +99,7 @@ class MyMuonCollection:
                 msg = "Using GeoFit Correction Algorithm"
                 print_header_message(msg, pad_char="@", n_center_pad_chars=5)
         print(f"...Opening root file:\n{infile_path}")
-        f = r.TFile(infile_path, "read")
+        f = ROOT.TFile(infile_path, "read")
         t = f.Get("Ana/passedEvents")
 
         all_evts = t.GetEntries()
@@ -137,7 +137,7 @@ class MyMuonCollection:
                         use_GeoFit_algo=use_GeoFit_algo,
                         print_all_muon_info=False,
                         verbose=verbose)
-                    lorentzvec_mu_corr = r.Math.PtEtaPhiMVector(mu.pT_corr, mu.eta, mu.phi, mu.mass)
+                    lorentzvec_mu_corr = ROOT.Math.PtEtaPhiMVector(mu.pT_corr, mu.eta, mu.phi, mu.mass)
                     corr_mu_ls.append(lorentzvec_mu_corr)
 
                     # if use_GeoFit_algo:
@@ -147,7 +147,7 @@ class MyMuonCollection:
                     #         force_zero_intercept=force_zero_intercept,
                     #         use_GeoFit_algo=True,
                     #         verbose=verbose)
-                    #     lorentzvec_mu_corr_geofit = r.Math.PtEtaPhiMVector(mu.pT_corr_geofit, mu.eta, mu.phi, mu.mass)
+                    #     lorentzvec_mu_corr_geofit = ROOT.Math.PtEtaPhiMVector(mu.pT_corr_geofit, mu.eta, mu.phi, mu.mass)
                     #     corr_mu_geofit_ls.append(lorentzvec_mu_corr_geofit)
                 assert len(corr_mu_ls) == 4
                 m4mu_corr = calc_Hmass(corr_mu_ls)
@@ -221,7 +221,7 @@ class MyMuonCollection:
             self.do_mu_pT_corr = True
 
         print(f"...Opening root file:\n{infile_path}")
-        f = r.TFile(infile_path, "read")
+        f = ROOT.TFile(infile_path, "read")
         t = f.Get("passedEvents")
 
         all_evts = t.GetEntries()
@@ -260,7 +260,7 @@ class MyMuonCollection:
                         force_zero_intercept=force_zero_intercept,
                         use_GeoFit_algo=use_GeoFit_algo,
                         verbose=verbose)
-                    lorentzvec_mu_corr = r.Math.PtEtaPhiMVector(mu.pT_corr, mu.eta, mu.phi, mu.mass)
+                    lorentzvec_mu_corr = ROOT.Math.PtEtaPhiMVector(mu.pT_corr, mu.eta, mu.phi, mu.mass)
                     corr_mu_ls.append(lorentzvec_mu_corr)
 
                     # if use_GeoFit_algo:
@@ -270,7 +270,7 @@ class MyMuonCollection:
                     #         force_zero_intercept=force_zero_intercept,
                     #         use_GeoFit_algo=True,
                     #         verbose=verbose)
-                    #     lorentzvec_mu_corr_geofit = r.Math.PtEtaPhiMVector(mu.pT_corr_geofit, mu.eta, mu.phi, mu.mass)
+                    #     lorentzvec_mu_corr_geofit = ROOT.Math.PtEtaPhiMVector(mu.pT_corr_geofit, mu.eta, mu.phi, mu.mass)
                     #     corr_mu_geofit_ls.append(lorentzvec_mu_corr_geofit)
                 assert len(corr_mu_ls) == 2
                 m4mu_corr = calc_Hmass(corr_mu_ls)
@@ -557,67 +557,67 @@ class MyMuonCollection:
         print(f"Creating histograms of inclusive muon kinematics...")
         title_prefix = "inclusive "
         
-        h_m4mu = r.TH1F("h_m4mu", r"%sm_{4#mu} from %s" % (title_prefix, self.get_prod_modes_str()), 140, 105, 140)
+        h_m4mu = ROOT.TH1F("h_m4mu", r"%sm_{4#mu} from %s" % (title_prefix, self.get_prod_modes_str()), 140, 105, 140)
         h_m4mu.SetXTitle(r"m_{4#mu} (GeV)")
         h_m4mu.SetYTitle(r"Events / (%.1f GeV)" % h_m4mu.GetBinWidth(1))
 
-        h_pT = r.TH1F("h_pT", title_prefix+"p_{T,#mu}^{reco}", 220, 0, 220)
+        h_pT = ROOT.TH1F("h_pT", title_prefix+"p_{T,#mu}^{reco}", 220, 0, 220)
         h_pT.SetXTitle(r"p_{T,#mu}^{reco} (GeV)")
         h_pT.SetYTitle(r"Events / (%.1f GeV)" % h_pT.GetBinWidth(1))
 
-        h_pT_gen = r.TH1F("h_pT_gen", title_prefix+"p_{T,#mu}^{gen}", 220, 0, 220)
+        h_pT_gen = ROOT.TH1F("h_pT_gen", title_prefix+"p_{T,#mu}^{gen}", 220, 0, 220)
         h_pT_gen.SetXTitle(r"p_{T,#mu}^{gen} (GeV)")
         h_pT_gen.SetYTitle(r"Events / (%.1f GeV)" % h_pT_gen.GetBinWidth(1))
 
-        h_eta = r.TH1F("h_eta", title_prefix+"#eta_{#mu}^{reco}", 100, -2.5, 2.5)
+        h_eta = ROOT.TH1F("h_eta", title_prefix+"#eta_{#mu}^{reco}", 100, -2.5, 2.5)
         h_eta.SetXTitle(r"#eta_{#mu}^{reco}")
         h_eta.SetYTitle(r"Events / (%.1f)" % h_eta.GetBinWidth(1))
 
-        h_eta_gen = r.TH1F("h_eta_gen", title_prefix+"#eta_{#mu}^{gen}", 100, -2.5, 2.5)
+        h_eta_gen = ROOT.TH1F("h_eta_gen", title_prefix+"#eta_{#mu}^{gen}", 100, -2.5, 2.5)
         h_eta_gen.SetXTitle(r"#eta_{#mu}^{gen}")
         h_eta_gen.SetYTitle(r"Events / (%.1f)" % h_eta_gen.GetBinWidth(1))
 
-        h_phi = r.TH1F("h_phi", title_prefix+"#phi_{#mu}^{reco}", 50, -4, 4)
+        h_phi = ROOT.TH1F("h_phi", title_prefix+"#phi_{#mu}^{reco}", 50, -4, 4)
         h_phi.SetXTitle(r"#phi_{#mu}^{reco}")
         h_phi.SetYTitle(r"Events / (%.1f)" % h_phi.GetBinWidth(1))
 
-        h_phi_gen = r.TH1F("h_phi_gen", title_prefix+"#phi_{#mu}^{gen}", 50, -4, 4)
+        h_phi_gen = ROOT.TH1F("h_phi_gen", title_prefix+"#phi_{#mu}^{gen}", 50, -4, 4)
         h_phi_gen.SetXTitle(r"#phi_{#mu}^{gen}")
         h_phi_gen.SetYTitle(r"Events / (%.1f)" % h_phi_gen.GetBinWidth(1))
 
-        h_qd0 = r.TH1F("h_qd0", title_prefix+"muon qd_{0}", 100, -0.01, 0.01)
+        h_qd0 = ROOT.TH1F("h_qd0", title_prefix+"muon qd_{0}", 100, -0.01, 0.01)
         h_qd0.SetXTitle(r"qd_{0} (cm)")
         h_qd0.SetYTitle(r"Events / (%.4f cm)" % h_qd0.GetBinWidth(1))
 
-        h_charge = r.TH1F("h_charge", title_prefix+"muon charge", 100, -10, 10)
+        h_charge = ROOT.TH1F("h_charge", title_prefix+"muon charge", 100, -10, 10)
         h_charge.SetXTitle(r"Charge of muon")
         h_charge.SetYTitle(r"Number of muons")
 
-        h_dpTOverpT = r.TH1F("h_dpTOverpT", title_prefix+"(p_{T}^{reco} - p_{T}^{gen})/p_{T}^{gen}", 100, -0.3, 0.3)
+        h_dpTOverpT = ROOT.TH1F("h_dpTOverpT", title_prefix+"(p_{T}^{reco} - p_{T}^{gen})/p_{T}^{gen}", 100, -0.3, 0.3)
         h_dpTOverpT.SetXTitle(r"#Deltap_{T}^{reco}/p_{T}^{gen}")
         h_dpTOverpT.SetYTitle(r"Events / (%.4f)" % h_dpTOverpT.GetBinWidth(1))
 
         if self.do_mu_pT_corr:
-            h_pT_corr = r.TH1F("h_pT_corr", title_prefix+"p_{T,#mu}^{reco, corr.}", 220, 0, 220)
+            h_pT_corr = ROOT.TH1F("h_pT_corr", title_prefix+"p_{T,#mu}^{reco, corr.}", 220, 0, 220)
 
-            h_m4mu_corr = r.TH1F("h_m4mu_corr", title_prefix+"m_{4#mu}^{p_{T}, corr.} from %s" % self.get_prod_modes_str(), 140, 105, 140)
+            h_m4mu_corr = ROOT.TH1F("h_m4mu_corr", title_prefix+"m_{4#mu}^{p_{T}, corr.} from %s" % self.get_prod_modes_str(), 140, 105, 140)
             h_m4mu_corr.SetXTitle(r"m_{4#mu}^{p_{T},corr.} (GeV)")
             h_m4mu_corr.SetYTitle(r"Events / (%.1f GeV)" % h_m4mu_corr.GetBinWidth(1))
 
-            h_m4mu_diff = r.TH1F("h_m4mu_diff", title_prefix+"#Deltam_{4#mu} #equiv m_{4#mu}^{corr. p_{T}} - m_{4#mu}", 100, -10, 10)
+            h_m4mu_diff = ROOT.TH1F("h_m4mu_diff", title_prefix+"#Deltam_{4#mu} #equiv m_{4#mu}^{corr. p_{T}} - m_{4#mu}", 100, -10, 10)
             h_m4mu_diff.SetXTitle(r"#Deltam_{4#mu} (GeV)")
             h_m4mu_diff.SetYTitle(r"Events / (%.1f GeV)" % h_m4mu_diff.GetBinWidth(1))
 
-            h_m4muvsm4mucorr = r.TH2F("h_m4muvsm4mucorr", title_prefix+"Correlation between m_{4#mu}^{corr. p_{T}} and m_{4#mu}", 
+            h_m4muvsm4mucorr = ROOT.TH2F("h_m4muvsm4mucorr", title_prefix+"Correlation between m_{4#mu}^{corr. p_{T}} and m_{4#mu}", 
                                         100, 70, 170, 100, 70, 170)  # n_binX, X_Low,X_Hig, n_binY, Y_low, Y_high
             h_m4muvsm4mucorr.SetXTitle(r"m_{4#mu} (GeV)")
             h_m4muvsm4mucorr.SetYTitle(r"m_{4#mu}^{p_{T},corr.} (GeV)")
 
-            h_rel_dpT_corr2gen = r.TH1F("h_rel_dpT_corr2gen", title_prefix+"(p_{T}^{corr} - p_{T}^{gen})/p_{T}^{gen}", 100, -0.3, 0.3)
+            h_rel_dpT_corr2gen = ROOT.TH1F("h_rel_dpT_corr2gen", title_prefix+"(p_{T}^{corr} - p_{T}^{gen})/p_{T}^{gen}", 100, -0.3, 0.3)
             h_rel_dpT_corr2gen.SetXTitle(r"#Deltap_{T}^{corr}/p_{T}^{gen}")
             h_rel_dpT_corr2gen.SetYTitle(r"Events / (%.4f)" % h_rel_dpT_corr2gen.GetBinWidth(1))
 
-            h_rel_dpT_corr2rec = r.TH1F("h_rel_dpT_corr2rec", title_prefix+"(p_{T}^{corr} - p_{T}^{reco})/p_{T}^{reco}", 100, -0.05, 0.05)
+            h_rel_dpT_corr2rec = ROOT.TH1F("h_rel_dpT_corr2rec", title_prefix+"(p_{T}^{corr} - p_{T}^{reco})/p_{T}^{reco}", 100, -0.05, 0.05)
             h_rel_dpT_corr2rec.SetXTitle(r"#Deltap_{T}^{corr}/p_{T}^{reco}")
             h_rel_dpT_corr2rec.SetYTitle(r"Events / (%.4f)" % h_rel_dpT_corr2rec.GetBinWidth(1))
 
@@ -752,7 +752,7 @@ class MyMuonCollection:
 
     def make_multigraph(self, eta_min, eta_max):
         """Combine all KinBin2D TGraphs of a given eta bin into one plot."""
-        mg = r.TMultiGraph(f"{eta_min}eta{eta_max}","")
+        mg = ROOT.TMultiGraph(f"{eta_min}eta{eta_max}","")
         mg.SetMinimum(-0.04)
         mg.SetMaximum(0.04)
         # gr_ls = [kb2d. for kb2d in self.KinBin2D_dict.values()]
@@ -802,7 +802,7 @@ class MyMuonCollection:
         max_height = n_graphs * gr_height
         y_max = 0.88
         y_min = y_max - max_height
-        pave = r.TPaveText(0.12, y_min, 0.51, y_max, "NDC")  # NDC = normalized coord.
+        pave = ROOT.TPaveText(0.12, y_min, 0.51, y_max, "NDC")  # NDC = normalized coord.
         pave.SetFillColor(0)
         pave.SetFillStyle(1001)  # Solid fill = 1001.
         pave.SetBorderSize(1) # Use 0 for no border.
@@ -810,16 +810,16 @@ class MyMuonCollection:
         pave.SetTextSize(0.015)
 
         # Don't show stats box on multigraph.
-        r.gStyle.SetOptStat(0)
-        r.gStyle.SetOptFit(0)
+        ROOT.gStyle.SetOptStat(0)
+        ROOT.gStyle.SetOptFit(0)
         # Draw all graphs at once using TMultiGraph.
         mg.Draw("a")
-        r.gPad.Modified()  # Necessary to change multigraph's x-axis.
+        ROOT.gPad.Modified()  # Necessary to change multigraph's x-axis.
         mg.GetXaxis().SetLimits(-0.005, 0.005)
         # Draw fit lines.
         # Turn stats box back on.
-        # r.gStyle.SetOptStat("iouRMe")
-        # r.gStyle.SetOptFit(1)
+        # ROOT.gStyle.SetOptStat("iouRMe")
+        # ROOT.gStyle.SetOptFit(1)
         for fit,gr in zip(fitline_ls, gr_ls):
             interc = fit.GetParameter(0)
             slope = fit.GetParameter(1)
@@ -837,8 +837,8 @@ class MyMuonCollection:
         check_overwrite(outpath_rootfile, overwrite)
         print(f"  Writing m4mu and m4mu_corr vals to root file:")
         print(f"  {outpath_rootfile}")
-        outf = r.TFile(outpath_rootfile, "recreate")
-        newtree = r.TTree("tree", "tree_m4mu_vals")
+        outf = ROOT.TFile(outpath_rootfile, "recreate")
+        newtree = ROOT.TTree("tree", "tree_m4mu_vals")
 
         # Set pointers for values to be stored in root file.
         ptr_m4mu = array('f', [0.])

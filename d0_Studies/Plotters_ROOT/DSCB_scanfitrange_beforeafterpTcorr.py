@@ -15,7 +15,7 @@ infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_s
 outfile_dir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/plots/applypTcorrplots/CorrFromMC/tests/"
 # infile_path = "/afs/cern.ch/work/d/drosenzw/Higgs/HiggsMassMeasurement/d0_Studies/Plotters_ROOT/MC2018ggH_passFull_fullstats.root"
 # outfile_dir = "/afs/cern.ch/work/d/drosenzw/Higgs/HiggsMassMeasurement/d0_Studies/plots/test/DSCBscanoutput/"
-outfile_prefix = "MCYEARggH_applypTcorrMETHOD_scanfitrange_zoom_zerointerc_test12"
+outfile_prefix = "MCYEARggH_applypTcorrMETHOD_scanfitrange_zoom_zerointerc_test13"
 # outfile_prefix = "MC2017ggH_applypTcorrGeoFit_scanfitrange"
 
 #--- WARNING ---#
@@ -25,19 +25,17 @@ outfile_prefix = "MCYEARggH_applypTcorrMETHOD_scanfitrange_zoom_zerointerc_test1
 cpp_DSCB_code_path = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/Plotters_ROOT/fit_and_draw_DSCB_withAdHocCorr.C"
 so_filepath = "./RooMyPDF_DSCB_C.so"
 draw_beforeafter_corr = 1
-overwrite = 0
+overwrite = 1
 verbose = 1
 year = "2018"
 method = "AdHoc" # "GeoFit"
-zoom = True
+zoom = False
 
 m4mu_min, m4mu_max = 105.0, 145.0
 relmasserr_min, relmasserr_max = 0.0, 5.0
-m4muErr_binedge_ls = [0.0, 0.75, 1.25, 5.0]  # This is a percent!
-# m4muErr_binedge_ls = [0.0, 0.75]
 max_lower_edge = 122.0
 min_upper_edge = 128.0
-step_GeV = 0.2
+step_GeV = 4
 n_bins = 100
 # m4mu_min = 121.2
 # m4mu_max = 128.4

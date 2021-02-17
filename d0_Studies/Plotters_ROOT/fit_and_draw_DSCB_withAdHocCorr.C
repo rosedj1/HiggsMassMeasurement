@@ -68,6 +68,7 @@ RooFitResult* fit_and_draw_DSCB(
     }
     
     TString name_m4mu = "m4mu";
+    TString name_m4mu_corr = "m4mu_corr";
     TString name_mu = "#mu";
     TString name_sig = "#sigma";
     TString name_aL = "#alpha_{L}";
@@ -79,7 +80,7 @@ RooFitResult* fit_and_draw_DSCB(
 
     if (show_after_corr) {
         tex_horiz = 0.70;
-        name_m4mu += "_corr";  // Don't change!
+        // name_m4mu += "_corr";  // Don't change!
         name_mu   += corr_suffix;
         name_sig  += corr_suffix;
         name_aL   += corr_suffix;
@@ -98,6 +99,7 @@ RooFitResult* fit_and_draw_DSCB(
      * So leave it at 100 for faster fitting.
      */
     RooRealVar m4mu(name_m4mu, "m_{4#mu}", 105, 145, "GeV");
+    RooRealVar m4mu_corr(name_m4mu_corr, "m_{4#mu}", 105, 145, "GeV");
     RooRealVar Mean(name_mu, "#mu", 125, 120, 130);
     RooRealVar Sigma(name_sig, "#sigma", 1, 0, 10);//sigma[decay]);
     RooRealVar AlphaL(name_aL, "#alpha_{L}", 1, 0, 30);//alphaL[decay]);
@@ -105,19 +107,24 @@ RooFitResult* fit_and_draw_DSCB(
     RooRealVar ExpL(name_expL, "n_{L}", 1, 0, 50);//expL[decay]);
     RooRealVar ExpR(name_expR, "n_{R}", 1, 0, 100);//expR[decay]); (1,1,50)
 
-    RooMyPDF_DSCB DSCB("DSCB", "DSCB", m4mu, Mean, Sigma, AlphaL, ExpL, AlphaR, ExpR);
+    if (show_after_corr) {
+        RooMyPDF_DSCB DSCB("DSCB", "DSCB", m4mu_corr, Mean, Sigma, AlphaL, ExpL, AlphaR, ExpR);
+    } else {
+        RooMyPDF_DSCB DSCB("DSCB", "DSCB", m4mu, Mean, Sigma, AlphaL, ExpL, AlphaR, ExpR);
+    }
 
     // Prepare the cuts.
     // TString cut1 = Form("%f < ", m4mu_min) + name_m4mu + " && "
     // TString cut1 = Form("%f > ", m4mu_min) + name_m4mu + " && "
-    TString sel_mass4mu = Form("%f < %s && %s < %f", m4mu_min, name_m4mu.Data(), name_m4mu.Data(), m4mu_max);
+    // TString sel_mass4mu = Form("%f < %s && %s < %f", m4mu_min, name_m4mu.Data(), name_m4mu.Data(), m4mu_max);
+    TString sel_mass4mu = Form("%f < m4mu && m4mu < %f", m4mu_min, m4mu_max);
     cout << "***** Fitting a DSCB to m4mu with the following cuts: *****" << endl;
     TString all_cuts = sel_mass4mu;
     cout << "  * " << all_cuts << endl;
 
     // Make a RooDataSet to plot black points along full mass4mu range:
-    RooDataSet rds("rds", "roodataset m4mu", tree, RooArgSet(m4mu), "");
-    RooDataSet rds_inmasswindow("rds_inmasswindow", "rds_inmasswindow m4mu", tree, RooArgSet(m4mu), all_cuts);
+    RooDataSet rds("rds", "roodataset m4mu", tree, RooArgSet(m4mu, m4mu_corr), "");
+    RooDataSet rds_inmasswindow("rds_inmasswindow", "rds_inmasswindow m4mu", tree, RooArgSet(m4mu, m4mu_corr), all_cuts);
 
     // Do the DSCB fit.
     gStyle->SetOptStat("iouRMe");
