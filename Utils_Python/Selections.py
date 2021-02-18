@@ -106,7 +106,7 @@ def passed_Hmumu_evt_selection(evt):
     selec_ls = [True]
     return all(selec_ls)
 
-def initialize_muon(evt, reco_ndx, gen_ndx, use_FSR=False):
+def initialize_muon(evt, reco_ndx, gen_ndx):
     """
     For a given event (evt), build a muon (mu) using: 
         - the reco values at a given index (reco_ndx) in the lep_kinem vectors
@@ -129,14 +129,22 @@ def initialize_muon(evt, reco_ndx, gen_ndx, use_FSR=False):
     # mu = ROOT.Math.PtEtaPhiMVector(evt.lepFSR_pt[reco_ndx], evt.lepFSR_eta[reco_ndx], evt.lepFSR_phi[reco_ndx], evt.lepFSR_mass[reco_ndx])
     charge = evt.lep_id[reco_ndx] / -13.
     mu = MyMuon(charge)
-    # Set reco and gen kinematics.
-    mu.set_GENPtEtaPhiMass(evt.GENlep_pt[gen_ndx], evt.GENlep_eta[gen_ndx], evt.GENlep_phi[gen_ndx], evt.GENlep_mass[gen_ndx])
-    if use_FSR:
-        this_pT = evt.lepFSR_pt[reco_ndx]
-    else:
-        # On 2020-12-16 Filippo says we should use WITHOUT FSR quantities.
-        this_pT = evt.lep_pt[reco_ndx]
-    mu.set_PtEtaPhiMass(this_pT, evt.lep_eta[reco_ndx], evt.lep_phi[reco_ndx], evt.lep_mass[reco_ndx])
+    # Set gen, reco, and reco_withFSR kinematics.
+    mu.set_GENPtEtaPhiMass(evt.GENlep_pt[gen_ndx],
+                           evt.GENlep_eta[gen_ndx],
+                           evt.GENlep_phi[gen_ndx],
+                           evt.GENlep_mass[gen_ndx])
+
+    mu.set_PtEtaPhiMass(evt.lep_pt[reco_ndx],
+                        evt.lep_eta[reco_ndx],
+                        evt.lep_phi[reco_ndx],
+                        evt.lep_mass[reco_ndx])
+
+    mu.set_PtEtaPhiMass_withFSR(evt.lepFSR_pt[reco_ndx],
+                                evt.lepFSR_eta[reco_ndx],
+                                evt.lepFSR_phi[reco_ndx],
+                                evt.lepFSR_mass[reco_ndx])
+
     # Set other kinematic quantities.
     mu.d0 = evt.lep_d0BS[reco_ndx]
     mu.dpTOverpT = (mu.pT - mu.gen_pT) / mu.gen_pT
@@ -194,7 +202,7 @@ def initialize_Htomumu_muons_fromliteskim(evt, num):
     mu.dpTOverpT = (mu.pT - mu.gen_pT) / mu.gen_pT
     return mu
 
-def make_muon_ls(evt, rec_ndcs_ls, gen_ndcs_ls, use_FSR=False):
+def make_muon_ls(evt, rec_ndcs_ls, gen_ndcs_ls):
     """Return a list of MyMuon objects with stored reco and gen kinematic info.
     
     Parameters
@@ -207,13 +215,7 @@ def make_muon_ls(evt, rec_ndcs_ls, gen_ndcs_ls, use_FSR=False):
         Should be the same length as rec_ndcs_ls.
     """
     assert len(rec_ndcs_ls) == len(gen_ndcs_ls)
-    # mu_ls = []
-    # Run over the reco muons.
-    # for reco_ndx,gen_ndx in zip(rec_ndcs_ls, gen_ndcs_ls):
-    #     mu = initialize_muon(evt, reco_ndx, gen_ndx)
-    #     mu_ls.append(mu)
-    # return mu_ls
-    return [initialize_muon(evt, reco_ndx, gen_ndx, use_FSR) for reco_ndx,gen_ndx in zip(rec_ndcs_ls, gen_ndcs_ls)]
+    return [initialize_muon(evt, reco_ndx, gen_ndx) for reco_ndx,gen_ndx in zip(rec_ndcs_ls, gen_ndcs_ls)]
 
 def make_muon_ls_fromliteskim(evt):
     """Return a 2-elem list of MyMuon objects with stored reco and gen info.
@@ -264,7 +266,22 @@ def get_ndcs_gen(rec_ndcs_ls, lep_genindex):
     """
     return [lep_genindex[ndx] for ndx in rec_ndcs_ls]
 
-def build_muons_from_HZZ4mu_event(t, evt_num, eta_bin=[0,2.4], pT_bin=[5,200], d0_max=1, use_FSR=False):
+# def account_for_FSR(t, mu):
+#     """
+
+#     Parameters
+#     ----------
+#     t : ROOT.TTree
+#     mu : MyMuon object
+#     """
+#     fsr_pT_ls = list(t.fsrPhotons_pt)
+#     list(t.fsrPhotons_eta)
+#     list(t.fsrPhotons_phi)
+
+#     composite = mu + 
+#     mu.
+
+def build_muons_from_HZZ4mu_event(t, evt_num, eta_bin=[0,2.4], pT_bin=[5,200], d0_max=1):
     """Return a 4-tuple of MyMuon objects which pass muon selections in H->ZZ->4mu sample.
 
     NOTE: This function works for post-UFHZZ4L analyzer, not lite skim.
@@ -281,8 +298,6 @@ def build_muons_from_HZZ4mu_event(t, evt_num, eta_bin=[0,2.4], pT_bin=[5,200], d
         Keep muons with reco pT in range: [pT_min, pT_max] (GeV)
     d0_max : float
         Keep muons with d0 < d0_max (cm).
-    use_FSR : bool
-        If True, then store reco pT accounting for FSR.
 
     Returns
     -------
@@ -300,6 +315,8 @@ def build_muons_from_HZZ4mu_event(t, evt_num, eta_bin=[0,2.4], pT_bin=[5,200], d
 
     rec_ndcs_ls = list(t.lep_Hindex)  # Elements that correspond to 4 leptons which build Higgs candidate.
     lep_genindex_ls = list(t.lep_genindex)
+    # fsrPhotons_lepindex_ls = list(t.fsrPhotons_lepindex)
+
     # if not validate_lep_genindex(lep_genindex_ls):
     #     continue
     # We have a good lep_genindex: at least 4 leptons have been matched. 
@@ -319,7 +336,10 @@ def build_muons_from_HZZ4mu_event(t, evt_num, eta_bin=[0,2.4], pT_bin=[5,200], d
 
     # Event looks good so far. 
     # Now check kinematics of muons.
-    mu_ls = make_muon_ls(t, rec_ndcs_ls, gen_ndcs_ls, use_FSR)
+    mu_ls = make_muon_ls(t, rec_ndcs_ls, gen_ndcs_ls)
+    # if t.nFSRPhotons > 0:
+    #     mu_ls = [account_for_FSR(mu) for mu in mu_ls]
+
     all_muons_passed = apply_kinem_selections(mu_ls, eta_bin=eta_bin, pT_bin=pT_bin, d0_max=d0_max)
     if not all_muons_passed:
         return bad_muons

@@ -2,34 +2,37 @@
 
 Select m4mu events from a ggH sample which pass selections.
 Apply pT correction factors per MyMuon, from a pT corr dict.
+
+Edited: 2021-02-
 """
 import pickle
-import ROOT as r
+import ROOT
 from Utils_ROOT.Printer import CanvasPrinter
 from ParticleCollections import MyMuonCollection
 from Utils_Python.Utils_Files import check_overwrite
 #---------------------------#
 #----- User Parameters -----#
 #---------------------------#
-# suffix = "tenthstats_test01"
-suffix = "fullstats"
+suffix = "tenthstats_test02"
+# suffix = "fullstats"
 infileroot_path = "/cmsuf/data/store/user/t2/users/ferrico/Full_RunII/Production_10_2_18/Higgs_VX_BS/125/GluGluHToZZTo4L_M125_2018.root"
-inpkl_pT_corr_factor_dict = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/Pickles/BestSoFar/MC2018ggH_combined_pT_corr_factor_dct.pkl"
+inpkl_pT_corr_factor_dict = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/CorrFactors/AdHoc/AdHocpTcorrfact_derivedfromMC2018ggH_13etabins12pTbins_0p0eta2p4_5pT1000.pkl"
 # inpkl_pT_corr_factor_dict = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/Pickles/TRASH/small_test_pT_corr_factor_dict.pkl"
 
 outpath_rootfile = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2018_m4mu_m4mucorr_vals_{suffix}.root"
-outpath_pdf      = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/Plots/applypTcorrplots/MC2018_dpTOverpTdist_beforeafterpTcorr_{suffix}.pdf"
+outpath_pdf      = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/plots/applypTcorrplots/CorrFromMC/MC2018_dpTOverpTdist_beforeafterpTcorr_{suffix}.pdf"
 outpath_pkl      = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/Pickles/AfterApplyCorr/afterapplycorr_kb2d_dict_{suffix}.pkl"
 
-verbose = True
-overwrite = True
-do_mu_pT_corr = True
-only_draw_last = True
-max_n_evts = -1
-print_out_every = 100000
+verbose = 1
+overwrite = 0
+make_m4mu_rootfile = 1
+do_mu_pT_corr = 1
+only_draw_last = 1
+
+max_n_evts = 10000
+print_out_every = 5000
 iters = 5
 switch_to_binned_fit = 3000
-make_m4mu_rootfile = False
 #----------------------------#
 #----- Script Functions -----#
 #----------------------------#
@@ -74,7 +77,7 @@ if __name__ == "__main__":
                                 use_mu_pT_corr=do_mu_pT_corr, only_draw_last=only_draw_last)
     # muon_collection.make_plots_beforeafterpTcorr()
     # plot_ls = muon_collection.hist_inclusive_ls
-    c = r.TCanvas()
+    c = ROOT.TCanvas()
     c.Print(outpath_pdf + "[")
     for kb2d in muon_collection.KinBin2D_dict.values():
         kb2d.overwrite_muon_info(delete_all=False)

@@ -66,7 +66,7 @@ def perc_diff(num, ref):
     ref : float or array
         Reference number. Goes in the denominator.
     """
-    return (num - ref) / ref * 100.
+    return (num - ref) / ref * 100.0
 
 def calc_Hmass(mu_ls):
     """

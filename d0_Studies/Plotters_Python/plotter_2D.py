@@ -18,7 +18,7 @@
 #  - If you get blank cells, try modifying your color_lim range. 
 # SYNTAX: python this_script.py
 # AUTHOR: Jake Rosenzweig
-# EDITED: 2021-02-09
+# EDITED: 2021-02-10
 """
 import pickle
 import os
@@ -29,7 +29,7 @@ from Utils_Python.Utils_Files import check_overwrite, open_pkl, make_dirs
 from Utils_ROOT.ROOT_classes import make_TH2F
 #--- User Parameters ---#
 # inpath_pkl = f"/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/plots/qd0/MC{year}JpsiDY_2D_plot_qd0dist_gausiterfitsigmas_4unbinnedfits_0p0eta2p4_5p0pT1000p0GeV.pkl"
-filename = "test11.pdf"
+filename = "test13.pdf"
 inpath_pkl = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/RochCorr/pickles/RC_vs_NoRC_itergaussfits_fullstats_pT75then200GeV_extendedxaxis_5iters.pkl"
 # outpath_pdf = f"/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/plots/2D_tables_etavspT/MC{year}JpsiDY_2Dplot_dpToverpTimprovement_gausiterfitsigmas_6unbinnedfits_0p0eta2p4_5p0pT1000p0GeV_final.pdf"
 outpath_pdf = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/RochCorr/plots/tables2D/test/{filename}"
@@ -98,6 +98,30 @@ def get_mean_and_SEOM(arr):
     seom = get_standarderrorofmean(arr)
     return (mean, seom)
 
+def get_mean_and_SEOM_fromiterfits(kb2d, which_dct):
+    """Return a 2-tuple: (mean, standard error of mean) from iterated Gaussian fits.
+    
+    Parameters
+    ----------
+    which_dct : str
+        A dict key to unlock the appropriate fit stats dict.
+        Choices:
+        - dpT_RC_reco_fit_dct
+        - dpTOverpT_RC_reco_fit_dct
+        - dpT_RC_gen_fit_dct
+        - dpTOverpT_RC_gen_fit_dct
+        - dpT_reco_gen_fit_dct
+        - dpTOverpT_reco_gen_fit_dct
+    """
+    mean_ls = getattr(kb2d, which_dct)['mean_ls']
+    mean_err_ls = getattr(kb2d, which_dct)['mean_err_ls']
+    # Best-fit vals are at the end of lists:
+    mean = mean_ls[-1]
+    seom = mean_err_ls[-1]
+    # for val in mean_ls[]:
+    #     validate_chi2()
+    return (mean, seom)
+
 def make_hist_and_errhist(internal_name, title=None, 
             n_binsx=5, x_label="", x_units=None, x_min=0, x_max=10, z_min=None,
             n_binsy=5, y_label="", y_units=None, y_min=0, y_max=10, z_max=None,
@@ -137,6 +161,9 @@ if __name__ == "__main__":
     rt.gStyle.SetOptStat(0)
 
     # Make hist of mean and standard err of mean for pTs, dpTs, and dpT/pTs.
+    #------------------------------------#
+    #--- Make 2D hists for plain data ---#
+    #------------------------------------# 
     h2_mean_pT_RC, h2_sterrofmean_pT_RC = make_hist_and_errhist(
                                               internal_name="h2_mean_pT_RC", title="<p_{T}^{RC}>",
                                               n_binsx=pT_binedge_ls, x_label=x_label, x_units="GeV",
@@ -158,42 +185,113 @@ if __name__ == "__main__":
     # pT differences.
     h2_mean_pTRCminuspTreco, h2_sterrofmean_pTRCminuspTreco = make_hist_and_errhist(
                                               internal_name="h2_mean_pTRCminuspTreco", title="<p_{T}^{RC} - p_{T}^{reco}> (MeV)",
-                                              n_binsx=pT_binedge_ls, x_label=x_label, x_units="GeV",00,
-                                              n_binsy=eta_binedge_ls, y_label="#left|#eta#right|", y_units=Non
-                                              , z_min=-6 z_max=600, z_label_size=z_label_size,
+                                              n_binsx=pT_binedge_ls, x_label=x_label, x_units="GeV",
+                                              n_binsy=eta_binedge_ls, y_label="#left|#eta#right|", y_units=None,
+                                              z_min=-6, z_max=600, z_label_size=z_label_size,
                                               n_contour=n_contour)
     h2_mean_pTRCminuspTgen, h2_sterrofmean_pTRCminuspTgen = make_hist_and_errhist(
                                               internal_name="h2_mean_pTRCminuspTgen", title="<p_{T}^{RC} - p_{T}^{gen}> (MeV)",
-                                              n_binsx=pT_binedge_ls, x_label=x_label, x_units="GeV",00,
-                                              n_binsy=eta_binedge_ls, y_label="#left|#eta#right|", y_units=Non
-                                              , z_min=-6 z_max=600, z_label_size=z_label_size,
+                                              n_binsx=pT_binedge_ls, x_label=x_label, x_units="GeV",
+                                              n_binsy=eta_binedge_ls, y_label="#left|#eta#right|", y_units=None,
+                                              z_min=-6, z_max=600, z_label_size=z_label_size,
                                               n_contour=n_contour)
     h2_mean_pTrecominuspTgen, h2_sterrofmean_pTrecominuspTgen = make_hist_and_errhist(
                                               internal_name="h2_mean_pTrecominuspTgen", title="<p_{T}^{reco} - p_{T}^{gen}> (MeV)",
-                                              n_binsx=pT_binedge_ls, x_label=x_label, x_units="GeV",00,
-                                              n_binsy=eta_binedge_ls, y_label="#left|#eta#right|", y_units=Non
-                                              , z_min=-6 z_max=600, z_label_size=z_label_size,
+                                              n_binsx=pT_binedge_ls, x_label=x_label, x_units="GeV",
+                                              n_binsy=eta_binedge_ls, y_label="#left|#eta#right|", y_units=None,
+                                              z_min=-6, z_max=600, z_label_size=z_label_size,
                                               n_contour=n_contour)
     # Relative pT differences.
     h2_mean_relpTRCminuspTreco, h2_sterrofmean_relpTRCminuspTreco = make_hist_and_errhist(
                                               internal_name="h2_mean_relpTRCminuspTreco", title="<(p_{T}^{RC} - p_{T}^{reco})/p_{T}^{reco}> (%)",
-                                              n_binsx=pT_binedge_ls, x_label=x_label, x_units="GeV",0,
-                                              n_binsy=eta_binedge_ls, y_label="#left|#eta#right|", y_units=Non
-                                              , z_min=-2 z_max=20, z_label_size=z_label_size,
+                                              n_binsx=pT_binedge_ls, x_label=x_label, x_units="GeV",
+                                              n_binsy=eta_binedge_ls, y_label="#left|#eta#right|", y_units=None,
+                                              z_min=-2, z_max=20, z_label_size=z_label_size,
                                               n_contour=n_contour)
     h2_mean_relpTRCminuspTgen, h2_sterrofmean_relpTRCminuspTgen = make_hist_and_errhist(
                                               internal_name="h2_mean_relpTRCminuspTgen", title="<(p_{T}^{RC} - p_{T}^{gen})/p_{T}^{gen}> (%)",
-                                              n_binsx=pT_binedge_ls, x_label=x_label, x_units="GeV",0,
-                                              n_binsy=eta_binedge_ls, y_label="#left|#eta#right|", y_units=Non
-                                              , z_min=-2 z_max=20, z_label_size=z_label_size,
+                                              n_binsx=pT_binedge_ls, x_label=x_label, x_units="GeV",
+                                              n_binsy=eta_binedge_ls, y_label="#left|#eta#right|", y_units=None,
+                                              z_min=-2, z_max=20, z_label_size=z_label_size,
                                               n_contour=n_contour)
     h2_mean_relpTrecominuspTgen, h2_sterrofmean_relpTrecominuspTgen = make_hist_and_errhist(
                                               internal_name="h2_mean_relpTrecominuspTgen", title="<(p_{T}^{reco} - p_{T}^{gen})/p_{T}^{gen}> (%)",
-                                              n_binsx=pT_binedge_ls, x_label=x_label, x_units="GeV",0,
-                                              n_binsy=eta_binedge_ls, y_label="#left|#eta#right|", y_units=Non
-                                              , z_min=-2 z_max=20, z_label_size=z_label_size,
+                                              n_binsx=pT_binedge_ls, x_label=x_label, x_units="GeV",
+                                              n_binsy=eta_binedge_ls, y_label="#left|#eta#right|", y_units=None,
+                                              z_min=-2, z_max=20, z_label_size=z_label_size,
                                               n_contour=n_contour)
-    # Collect data.
+    
+    #--------------------------------------#
+    #--- Make 2D hists for iterfit data ---#
+    #--------------------------------------# 
+    h2_mean_pTRCminuspTreco_iterfit, h2_sterrofmean_pTRCminuspTreco_iterfit = make_hist_and_errhist(
+                                              internal_name="h2_mean_pTRCminuspTreco_iterfit", title="Best-fit Gaussian #mu#left(p_{T}^{RC} - p_{T}^{reco}#right) (MeV)",
+                                              n_binsx=pT_binedge_ls, x_label=x_label, x_units="GeV",
+                                              n_binsy=eta_binedge_ls, y_label="#left|#eta#right|", y_units=None,
+                                              z_min=-6, z_max=600, z_label_size=z_label_size,
+                                              n_contour=n_contour)
+    h2_mean_pTRCminuspTgen_iterfit, h2_sterrofmean_pTRCminuspTgen_iterfit = make_hist_and_errhist(
+                                              internal_name="h2_mean_pTRCminuspTgen_iterfit", title="Best-fit Gaussian #mu#left(p_{T}^{RC} - p_{T}^{gen}#right) (MeV)",
+                                              n_binsx=pT_binedge_ls, x_label=x_label, x_units="GeV",
+                                              n_binsy=eta_binedge_ls, y_label="#left|#eta#right|", y_units=None,
+                                              z_min=-6, z_max=600, z_label_size=z_label_size,
+                                              n_contour=n_contour)
+    h2_mean_pTrecominuspTgen_iterfit, h2_sterrofmean_pTrecominuspTgen_iterfit = make_hist_and_errhist(
+                                              internal_name="h2_mean_pTrecominuspTgen_iterfit", title="Best-fit Gaussian #mu#left(p_{T}^{reco} - p_{T}^{gen}#right) (MeV)",
+                                              n_binsx=pT_binedge_ls, x_label=x_label, x_units="GeV",
+                                              n_binsy=eta_binedge_ls, y_label="#left|#eta#right|", y_units=None,
+                                              z_min=-6, z_max=600, z_label_size=z_label_size,
+                                              n_contour=n_contour)
+    # Relative pT differences.
+    h2_mean_relpTRCminuspTreco_iterfit, h2_sterrofmean_relpTRCminuspTreco_iterfit = make_hist_and_errhist(
+                                              internal_name="h2_mean_relpTRCminuspTreco_iterfit", title="Best-fit Gaussian #mu#left((p_{T}^{RC} - p_{T}^{reco})/p_{T}^{reco}#right) (%)",
+                                              n_binsx=pT_binedge_ls, x_label=x_label, x_units="GeV",
+                                              n_binsy=eta_binedge_ls, y_label="#left|#eta#right|", y_units=None,
+                                              z_min=-2, z_max=20, z_label_size=z_label_size,
+                                              n_contour=n_contour)
+    h2_mean_relpTRCminuspTgen_iterfit, h2_sterrofmean_relpTRCminuspTgen_iterfit = make_hist_and_errhist(
+                                              internal_name="h2_mean_relpTRCminuspTgen_iterfit", title="Best-fit Gaussian #mu#left((p_{T}^{RC} - p_{T}^{gen})/p_{T}^{gen}#right) (%)",
+                                              n_binsx=pT_binedge_ls, x_label=x_label, x_units="GeV",
+                                              n_binsy=eta_binedge_ls, y_label="#left|#eta#right|", y_units=None,
+                                              z_min=-2, z_max=20, z_label_size=z_label_size,
+                                              n_contour=n_contour)
+    h2_mean_relpTrecominuspTgen_iterfit, h2_sterrofmean_relpTrecominuspTgen_iterfit = make_hist_and_errhist(
+                                              internal_name="h2_mean_relpTrecominuspTgen_iterfit", title="Best-fit Gaussian #mu#left((p_{T}^{reco} - p_{T}^{gen})/p_{T}^{gen}#right) (%)",
+                                              n_binsx=pT_binedge_ls, x_label=x_label, x_units="GeV",
+                                              n_binsy=eta_binedge_ls, y_label="#left|#eta#right|", y_units=None,
+                                              z_min=-2, z_max=20, z_label_size=z_label_size,
+                                              n_contour=n_contour)
+    
+    for kb2d in dct.values():
+        # Collect iterated Gaussian fit data.
+        avg_bin_val_eta = np.mean(kb2d.eta_range)
+        avg_bin_val_pT = np.mean(kb2d.pT_range)
+
+        mean_dpT_RCvsreco_iterfit, sterrofmean_dpT_RCvsreco_iterfit = get_mean_and_SEOM_fromiterfits(kb2d, "dpT_RC_reco_fit_dct")
+        mean_dpT_RCvsgen_iterfit, sterrofmean_dpT_RCvsgen_iterfit = get_mean_and_SEOM_fromiterfits(kb2d, "dpT_RC_gen_fit_dct")
+        mean_dpT_recovsgen_iterfit, sterrofmean_dpT_recovsgen_iterfit = get_mean_and_SEOM_fromiterfits(kb2d, "dpT_reco_gen_fit_dct")
+        mean_reldpT_RCvsreco_iterfit, sterrofmean_reldpT_RCvsreco_iterfit = get_mean_and_SEOM_fromiterfits(kb2d, "dpTOverpT_RC_reco_fit_dct")
+        mean_reldpT_RCvsgen_iterfit, sterrofmean_reldpT_RCvsgen_iterfit = get_mean_and_SEOM_fromiterfits(kb2d, "dpTOverpT_RC_gen_fit_dct")
+        mean_reldpT_recovsgen_iterfit, sterrofmean_reldpT_recovsgen_iterfit = get_mean_and_SEOM_fromiterfits(kb2d, "dpTOverpT_reco_gen_fit_dct")
+
+        h2_mean_pTRCminuspTreco_iterfit.Fill(avg_bin_val_pT, avg_bin_val_eta, mean_dpT_RCvsreco_iterfit)  # Does not need unit_factor.
+        h2_sterrofmean_pTRCminuspTreco_iterfit.Fill(avg_bin_val_pT, avg_bin_val_eta, sterrofmean_dpT_RCvsreco_iterfit)
+
+        h2_mean_pTRCminuspTgen_iterfit.Fill(avg_bin_val_pT, avg_bin_val_eta, mean_dpT_RCvsgen_iterfit * unit_factor)
+        h2_sterrofmean_pTRCminuspTgen_iterfit.Fill(avg_bin_val_pT, avg_bin_val_eta, sterrofmean_dpT_RCvsgen_iterfit * unit_factor)
+
+        h2_mean_pTrecominuspTgen_iterfit.Fill(avg_bin_val_pT, avg_bin_val_eta, mean_dpT_recovsgen_iterfit * unit_factor)
+        h2_sterrofmean_pTrecominuspTgen_iterfit.Fill(avg_bin_val_pT, avg_bin_val_eta, sterrofmean_dpT_recovsgen_iterfit * unit_factor)
+
+        h2_mean_relpTRCminuspTreco_iterfit.Fill(avg_bin_val_pT, avg_bin_val_eta, mean_reldpT_RCvsreco_iterfit * 100.0)
+        h2_sterrofmean_relpTRCminuspTreco_iterfit.Fill(avg_bin_val_pT, avg_bin_val_eta, sterrofmean_reldpT_RCvsreco_iterfit * 100.0)
+
+        h2_mean_relpTRCminuspTgen_iterfit.Fill(avg_bin_val_pT, avg_bin_val_eta, mean_reldpT_RCvsgen_iterfit * 100.0)
+        h2_sterrofmean_relpTRCminuspTgen_iterfit.Fill(avg_bin_val_pT, avg_bin_val_eta, sterrofmean_reldpT_RCvsgen_iterfit * 100.0)
+
+        h2_mean_relpTrecominuspTgen_iterfit.Fill(avg_bin_val_pT, avg_bin_val_eta, mean_reldpT_recovsgen_iterfit * 100.0)
+        h2_sterrofmean_relpTrecominuspTgen_iterfit.Fill(avg_bin_val_pT, avg_bin_val_eta, sterrofmean_reldpT_recovsgen_iterfit * 100.0)
+    # Collect normal data.
     for kb2d in dct.values():
         avg_bin_val_eta = np.mean(kb2d.eta_range)
         avg_bin_val_pT = np.mean(kb2d.pT_range)
@@ -249,9 +347,17 @@ if __name__ == "__main__":
         h2_mean_relpTrecominuspTgen.Fill(avg_bin_val_pT, avg_bin_val_eta, mean_reldpT_recovsgen)
         h2_sterrofmean_relpTrecominuspTgen.Fill(avg_bin_val_pT, avg_bin_val_eta, sterrofmean_reldpT_recovsgen)
     # End loop over kb2ds.
-    hist_tup = (h2_mean_pT_RC, h2_mean_pT_reco, h2_mean_pT_gen, h2_mean_pTRCminuspTreco, h2_mean_pTRCminuspTgen, h2_mean_pTrecominuspTgen, h2_mean_relpTRCminuspTreco, h2_mean_relpTRCminuspTgen, h2_mean_relpTrecominuspTgen)
-    hist_err_tup = (h2_sterrofmean_pT_RC, h2_sterrofmean_pT_reco, h2_sterrofmean_pT_gen, h2_sterrofmean_pTRCminuspTreco, h2_sterrofmean_pTRCminuspTgen, h2_sterrofmean_pTrecominuspTgen, h2_sterrofmean_relpTRCminuspTreco, h2_sterrofmean_relpTRCminuspTgen, h2_sterrofmean_relpTrecominuspTgen)
-
+    hist_tup = (h2_mean_pT_RC, h2_mean_pT_reco, h2_mean_pT_gen,
+                h2_mean_pTRCminuspTreco, h2_mean_pTRCminuspTgen, h2_mean_pTrecominuspTgen,
+                h2_mean_relpTRCminuspTreco, h2_mean_relpTRCminuspTgen, h2_mean_relpTrecominuspTgen)
+    hist_err_tup = (h2_sterrofmean_pT_RC, h2_sterrofmean_pT_reco, h2_sterrofmean_pT_gen,
+                    h2_sterrofmean_pTRCminuspTreco, h2_sterrofmean_pTRCminuspTgen, h2_sterrofmean_pTrecominuspTgen,
+                    h2_sterrofmean_relpTRCminuspTreco, h2_sterrofmean_relpTRCminuspTgen, h2_sterrofmean_relpTrecominuspTgen)
+    hist_iterfit_tup = (h2_mean_pTRCminuspTreco_iterfit, h2_mean_pTRCminuspTgen_iterfit, h2_mean_pTrecominuspTgen_iterfit,
+                h2_mean_relpTRCminuspTreco_iterfit, h2_mean_relpTRCminuspTgen_iterfit, h2_mean_relpTrecominuspTgen_iterfit)
+    hist_err_iterfit_tup = (h2_sterrofmean_pTRCminuspTreco_iterfit, h2_sterrofmean_pTRCminuspTgen_iterfit, h2_sterrofmean_pTrecominuspTgen_iterfit,
+                    h2_sterrofmean_relpTRCminuspTreco_iterfit, h2_sterrofmean_relpTRCminuspTgen_iterfit, h2_sterrofmean_relpTrecominuspTgen_iterfit)
+    
     z_max_pT = 105
     h2_mean_pT_RC.GetZaxis().SetRangeUser(0, z_max_pT)
     h2_mean_pT_reco.GetZaxis().SetRangeUser(0, z_max_pT)
@@ -261,15 +367,22 @@ if __name__ == "__main__":
     h2_mean_pTRCminuspTreco.GetZaxis().SetRangeUser(-200, 200)
     h2_mean_pTRCminuspTgen.GetZaxis().SetRangeUser(-1 * z_max_dpT, z_max_dpT)
     h2_mean_pTrecominuspTgen.GetZaxis().SetRangeUser(-1 * z_max_dpT, z_max_dpT)
+    h2_mean_pTRCminuspTreco_iterfit.GetZaxis().SetRangeUser(-200, 200)
+    h2_mean_pTRCminuspTgen_iterfit.GetZaxis().SetRangeUser(-1 * z_max_dpT, z_max_dpT)
+    h2_mean_pTrecominuspTgen_iterfit.GetZaxis().SetRangeUser(-1 * z_max_dpT, z_max_dpT)
 
     z_max_reldpT = 2.1
     h2_mean_relpTRCminuspTreco.GetZaxis().SetRangeUser(-0.5, 0.5)
     h2_mean_relpTRCminuspTgen.GetZaxis().SetRangeUser(-1 * z_max_reldpT, z_max_reldpT)
     h2_mean_relpTrecominuspTgen.GetZaxis().SetRangeUser(-1 * z_max_reldpT, z_max_reldpT)
+    h2_mean_relpTRCminuspTreco_iterfit.GetZaxis().SetRangeUser(-0.5, 0.5)
+    h2_mean_relpTRCminuspTgen_iterfit.GetZaxis().SetRangeUser(-1 * z_max_reldpT, z_max_reldpT)
+    h2_mean_relpTrecominuspTgen_iterfit.GetZaxis().SetRangeUser(-1 * z_max_reldpT, z_max_reldpT)
     if make_pdf:
         c = rt.TCanvas()
         c.Print(outpath_pdf + "[")
         c.SetLogx(True)
+        # Consolidate for loops into a single one.
         for h, h_err in zip(hist_tup, hist_err_tup):
             set_bin_vals_and_errs(h, h_err)
             h.SetContour(n_contour)
@@ -278,66 +391,12 @@ if __name__ == "__main__":
             rt.gStyle.SetPaintTextFormat(cell_text_format)
             h.Draw("colz text e1")
             c.Print(outpath_pdf)
+        for h, h_err in zip(hist_iterfit_tup, hist_err_iterfit_tup):
+            set_bin_vals_and_errs(h, h_err)
+            h.SetContour(n_contour)
+            h.SetMarkerSize(text_size)
+            # h.SetBarOffset(0.2)
+            rt.gStyle.SetPaintTextFormat(cell_text_format)
+            h.Draw("colz text e1")
+            c.Print(outpath_pdf)
         c.Print(outpath_pdf + "]")
-
-
-
-#     hist_dct = make_hist_dict()
-
-#  {
-#     "pT_RC" : make_hist_and_errhist(),
-#     "pT_reco" : (h_pT, h_err1),
-#  }
-#     hist_tup = (h2_pT_RC, h2_pT_reco, h2_pT_gen,
-#                 h2_avg_pTRCminuspTreco, h2_avg_pTRCminuspTgen, h2_avg_pTrecominuspTgen,
-#                 h2_avg_relpTRCminuspTreco, h2_avg_relpTRCminuspTgen, h2_avg_relpTrecominuspTgen)
-#     hist_err_tup = ()
-    # Fill histograms.
-    # x_vals = [np.mean(kb2d.pT_range) for kb2d in dct.values()]
-    # y_vals = [np.mean(kb2d.eta_range) for kb2d in dct.values()]
-    # y_vals = [np.mean(end - start) for start,end in (eta_binedge_ls[:-1], eta_binedge_ls[1:])]
-    # pT.f
-    # fill_TH2F(h2_pT_RC,
-    #             x_vals=x_vals,
-    #             y_vals=y_vals,
-    #             z_vals=[np.mean([mu.pT_RC for mu in kb2d.muon_ls]) for kb2d in dct.values()])
-    # fill_TH2F(h2_pT_reco,
-    #             x_vals=x_vals,
-    #             y_vals=y_vals,
-    #             z_vals=[np.mean([mu.pT for mu in kb2d.muon_ls]) for kb2d in dct.values()])
-    # fill_TH2F(h2_pT_gen,
-    #             x_vals=x_vals,
-    #             y_vals=y_vals,
-    #             z_vals=[np.mean([mu.gen_pT for mu in kb2d.muon_ls]) for kb2d in dct.values()])
-    # pT diff.
-    # fill_TH2F(h2_avg_pTRCminuspTreco,
-    #             x_vals=x_vals,
-    #             y_vals=y_vals,
-    #             z_vals=[np.mean([(mu.pT_RC - mu.pT) * 1000.0 for mu in kb2d.muon_ls]) for kb2d in dct.values()])
-    # fill_TH2F(h2_avg_pTRCminuspTgen,
-    #             x_vals=x_vals,
-    #             y_vals=y_vals,
-    #             z_vals=[np.mean([(mu.pT_RC - mu.gen_pT) * 1000.0 for mu in kb2d.muon_ls]) for kb2d in dct.values()])
-    # fill_TH2F(h2_avg_pTrecominuspTgen,
-    #             x_vals=x_vals,
-    #             y_vals=y_vals,
-    #             z_vals=[np.mean([(mu.pT - mu.gen_pT) * 1000.0 for mu in kb2d.muon_ls]) for kb2d in dct.values()],
-
-    # def make_hist_dict():
-    #     """Return a dict of empty TH2Fs as the values."""
-    #     hist_dct = {
-    #     }
-
-    # Relative pT diff.
-    # fill_TH2F(h2_avg_relpTRCminuspTreco,
-    #             x_vals=[np.mean([(mu.pT_RC - mu.pT)/mu.pT * 1000.0 for mu in kb2d.muon_ls]) for kb2d in dct.values()],
-    #             y_vals=y_vals,
-    #             use_weight_x=True, use_weight_y=False)
-    # fill_TH2F(h2_avg_relpTRCminuspTgen,
-    #             x_vals=[np.mean([(mu.pT_RC - mu.gen_pT)/mu.gen_pT * 1000.0 for mu in kb2d.muon_ls]) for kb2d in dct.values()],
-    #             y_vals=y_vals,
-    #             use_weight_x=True, use_weight_y=False)
-    # fill_TH2F(h2_avg_relpTrecominuspTgen,
-    #             x_vals=[np.mean([(mu.pT - mu.gen_pT)/mu.gen_pT * 1000.0 for mu in kb2d.muon_ls]) for kb2d in dct.values()],
-    #             y_vals=y_vals,
-    #             use_weight_x=True, use_weight_y=False)

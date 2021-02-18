@@ -97,8 +97,11 @@ def correct_muon_pT(eta, pT, q, d0,
 
     Kinematics required to determine correction: (eta, pT, charge, d0)
 
-    # FIXME: Need to also retrieve and implement uncertainties on slope and
-    intercept.
+    NOTE:
+    - Do not correct muon_FSR pT; only muon_reco pT without accounting for FSR.
+
+    FIXME:
+    - Need to also retrieve and implement uncertainties on slope and intercept.
 
     Parameters
     ----------
@@ -277,7 +280,7 @@ def centers_of_binning_array(bin_arr, decimals=0):
     
     Example: 
         bin_arr = np.array([1, 2, 4, 8])
-        bin_arr_shifted = np.array([1.5, 3, 6])
+        returns: np.array([1.5, 3, 6])
         
     NOTE: Was formerly called shift_binning_array().
     
@@ -304,19 +307,44 @@ def centers_of_binning_array(bin_arr, decimals=0):
     
     return bin_centers_arr
 
-def calc_x_err_bins_from_bin_edges(binedge_ls):
+def calc_x_err_bins_from_bin_edges(bin_edge_ls, bin_center_ls=None):
     """
     Returns lists of the "x-errors", i.e. the half-distances between neighboring bins.
-    These may be symmetrical or asymmetrical. 
+    These may be symmetrical or asymmetrical.
+
+    Example:
+    bin_edge_ls = [0, 2, 5, 10]
+    bin_center_ls = [1, 4, 8]
+    returns: (
+        [1, 2, 3],
+        [1, 1, 2]
+        )
+
+    Parameters
+    ----------
+    bin_edge_ls : list or array-like
+        The edges of the bins along the x-axis.
+        len(bin_edge_ls) should equal len(n_bins) + 1.
+    bin_center_ls : list or array-like, optional
+        len(bin_center_ls) shoudl equal len(n_bins).
+
+    Returns
+    -------
+    2-tuple : (low_err_arr, high_err_arr)
+    - low_err_arr is the array of x-err bars on the left side of each point.
+    - high_err_arr is the array of x-err bars on the right side of each point.
     """
-    bin_arr = np.array(binedge_ls)
+    bin_arr = np.array(bin_edge_ls)
     bin_edges_low = bin_arr[:-1]
     bin_edges_high = bin_arr[1:]
 
-    centers = centers_of_binning_array(bin_arr)
+    if bin_center_ls is None:
+        bin_center_ls = centers_of_binning_array(bin_arr)
 
-    low_err_arr = centers - bin_edges_low
-    high_err_arr = bin_edges_high - centers
+    assert len(bin_center_ls) + 1 == len(bin_edge_ls)
+
+    low_err_arr = bin_center_ls - bin_edges_low
+    high_err_arr = bin_edges_high - bin_center_ls
     
     return (low_err_arr, high_err_arr)
 

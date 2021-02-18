@@ -23,6 +23,11 @@ class MyParticle:
         self.gen_phi = None
         self.gen_mass = None
 
+        self.pT_withFSR = None
+        self.eta_withFSR = None
+        self.phi_withFSR = None
+        self.mass_withFSR = None
+
         self.charge = None
         self.ID = None
         self.d0 = None
@@ -42,11 +47,23 @@ class MyParticle:
         self.gen_phi = gphi
         self.gen_mass = gmass
 
+    def set_PtEtaPhiMass_withFSR(self, pTFSR, etaFSR, phiFSR, massFSR):
+        self.pT_withFSR = pTFSR
+        self.eta_withFSR = etaFSR
+        self.phi_withFSR = phiFSR
+        self.mass_withFSR = massFSR
+
     def get_PtEtaPhiMass(self):
+        """Return a 4-tup of muon's RECO pT, eta, phi, mass."""
         return (self.pT, self.eta, self.phi, self.mass)
 
     def get_GENPtEtaPhiMass(self):
+        """Return a 4-tup of muon's GEN pT, eta, phi, mass."""
         return (self.gen_pT, self.gen_eta, self.gen_phi, self.gen_mass)
+ 
+    def get_PtEtaPhiMass_withFSR(self):
+        """Return a 4-tup of muon's pT, eta, phi, mass, corrected for FSR."""
+        return (self.pT_withFSR, self.eta_withFSR, self.phi_withFSR, self.mass_withFSR)
 
     def verify_charge(self):
         """Return True if charge of particle is compatible with its ID."""
@@ -57,13 +74,16 @@ class MyParticle:
         """Return a ROOT.Math.LorentzVector object of this particle.
         
         kind : str
-            Either "gen" or "reco".
+            Can be: "gen", "reco", or "withFSR".
         """
-        k = kind.lower()
-        if k in "gen":
+        # k = kind.lower()
+        # print(f"k is {k}")
+        if kind in "gen":
             tup = self.get_GENPtEtaPhiMass()
-        elif k in "reco":
+        elif kind in "reco":
             tup = self.get_PtEtaPhiMass()
+        elif kind in "withFSR":
+            tup = self.get_PtEtaPhiMass_withFSR()
         else:
             raise ValueError(f"Parameter `kind` ({kind}) not understood.")
         return r.Math.PtEtaPhiMVector(*tup)
