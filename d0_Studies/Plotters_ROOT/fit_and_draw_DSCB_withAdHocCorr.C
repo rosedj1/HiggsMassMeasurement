@@ -57,6 +57,8 @@ RooFitResult* fit_and_draw_DSCB(
     //     throw std::invalid_argument("`method` must be either 'AdHoc' or 'GeoFit'.");
     // }
 
+    Float_t gbl_x_min = 105.0;
+    Float_t gbl_x_max = 140.0;
     Float_t size_text  = 0.017;  // 0.02
     Double_t tex_horiz = 0.20;
     Double_t tex_vert  = 0.82;
@@ -67,20 +69,18 @@ RooFitResult* fit_and_draw_DSCB(
         // Throw exception here.
     }
     
-    TString name_m4mu = "m4mu";
-    TString name_m4mu_corr = "m4mu_corr";
     TString name_mu = "#mu";
     TString name_sig = "#sigma";
     TString name_aL = "#alpha_{L}";
     TString name_aR = "#alpha_{R}";
     TString name_expL = "n_{L}";
     TString name_expR = "n_{R}";
+
     TString corr_suffix = "^{corr.}";
     TString fit_param_title = "DSCB Fit Params:";
 
     if (show_after_corr) {
         tex_horiz = 0.70;
-        // name_m4mu += "_corr";  // Don't change!
         name_mu   += corr_suffix;
         name_sig  += corr_suffix;
         name_aL   += corr_suffix;
@@ -98,8 +98,8 @@ RooFitResult* fit_and_draw_DSCB(
      * the other fit params much based on preliminary testing.
      * So leave it at 100 for faster fitting.
      */
-    RooRealVar m4mu(name_m4mu, "m_{4#mu}", 105, 145, "GeV");
-    RooRealVar m4mu_corr(name_m4mu_corr, "m_{4#mu}", 105, 145, "GeV");
+    RooRealVar m4mu("m4mu", "m_{4#mu}", gbl_x_min, gbl_x_max, "GeV");
+    RooRealVar m4mu_corr("m4mu_corr", "m_{4#mu}", gbl_x_min, gbl_x_max, "GeV");
     RooRealVar Mean(name_mu, "#mu", 125, 120, 130);
     RooRealVar Sigma(name_sig, "#sigma", 1, 0, 10);//sigma[decay]);
     RooRealVar AlphaL(name_aL, "#alpha_{L}", 1, 0, 30);//alphaL[decay]);
@@ -107,66 +107,95 @@ RooFitResult* fit_and_draw_DSCB(
     RooRealVar ExpL(name_expL, "n_{L}", 1, 0, 50);//expL[decay]);
     RooRealVar ExpR(name_expR, "n_{R}", 1, 0, 100);//expR[decay]); (1,1,50)
 
-    if (show_after_corr) {
-        RooMyPDF_DSCB DSCB("DSCB", "DSCB", m4mu_corr, Mean, Sigma, AlphaL, ExpL, AlphaR, ExpR);
-    } else {
-        RooMyPDF_DSCB DSCB("DSCB", "DSCB", m4mu, Mean, Sigma, AlphaL, ExpL, AlphaR, ExpR);
-    }
+    // RooMyPDF_DSCB DSCB;
+    // if (show_after_corr) {
+    //     DSCB = RooMyPDF_DSCB("DSCB", "DSCB", m4mu_corr, Mean, Sigma, AlphaL, ExpL, AlphaR, ExpR);
+    // } else {
+    //     DSCB = RooMyPDF_DSCB("DSCB", "DSCB", m4mu, Mean, Sigma, AlphaL, ExpL, AlphaR, ExpR);
+    // }
+    RooMyPDF_DSCB DSCB = RooMyPDF_DSCB("DSCB", "DSCB", m4mu, Mean, Sigma, AlphaL, ExpL, AlphaR, ExpR);
+    RooMyPDF_DSCB DSCB_corr = RooMyPDF_DSCB("DSCB_corr", "DSCB", m4mu_corr, Mean, Sigma, AlphaL, ExpL, AlphaR, ExpR);
 
     // Prepare the cuts.
     // TString cut1 = Form("%f < ", m4mu_min) + name_m4mu + " && "
     // TString cut1 = Form("%f > ", m4mu_min) + name_m4mu + " && "
     // TString sel_mass4mu = Form("%f < %s && %s < %f", m4mu_min, name_m4mu.Data(), name_m4mu.Data(), m4mu_max);
-    TString sel_mass4mu = Form("%f < m4mu && m4mu < %f", m4mu_min, m4mu_max);
     cout << "***** Fitting a DSCB to m4mu with the following cuts: *****" << endl;
-    TString all_cuts = sel_mass4mu;
+    TString all_cuts = Form("%f < m4mu && m4mu < %f", m4mu_min, m4mu_max);
     cout << "  * " << all_cuts << endl;
 
     // Make a RooDataSet to plot black points along full mass4mu range:
-    RooDataSet rds("rds", "roodataset m4mu", tree, RooArgSet(m4mu, m4mu_corr), "");
-    RooDataSet rds_inmasswindow("rds_inmasswindow", "rds_inmasswindow m4mu", tree, RooArgSet(m4mu, m4mu_corr), all_cuts);
+    RooDataSet rds("rds", "roodataset m4mu", tree, RooArgSet(m4mu), "");
+    RooDataSet rds_corr("rds_corr", "roodataset m4mu_corr", tree, RooArgSet(m4mu_corr), "");
+    RooDataSet rds_inmasswindow("rds_inmasswindow", "rds_inmasswindow m4mu", tree, RooArgSet(m4mu), all_cuts);
+    cout << "rds.numEntries() =" << rds.numEntries() << endl;
+    cout << "rds.sumEntries() =" << rds.sumEntries() << endl;
+    cout << "rds_corr.numEntries() =" << rds_corr.numEntries() << endl;
+    cout << "rds_corr.sumEntries() =" << rds_corr.sumEntries() << endl;
+    cout << "rds_inmasswindow.numEntries() =" << rds_inmasswindow.numEntries() << endl;
+    cout << "rds_inmasswindow.sumEntries() =" << rds_inmasswindow.sumEntries() << endl;
 
     // Do the DSCB fit.
     gStyle->SetOptStat("iouRMe");
-    RooFitResult* result = DSCB.fitTo(rds,
+    // RooFitResult* result = DSCB.fitTo(rds,
+    //                              RooFit::Range(m4mu_min, m4mu_max),
+    //                              RooFit::PrintLevel(-1),
+    //                              RooFit::Save()
+    //                              );
+    RooFitResult* result;
+    if (show_after_corr) {
+        result = DSCB_corr.fitTo(rds_corr,
                                  RooFit::Range(m4mu_min, m4mu_max),
                                  RooFit::PrintLevel(-1),
                                  RooFit::Save()
                                  );
+    } else {
+        result = DSCB.fitTo(rds,
+                                 RooFit::Range(m4mu_min, m4mu_max),
+                                 RooFit::PrintLevel(-1),
+                                 RooFit::Save()
+                                 );
+    }
+
     // TPad* ptop = new TPad("ptop", "pad main", 0.0, 0.25, 1.0, 1.0);
     // TPad* pbot = new TPad("pbot", "pad ratio", 0.0, 0.0, 1.0, 0.25);
     RooPlot* xframe;
+    RooPlot* xframe_corr;
     if (zoom) {
         xframe = m4mu.frame(RooFit::Range(m4mu_min, m4mu_max), RooFit::Title(title));
+        xframe_corr = m4mu_corr.frame(RooFit::Range(m4mu_min, m4mu_max), RooFit::Title(title));
     } else {
-        xframe = m4mu.frame(RooFit::Range(105, 145), RooFit::Title(title));
+        xframe = m4mu.frame(RooFit::Range(gbl_x_min, gbl_x_max), RooFit::Title(title));
+        xframe_corr = m4mu_corr.frame(RooFit::Range(gbl_x_min, gbl_x_max), RooFit::Title(title));
     }
     
     // Make binned version of data.
     // Should be no need to make a separate hist.
     // When the RooDataSet plots on the frame, it will look binned.
-    TString hist_name = Form("h_m4mu_%f_%f", m4mu_min, m4mu_max);
+    TString hist_name = Form("h_m4mu_%fm4mu%f_%fm4muErr%f_%s", m4mu_min, m4mu_max, m4muErr_min, m4muErr_max, name_mu.Data());
     // h_m4mu->SetLineWidth(0);
     // xframe->addTH1(h_m4mu)
-    TH1* h_m4mu = rds.createHistogram(hist_name, m4mu, RooFit::Binning(n_bins, 105, 145));
+    TH1* h_m4mu = rds.createHistogram(hist_name, m4mu, RooFit::Binning(n_bins, gbl_x_min, gbl_x_max));
     Double_t max_val = h_m4mu->GetMaximum();
     xframe->SetMaximum(max_val * 1.1);
     // Double_t bin_width = h_m4mu->GetBinWidth(1);
-    Double_t bin_width = (145.0 - 105.0) / n_bins;
+    Double_t bin_width = (gbl_x_max - gbl_x_min) / n_bins;
     
     xframe->GetYaxis()->SetTitle(Form("Events / (%.2f GeV)", bin_width));
     // Int_t n_bins_in_fitrange = static_cast<Int_t>(round((m4mu_max - m4mu_min) / bin_width));
     // rds.plotOn(xframe, RooFit::MarkerColor(1), RooFit::Binning(n_bins_in_fitrange));
     rds.plotOn(xframe, RooFit::MarkerColor(color_marker), RooFit::Binning(n_bins));
-    DSCB.plotOn(xframe, RooFit::LineColor(color_line), RooFit::LineWidth(3), RooFit::Range(m4mu_min, m4mu_max));  //RooFit::Binning(n_bins), 
+    rds_corr.plotOn(xframe_corr, RooFit::MarkerColor(color_marker), RooFit::Binning(n_bins));
     // DSCB.paramOn(xframe, RooFit::Layout(tex_horiz, tex_horiz + 0.22, tex_vert - 0.02));
     // xframe->getAttText()->SetTextSize(size_text);
     // xframe->getAttText()->SetTextColor(color_line);
     // h_m4mu->SetTitle(title);
     // h_m4mu->Draw("same");  // For the stats box.
     if (show_after_corr) {
-        xframe->Draw("same");  // A plot was drawn before, so draw on it.
+        DSCB_corr.plotOn(xframe_corr, RooFit::LineColor(color_line), RooFit::LineWidth(3), RooFit::Range(m4mu_min, m4mu_max));  //RooFit::Binning(n_bins), 
+        xframe_corr->Draw("same");  // A plot was drawn before, so draw on it.
     } else {
+        DSCB.plotOn(xframe, RooFit::LineColor(color_line), RooFit::LineWidth(3), RooFit::Range(m4mu_min, m4mu_max));  //RooFit::Binning(n_bins), 
         xframe->Draw();
     }
 
@@ -234,6 +263,7 @@ RooFitResult* fit_and_draw_DSCB(
     tex.SetTextColor(1);
     tex.SetTextSize(size_text);
     tex.DrawLatex(0.20, 0.55, fitrange_txt);
+
     // TString integ_txt = Form("#bf{Integral = %.0f}", integral);
     // TLatex* tex_integ = new TLatex(tex_horiz, 0.25, integ);
     // tex_integ->SetNDC();
@@ -250,31 +280,6 @@ RooFitResult* fit_and_draw_DSCB(
     // pave->AddText(integ_txt);
     // pave->SetTextColor(color_marker);
     // pave->Draw("same");
-    
-
-
-
-
-
-
-
-
-
-    // if (show_after_corr) {
-    //     RooRealVar m4mu_corr("mass4mu_corr", "m_{4#mu}", 105, 140, "GeV");
-    //     RooRealVar Mean_corr("#mu^{corr.}", "#mu", 125, 120, 130);
-    //     RooRealVar Sigma_corr("#sigma^{corr.}", "#sigma", 1, 0, 10);//sigma[decay]);
-    //     RooRealVar AlphaL_corr("#alpha_{L}^{corr.}", "#alpha_{L}", 1, 0, 30);//alphaL[decay]);
-    //     RooRealVar AlphaR_corr("#alpha_{R}^{corr.}", "#alpha_{R}", 1, 0, 30);//alphaR[decay]);
-    //     RooRealVar ExpL_corr("n_{L}^{corr.}", "n_{L}", 1, 0, 50);//expL[decay]);
-    // }
-
-
-
-    // RooMyPDF_DSCB DSCB_corr("DSCB_corr", "DSCB_corr", m4mu_corr, Mean_corr, Sigma_corr, AlphaL_corr, ExpL_corr, AlphaR_corr, ExpR_corr);
-
-
-// RooDataSet rds_withmass4mucuts("rds_withmass4mucuts", "roodataset m4mu", tree, RooArgSet(m4mu_corr, ), all_cuts);
 
 
     

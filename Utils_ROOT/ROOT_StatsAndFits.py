@@ -842,7 +842,7 @@ class DSCBFitScanner:
             The year of the sample.
         zoom : bool
             If True, then x-axis range on plot will be same as fit range.
-            Else, x-axis range will be [105, 145] GeV.
+            Else, x-axis range will be [105, 140] GeV.
         """
         # Make sure n_bins can be represented as an int.
         if not isinstance(n_bins, int):
@@ -944,7 +944,7 @@ class DSCBFitPlotter:
         where var is something like: mean(DSCB) and sigma(DSCB).
 
         Example:
-            Fit 1 range: [105, 145] GeV
+            Fit 1 range: [105, 140] GeV
             Fit 2 range: [110, 135] GeV
 
         Parameters

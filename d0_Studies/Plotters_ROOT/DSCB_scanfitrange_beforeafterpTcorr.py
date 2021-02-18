@@ -1,22 +1,42 @@
+"""DSCB fits over different fit ranges
+
+This script produces a PDF of many DSCB unbinned fits.
+Each page shows a DSCB fit before any AdHoc/GeoFit corrections
+and a DSCB fit after corrections, overlaid on the first.
+
+Many details are written onto the PDF, like the improvement in sigma(DSCB),
+shift in the mu(DSCB), and the DSCB fit parameters.
+
+NOTE: The input root file can be obtained from (for example):
+HiggsMassMeasurement/d0_Studies/d0_Analyzers/apply_pTcorrfactors_to_H4mu_sample.py
+
+Syntax: python <this_script>
+Created:
+Updated: 2021-02-17
+"""
 import ROOT
+import os
 # # Local imports.
 from d0_Studies.Plotters_ROOT.DSCB_scanner_relmasserr import make_fullpath_file
 from Utils_Python.Plot_Styles_ROOT.tdrstyle_official import setTDRStyle, tdrGrid, fixOverlay
-from Utils_Python.Utils_Files import check_overwrite
-from Utils_ROOT.ROOT_fns import read_cpp_as_txt, load_cpp_code
+from Utils_Python.Utils_Files import check_overwrite, save_to_pkl
+from Utils_ROOT.ROOT_fns import load_cpp_code
 from Utils_ROOT.ROOT_StatsAndFits import DSCBFitter, DSCBFitScanner, DSCBFitPlotter
 from Utils_ROOT.ROOT_classes import make_TLegend, make_TMultiGraph_and_Legend
 from Utils_ROOT.ROOT_Plotting import make_ratio_pads
 
 # infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2018_m4mu_m4mucorrfromDYJpsifactors_fullstats_noFSR.root"
-infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2018_m4mu_m4mucorrfromAdHocfactors_fullstats_noFSR_zerointerc.root"
+infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2018_m4mu_m4mucorrfromAdHocfactors_fullstats_zerointerc.root"
+# infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2018_m4mu_m4mucorrfromGeoFitfactors_fullstats.root"
 # infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2017_m4mu_m4mucorrfromGeoFitfactors_fullstats_noFSR.root"
 # infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2016_m4mu_m4mucorrfromGeoFitfactors_fullstats_noFSR.root"
-outfile_dir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/plots/applypTcorrplots/CorrFromMC/tests/"
+outfile_dir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/plots/applypTcorrplots/CorrFromMC/"
+outpkl_dir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/FitStats/DSCBvaryfitrange/"
 # infile_path = "/afs/cern.ch/work/d/drosenzw/Higgs/HiggsMassMeasurement/d0_Studies/Plotters_ROOT/MC2018ggH_passFull_fullstats.root"
 # outfile_dir = "/afs/cern.ch/work/d/drosenzw/Higgs/HiggsMassMeasurement/d0_Studies/plots/test/DSCBscanoutput/"
-outfile_prefix = "MCYEARggH_applypTcorrMETHOD_scanfitrange_zoom_zerointerc_test13"
-# outfile_prefix = "MC2017ggH_applypTcorrGeoFit_scanfitrange"
+outfile_prefix = "MCYEARggH_applypTcorrMETHOD_scanfitrange_fullstats_synchwithFilippo_zoom"
+# outfile_prefix = "MCYEARggH_applypTcorrMETHOD_scanfitrange_zoom_zerointerc_test13"
+# outfile_prefix = "MCYEARggH_applypTcorrMETHOD_scanfitrange_zoom_test01"
 
 #--- WARNING ---#
 # When you change this, you must manually change the method in:
@@ -28,21 +48,21 @@ draw_beforeafter_corr = 1
 overwrite = 1
 verbose = 1
 year = "2018"
-method = "AdHoc" # "GeoFit"
+method = "AdHoc"
 zoom = False
 
-m4mu_min, m4mu_max = 105.0, 145.0
+m4mu_min, m4mu_max = 105.0, 140.0
 relmasserr_min, relmasserr_max = 0.0, 5.0
 max_lower_edge = 122.0
-min_upper_edge = 128.0
-step_GeV = 4
+min_upper_edge = 128.2
+step_GeV = 0.2
 n_bins = 100
 # m4mu_min = 121.2
 # m4mu_max = 128.4
 
 if __name__ == "__main__":
     print("...Preparing your area.")
-    assert year in infile_path
+    assert all(x in infile_path for x in (year, method))
     outfile_pdf = make_fullpath_file(outfile_dir, outfile_prefix, m4mu_min, m4mu_max, relmasserr_min, relmasserr_max, step_GeV)
     outfile_pdf = outfile_pdf.replace("METHOD", method)
     outfile_pdf = outfile_pdf.replace("YEAR", year)
@@ -84,16 +104,22 @@ if __name__ == "__main__":
     gr_sigma_improv = plotter.plot_X_vs_GeVfitrange("sigma_improv", scanner, canv, outfile_pdf, make_new_page_after=True, corrected_dscb=True)
     gr_mean_shift = plotter.plot_X_vs_GeVfitrange("mean_shift", scanner, canv, outfile_pdf, make_new_page_after=True, corrected_dscb=True)
 
+    screenshot_dim = (878,872)
+    # buffer_dim = (176,438,610,131)  # Top-left corner
+    buffer_dim = (588,79,610,131)
     mg_mean, leg_mean = make_TMultiGraph_and_Legend(gr_ls=[gr_mean_uncorr, gr_mean_corr],
                                         leg_txt_ls=[r"Before p_{T} corr.", r"After p_{T} corr."],
-                                        y_min=124.80, y_max=124.96)
+                                        y_min=124.80, y_max=124.96,
+                                        screenshot_dim=screenshot_dim, buffer_dim=buffer_dim)
 
     mg_sigma, leg_sigma = make_TMultiGraph_and_Legend(gr_ls=[gr_sigma_uncorr, gr_sigma_corr],
                                         leg_txt_ls=[r"Before p_{T} corr.", r"After p_{T} corr."],
-                                        y_min=0.9, y_max=1.25)
+                                        y_min=0.9, y_max=1.25,
+                                        screenshot_dim=screenshot_dim, buffer_dim=buffer_dim)
 
     mg_integ, leg_integ = make_TMultiGraph_and_Legend(gr_ls=[gr_integral, gr_integral_corr],
-                                        leg_txt_ls=[r"Before p_{T} corr.", r"After p_{T} corr."])
+                                        leg_txt_ls=[r"Before p_{T} corr.", r"After p_{T} corr."],
+                                        screenshot_dim=screenshot_dim, buffer_dim=buffer_dim)
 
     mg_sigma_improv, leg_sigma_improv = make_TMultiGraph_and_Legend(gr_ls=[gr_sigma_improv],
                                         leg_txt_ls=[year],
@@ -137,7 +163,7 @@ if __name__ == "__main__":
         rat.GetXaxis().SetLimits(x_min, x_max)
         rat.GetYaxis().SetRangeUser(y_err_min, y_err_max)
         rat.SetTitle("")
-        rat.Draw()
+        rat.Draw("ape")
         canv.Print(outfile_pdf)
         del ptop, pbot
         canv.Clear()
@@ -146,4 +172,8 @@ if __name__ == "__main__":
         leg.Draw("same")
         canv.Print(outfile_pdf)
     canv.Print(outfile_pdf + "]")
+
+    pkl_name = os.path.split(outfile_pdf)[1].replace(".pdf", ".pkl")
+    # f"/blue/avery/rosedj1/ForPeepsSake/Filippo/{pkl_name}")
+    save_to_pkl(scanner, os.path.join(outpkl_dir, pkl_name))
     print("Done.")

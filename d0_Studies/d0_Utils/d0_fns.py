@@ -97,8 +97,11 @@ def correct_muon_pT(eta, pT, q, d0,
 
     Kinematics required to determine correction: (eta, pT, charge, d0)
 
-    # FIXME: Need to also retrieve and implement uncertainties on slope and
-    intercept.
+    NOTE:
+    - Do not correct muon_FSR pT; only muon_reco pT without accounting for FSR.
+
+    FIXME:
+    - Need to also retrieve and implement uncertainties on slope and intercept.
 
     Parameters
     ----------

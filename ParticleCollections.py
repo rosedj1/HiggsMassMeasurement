@@ -116,20 +116,21 @@ class MyMuonCollection:
             mu_tup = build_muons_from_HZZ4mu_event(t, evt_num,
                                                   eta_bin=[eta_min, eta_max],
                                                   pT_bin=[pT_min, pT_max],
-                                                  d0_max=d0_max,
-                                                  use_FSR=False)
+                                                  d0_max=d0_max)
             if None in mu_tup: 
                 continue
-
+            
             if do_mu_pT_corr:
                 # Correct each muon's pT according to the
                 # ad hoc pT correction factors given.
                 # Save the muons with old and new pTs.
                 corr_mu_ls = []
-                # corr_mu_geofit_ls = []
+                lorentzvec_corr_mu_withFSR_ls = []
                 for mu in mu_tup:
                     # For all 4 muons in this event, correct the muon pT.
                     # Then evaluate the m4mu_corr for this event.
+                    # Correct muon pT WITHOUT accounting for FSR,
+                    # then add in FSR later!
                     mu.pT_corr = correct_muon_pT(
                         mu.eta, mu.pT, mu.charge, mu.d0, 
                         pT_corr_factor_dict, detection="auto",
@@ -137,20 +138,19 @@ class MyMuonCollection:
                         use_GeoFit_algo=use_GeoFit_algo,
                         print_all_muon_info=False,
                         verbose=verbose)
-                    lorentzvec_mu_corr = ROOT.Math.PtEtaPhiMVector(mu.pT_corr, mu.eta, mu.phi, mu.mass)
-                    corr_mu_ls.append(lorentzvec_mu_corr)
-
-                    # if use_GeoFit_algo:
-                    #     mu.pT_corr_geofit = correct_muon_pT(
-                    #         mu.eta, mu.pT, mu.charge, mu.d0, 
-                    #         pT_corr_factor_dict, detection="auto",
-                    #         force_zero_intercept=force_zero_intercept,
-                    #         use_GeoFit_algo=True,
-                    #         verbose=verbose)
-                    #     lorentzvec_mu_corr_geofit = ROOT.Math.PtEtaPhiMVector(mu.pT_corr_geofit, mu.eta, mu.phi, mu.mass)
-                    #     corr_mu_geofit_ls.append(lorentzvec_mu_corr_geofit)
+                        
+                    # lorentzvec_mu_corr = ROOT.Math.PtEtaPhiMVector(mu.pT_corr, mu.eta, mu.phi, mu.mass)
+                    # lorentzvec_mu_withFSR_ls.append()
+                    corr_mu_ls.append(mu)
                 assert len(corr_mu_ls) == 4
-                m4mu_corr = calc_Hmass(corr_mu_ls)
+                # Now combine any FSR photon to its muon with corrected pT.
+                for mu in corr_mu_ls:
+                    # Clever way to rebuild the FSR photon:
+                    lvec_photon = mu.get_LorentzVector(kind="withFSR") - mu.get_LorentzVector(kind="reco")
+                    lvec_mu_corrpT_FSR = lvec_photon + ROOT.Math.PtEtaPhiMVector(mu.pT_corr, mu.eta, mu.phi, mu.mass)
+                    lorentzvec_corr_mu_withFSR_ls.append(lvec_mu_corrpT_FSR)
+                m4mu_corr = calc_Hmass(lorentzvec_corr_mu_withFSR_ls)
+                # m4mu_corr = calc_Hmass(corr_mu_withFSR_ls)
                 self.m4mu_corr_ls.append(m4mu_corr)
                 # if use_GeoFit_algo:
                 #     m4mu_corr_geofit = calc_Hmass(corr_mu_geofit_ls)
@@ -159,9 +159,32 @@ class MyMuonCollection:
             # Add the good muons to the final muon list.
             self.muon_ls.extend(mu_tup)
             # Save the m4mu info.
-            lorentzvector_mu_ls = [mu.get_LorentzVector("reco") for mu in mu_tup]
-            m4mu = calc_Hmass(lorentzvector_mu_ls)
+            lorentzvec_mu_withFSR_ls = [mu.get_LorentzVector("withFSR") for mu in mu_tup]
+            m4mu = calc_Hmass(lorentzvec_mu_withFSR_ls)
             self.m4mu_ls.append(m4mu)
+
+            if verbose:
+                perc_diff = (t.mass4l - m4mu) / m4mu * 100.0
+                if (perc_diff > 2):
+                    print(
+                        f"[WARNING] (t.mass4l - m4mu) / m4mu * 100.0 > 2% spotted!\n"
+                        f"  Event #{evt_num}\n"
+                        f"  nFSRPhotons = {t.nFSRPhotons}\n"
+                        f"  t.mass4l    = {t.mass4l}\n"
+                        f"  m4mu        = {m4mu}\n"
+                        f"  perc_diff   = {perc_diff}\n"
+                        )
+                if do_mu_pT_corr:
+                    perc_diff = (t.mass4l - m4mu_corr) / m4mu_corr * 100.0
+                    if (perc_diff > 2):
+                        print(
+                            f"[WARNING] (t.mass4l - m4mu_corr) / m4mu_corr * 100.0 > 2% spotted!\n"
+                            f"  Event #{evt_num}\n"
+                            f"  nFSRPhotons = {t.nFSRPhotons}\n"
+                            f"  t.mass4l    = {t.mass4l}\n"
+                            f"  m4mu_corr   = {m4mu_corr}\n"
+                            f"  perc_diff   = {perc_diff}\n"
+                            )
         # End evt loop.
         assert len(self.muon_ls) > 0, "[ERROR] No muons were found!"
         assert len(self.muon_ls) / len(self.m4mu_ls) == 4

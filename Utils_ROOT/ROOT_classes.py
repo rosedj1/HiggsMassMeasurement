@@ -137,9 +137,17 @@ def make_TGraphErrors(x, y, x_err=None, y_err=None,
     gr.GetYaxis().SetRangeUser(y_min, y_max)
     return gr
 
-def make_TLegend(x_dim=(0,1), y_dim=(0,1), screenshot_dim=None, buffer_dim=None):
+def make_TLegend(x_dim=(0.7, 0.9), y_dim=(0.7, 0.9), screenshot_dim=None, buffer_dim=None):
     """Return a TLegend, given its x and y coord.
-        
+    
+    NOTE:
+    - screenshot_dim and buffer_dim take precedence over x_dim and y_dim.
+    If you want to use x_dim and y_dim, then set screenshot_dim and buffer_dim
+    to `None`.
+
+    - Some good numbers for screenshot_dim and buffer_dim:
+    screenshot_dim=(878,872), buffer_dim=(176,438,610,131)
+
     Parameters
     ----------
     x_dim : 2-tup
@@ -172,8 +180,42 @@ def make_TLegend(x_dim=(0,1), y_dim=(0,1), screenshot_dim=None, buffer_dim=None)
         y_min, y_max = y_dim[0], y_dim[1]
     return ROOT.TLegend(x_min, y_min, x_max, y_max)
 
-def make_TMultiGraph_and_Legend(gr_ls=[], leg_txt_ls=[], y_min=None, y_max=None):
-    """Return a (TMultiGraph, TLegend) with all the TGraphs from gr_ls added."""
+def make_TMultiGraph_and_Legend(gr_ls=[], leg_txt_ls=[], y_min=None, y_max=None,
+                                x_dim=(0.7, 0.9), y_dim=(0.7, 0.9),
+                                screenshot_dim=None, buffer_dim=None):
+    """Return a (TMultiGraph, TLegend) with all the TGraphs from gr_ls added.
+    
+    NOTE:
+    - screenshot_dim and buffer_dim take precedence over x_dim and y_dim.
+    If you want to use x_dim and y_dim, then set screenshot_dim and buffer_dim
+    to `None`.
+
+    Parameters
+    ----------
+    gr_ls : list
+        All the TGraphs to be put into the TMultiGraph.
+    leg_txt_ls : list
+        All the legend texts to be associated with the TGraphs.
+        The order should coincide with the elements of gr_ls.
+    y_min : float
+        Set the minimum of the y-axis.
+    y_max : float
+        Set the maximum of the y-axis.
+    x_dim : 2-tup
+        (x_min, x_max) of TLegend position as a fraction of the TCanvas.
+        So x_min = 0.2 means that the TLegend will begin at 20% of the
+        canvas width.
+    y_dim : 2-tup
+        (y_min, y_max) of TLegend position as a fraction of the TCanvas.
+    screenshot_dim : 2-tup
+        (width, height) of full screenshot window, in pixels.
+        Put the window around the entire canvas.
+    buffer_dim : 4-tup
+        (left_offset, right_offset, bottom_offset, top_offset),
+        measured in pixels.
+        Use another screenshot window to measure the offset from all four
+        edges of the canvas to where you want your legend to be.
+    """
     mg = ROOT.TMultiGraph()
     for gr in gr_ls:
         mg.Add(gr, "p")
@@ -183,16 +225,17 @@ def make_TMultiGraph_and_Legend(gr_ls=[], leg_txt_ls=[], y_min=None, y_max=None)
     all_titles = "%s;%s;%s" % (title, x_title, y_title)
     mg.SetTitle(all_titles)
 
-    leg = make_TLegend(x_dim=(0,1), y_dim=(0,1),
-                    screenshot_dim=(878,872), buffer_dim=(176,438,610,131))
+    leg = make_TLegend(x_dim=x_dim, y_dim=y_dim,
+                    screenshot_dim=screenshot_dim, buffer_dim=buffer_dim)
     # leg_text = r"%.2f < #deltam_{4#mu}/m_{4#mu} < %.2f%%" % (relmin, relmax)
     leg.SetTextSize(0.02)
     for gr, txt in zip(gr_ls, leg_txt_ls):
         leg.AddEntry(gr, txt, "lpfe")
     # leg.SetLineWidth(3)
     leg.SetBorderSize(1)
-    if (y_min is not None) and (y_max is not None):
+    if (y_min is not None):
         mg.SetMinimum(y_min) # Change y-axis limits.
+    if (y_max is not None):
         mg.SetMaximum(y_max)
     return (mg, leg)
 
