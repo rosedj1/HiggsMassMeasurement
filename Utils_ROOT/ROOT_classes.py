@@ -239,6 +239,39 @@ def make_TMultiGraph_and_Legend(gr_ls=[], leg_txt_ls=[], y_min=None, y_max=None,
         mg.SetMaximum(y_max)
     return (mg, leg)
 
+def make_TPave(w, h, topright_corner_pos=(0.33, 0.62)):#, when="Before"):
+    """Return a TPaveText that shows either before or after corr stats.
+    
+    Parameters
+    ----------
+    topright_corner_pos : 2-tup
+        (x_max, y_max) coordinate of pave.
+    when : str
+        Should be either 'Before' or 'After'
+    """
+    # color = r.kBlue if when.lower() in "before" else r.kRed
+    x_right, y_top = topright_corner_pos[0], topright_corner_pos[1]
+    assert x_right >= w
+    assert y_top >= h
+    x_left = x_right - w
+    y_bot = y_top - h
+
+    pave = r.TPaveText(x_left, y_bot, x_right, y_top, "NDC")
+    # pave = r.TPaveText(0.13, text_y_min-0.11, 0.33, text_y_min, "NDC")
+    pave.SetFillColor(0)
+    pave.SetBorderSize(1) # Use 0 for no border.
+    pave.SetTextAlign(12) # 22 is centered vert and horiz.
+    pave.SetTextSize(0.016)
+    # pave.SetTextColor(1)
+    pave.SetFillStyle(1001)  # Solid fill.
+    # pave.AddText(f"Used %i Gaus fit iterations per fit" % iters)  # Accommodates LaTeX!
+    # pave.SetTextColor(color)
+    # pave.AddText(r"%s p_{T} corrections:" % when)
+    # pave.AddText(f"  #mu = {mean.getVal():.4g} #pm {mean.getError():.4g}")
+    # pave.AddText(f"  #sigma = {sigma.getVal():.4g} #pm {sigma.getError():.4g}")
+    # pave.AddText(r"  #chi^{2}/ndf = %.4g" % xframe.chiSquare())
+    return pave
+
 def add_branch_to_TTree(tree, br):
     """Add a branch (`br`) to `tree` and return the pointer to `br`.
     
@@ -299,6 +332,3 @@ def get_normcoord_from_screenshot(canv_width, canv_height,
     y_min = bot_offset / float(canv_height)
     y_max = 1 - (top_offset / float(canv_height))
     return (x_min, x_max, y_min, y_max)
-
-# def add_branch_pTcorr_fromadhocmethod():
-#     """Copy  a '.root' file 
