@@ -963,6 +963,17 @@ def check_fit_convergence(stat_ls, max_perc_diff=5, compare_to_last=3, alarm_lev
         if alarm in "ERROR":
             raise ValueError
 
+def get_status_redchi2_fit(red_chi2, min_rc2, max_rc2):
+    """Return True if: min_rc2 < reduced chi^2 value < max_rc2."""
+    if (red_chi2 < min_rc2):
+        print(f"Reduced chi^2 ({red_chi2}) is less than minimum allowed: {min_rc2}")
+        return False
+    elif (red_chi2 > max_rc2):
+        print(f"Reduced chi^2 ({red_chi2}) is greater than minimum allowed: {max_rc2}")
+        return False
+    else:
+        return True
+
 def get_bestfit_vals_from_statsdict(d, check_convergence=False):
     """Return the best-fit mean, mean_err, std, std_err from a dict."""
     if check_convergence:

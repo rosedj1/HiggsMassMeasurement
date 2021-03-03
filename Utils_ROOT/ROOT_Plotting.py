@@ -1,6 +1,40 @@
 import ROOT as r
 from Utils_Python.Plot_Styles_ROOT.tdrstyle_official import setTDRStyle, tdrGrid
 
+def make_TPave(w, h, topright_corner_pos=(0.33, 0.62)):#, when="Before"):
+    """Return a TPaveText that shows either before or after corr stats.
+    
+    NOTE: I want to move this function to ROOT_classes but the pkls are 
+    Parameters
+    ----------
+    topright_corner_pos : 2-tup
+        (x_max, y_max) coordinate of pave.
+    when : str
+        Should be either 'Before' or 'After'
+    """
+    # color = r.kBlue if when.lower() in "before" else r.kRed
+    x_right, y_top = topright_corner_pos[0], topright_corner_pos[1]
+    assert x_right >= w
+    assert y_top >= h
+    x_left = x_right - w
+    y_bot = y_top - h
+
+    pave = r.TPaveText(x_left, y_bot, x_right, y_top, "NDC")
+    # pave = r.TPaveText(0.13, text_y_min-0.11, 0.33, text_y_min, "NDC")
+    pave.SetFillColor(0)
+    pave.SetBorderSize(1) # Use 0 for no border.
+    pave.SetTextAlign(12) # 22 is centered vert and horiz.
+    pave.SetTextSize(0.016)
+    # pave.SetTextColor(1)
+    pave.SetFillStyle(1001)  # Solid fill.
+    # pave.AddText(f"Used %i Gaus fit iterations per fit" % iters)  # Accommodates LaTeX!
+    # pave.SetTextColor(color)
+    # pave.AddText(r"%s p_{T} corrections:" % when)
+    # pave.AddText(f"  #mu = {mean.getVal():.4g} #pm {mean.getError():.4g}")
+    # pave.AddText(f"  #sigma = {sigma.getVal():.4g} #pm {sigma.getError():.4g}")
+    # pave.AddText(r"  #chi^{2}/ndf = %.4g" % xframe.chiSquare())
+    return pave
+
 def make_ratio_pads():
     """Create an upper pad (for hists), and a lower pad (for a ratio plot)."""
     ptop = r.TPad("ptop", "pad main", 0.0, 0.25, 1.0, 1.0)

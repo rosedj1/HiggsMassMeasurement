@@ -12,8 +12,8 @@ from d0_Studies.d0_Utils.d0_dicts import color_dict_RooFit
 def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None, 
                     count=1, 
                     x_label="Independent Var", units="", x_lim=None,
-                    fit_whole_range_first_iter=True,
-                    bins_only_across_data=False,
+                    # fit_whole_range_first_iter=True,
+                    # bins_only_across_data=False,
                     verbose=False,
                     n_bins=100,
                     line_color=4, marker_color=1, 
@@ -50,7 +50,7 @@ def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None,
     fit_range : 2-elem list, optional
         [x_min, x_max]
         Range along x-axis over which to do the fit.
-        If none is provided, fit range will be [min(data), max(data)].
+        If None, fit range will be [min(data), max(data)].
     xframe : ROOT.RooRealVar.frame, optional
         Essentially a canvas onto which the data and Gaussian fit will be drawn.
         If a frame is not provided, a frame will be created.
@@ -65,12 +65,6 @@ def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None,
         Units of the x-axis variable.
     x_lim : 2-elem list, optional
         The min and max x-axis values to show on the plot: [x_min, x_max]
-    fit_whole_range_first_iter : bool, optional
-        If True, the entire x-axis range will be fit over for first iteration.
-        Otherwise, first fit range is: mean(data) +- num_sigmas * rms(data)
-    bins_only_across_data : bool
-        Typically, the number of bins requested go from [x_min, x_max].
-        This allows 
     verbose : bool
         If True, print juicy debug info.
     n_bins : int, optional
@@ -128,7 +122,7 @@ def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None,
     x_var = r.RooRealVar("x_var", x_label, x_min, x_max, units)  # (name, title, min, max, units)
     # x_var.setRange("test_range", x_min, x_max)
     mean = r.RooRealVar("mean","Mean of Gaussian", x_avg, x_min, x_max)
-    sigma = r.RooRealVar("sigma","Width of Gaussian", abs(x_std), 0, abs(x_std)*10)
+    sigma = r.RooRealVar("sigma","Width of Gaussian", abs(x_std), 0, abs(x_std)*10.0)
     gauss = r.RooGaussian("gauss","The Gaussian Itself", x_var, mean, sigma)
     
     # Prepare appropriate RooFit data container.
@@ -314,9 +308,9 @@ def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None,
 
 def RooFit_iterative_gaus_fit(data, binned_fit=False, switch_to_binned_fit=2000, iters=1, num_sigmas=2.5, 
                               n_bins=100, x_lim=None, fit_whole_range_first_iter=False,
-                              xframe=None, x_label="Independent var", title="", units="",
-                              marker_color=1, force_last_line_color=None, only_draw_last=False, 
-                              verbose=False, view_plot=False):
+                              xframe=None, x_label="Independent var", title="", units="", marker_color=1,
+                              force_last_line_color=None, only_draw_last=False, verbose=False, view_plot=False,
+                              use_data_in_xlim=False):
     """Return a 2-tuple: 
         (dict of the fit statistics from iterative Gaussian fits on given data, 
          xframe on which the fits can be drawn)
@@ -379,6 +373,8 @@ def RooFit_iterative_gaus_fit(data, binned_fit=False, switch_to_binned_fit=2000,
         If True, then the canvas will be drawn to the screen
         and the terminal will hang, waiting for user input.
         Used for testing purposes.
+    use_data_in_xlim : bool
+        If True, only values between x_lim[0] and x_lim[1] are fit to.
 
     Returns
     -------
@@ -419,6 +415,9 @@ def RooFit_iterative_gaus_fit(data, binned_fit=False, switch_to_binned_fit=2000,
         data = np.array(data)
         data_mean = data.mean()
         data_rms = data.std()
+        if use_data_in_xlim:
+            print(f"Truncating data to fit between: [{x_lim[0]}, {x_lim[1]}]")
+            data = data[(x_lim[0] < data) & (data < x_lim[1])]
         data_x_min = data.min()
         data_x_max = data.max()
     else:
@@ -475,21 +474,18 @@ def RooFit_iterative_gaus_fit(data, binned_fit=False, switch_to_binned_fit=2000,
             # See if it will take too long.
             if len(data) > switch_to_binned_fit:
                 if verbose:
-                    msg = (
-                        f"[INFO] Switching to binned fit since len(data) > the limit you set:\n"
-                        f"       {len(data)} > {switch_to_binned_fit}"
-                        )
+                    msg = (f"[INFO] Switching to BINNED fit since len(data) {len(data)} > the limit set {switch_to_binned_fit}:\n")
                     print(msg)
                 do_binned = True
 
         fit_stats_ls, xframe = RooFit_gaus_fit(data, binned_fit=do_binned, fit_range=fit_range, xframe=xframe, 
                                                count=count,
-                                               x_label=x_label, x_lim=x_lim,
+                                               x_label=x_label, units="", x_lim=x_lim,
                                                verbose=verbose,
                                                n_bins=n_bins,
                                                line_color=color,
-                                               force_line_color=only_draw_last,
                                                marker_color=marker_color,
+                                               force_line_color=only_draw_last,
                                                view_plot=view_plot)
 
         mean_ls.append(fit_stats_ls[0])

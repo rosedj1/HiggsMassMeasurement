@@ -22,7 +22,7 @@ NOTE:
     - `REPLACE_NEW_FILE` : file path to main template script
 
 Author: Jake Rosenzweig
-Updated: 2021-02-05
+Updated: 2021-02-22
 """
 from Utils_Python.Utils_Files import replace_value, make_dirs
 from d0_Studies.kinematic_bins import equal_entry_bin_edges_eta_mod1_wholenum, bin_edges_pT_sevenfifths_to1000GeV_wholenum
@@ -33,8 +33,9 @@ import os
 import sys
 
 class SlurmManager:
-    """A class to handle the details of working with SLURM."""
-
+    """A class to handle the details of working with SLURM.
+    FIXME: Not implemented yet.
+    """
     def __init__(self): #, path_main, path_sbatch):
         self.file_copies_ls = []
         pass
@@ -57,18 +58,18 @@ class SlurmManager:
 #--- User Parameters ---#
 #-----------------------#
 # job_name = "RC_vs_NoRC_itergaussfits_fullstats_pT75then200GeV_extendedxaxis"
-job_name = "RC_vs_NoRC_itergaussfits_fullstats_pT75then200GeV_extendedxaxis"
+job_name = "RC_vs_NoRC_itergaussfits_fullstats_fixitergauss_test01"
 
 template_script_main = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/RochCorrAnalyzers/roch_vs_noroch_itergausfit_template.py"
 # template_script_main = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/derive_pTcorrfactors_from_ggH_sample_template.py"
 template_script_slurm = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/RochCorrAnalyzers/roch_vs_noroch_slurm.sbatch"
 
-outdir_copies = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/RochCorr/output/copies/"
-outdir_pkl    = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/RochCorr/pickles/"
-outdir_txt    = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/RochCorr/output/"
-outdir_pdf    = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/RochCorr/plots/"
+outdir_copies = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/RochCorr/output/copies/test/"
+outdir_pkl    = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/RochCorr/pickles/test/"
+outdir_txt    = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/RochCorr/output/test/"
+outdir_pdf    = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/RochCorr/plots/test/"
 
-full_eta_ls = equal_entry_bin_edges_eta_mod1_wholenum
+full_eta_ls = [2.0, 2.1]# equal_entry_bin_edges_eta_mod1_wholenum
 
 delete_copies = False
 #------------------------#
