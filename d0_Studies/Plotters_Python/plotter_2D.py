@@ -12,7 +12,6 @@
 #  We must be clever to grab these associated values and calculate the % diff. 
 #  The main purpose of this code is to make the 2D plot without having to 
 #  reproduce all the kinematic distributions and perform the iter. Gaus. fits.
-#  FIXME: Some of the variables are deprecated, but make sure: scale_factor, etc.
 #  FIXME: Use keys from kb2d dict to automatically make h2 bins.
 #  - Be sure to check all the variables in --- User Parameters ---.
 #  - If you get blank cells, try modifying your color_lim range. 
@@ -26,16 +25,20 @@ import numpy as np
 import ROOT as rt
 # Package imports.
 from Utils_Python.Utils_Files import check_overwrite, open_pkl, make_dirs
+from Utils_Python.Utils_StatsAndFits import get_status_redchi2_fit
 from Utils_ROOT.ROOT_classes import make_TH2F
 #--- User Parameters ---#
 # inpath_pkl = f"/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/plots/qd0/MC{year}JpsiDY_2D_plot_qd0dist_gausiterfitsigmas_4unbinnedfits_0p0eta2p4_5p0pT1000p0GeV.pkl"
-filename = "test13.pdf"
+filename = "test15.pdf"
 inpath_pkl = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/RochCorr/pickles/RC_vs_NoRC_itergaussfits_fullstats_pT75then200GeV_extendedxaxis_5iters.pkl"
 # outpath_pdf = f"/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/plots/2D_tables_etavspT/MC{year}JpsiDY_2Dplot_dpToverpTimprovement_gausiterfitsigmas_6unbinnedfits_0p0eta2p4_5p0pT1000p0GeV_final.pdf"
 outpath_pdf = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/RochCorr/plots/tables2D/test/{filename}"
-overwrite = 1
+overwrite = 0
 show_plots = 0
 make_pdf = 1
+
+min_chi2 = 0.01
+max_chi2 = 199
 
 z_label_size = 0.02
 text_size = 0.85
@@ -98,11 +101,12 @@ def get_mean_and_SEOM(arr):
     seom = get_standarderrorofmean(arr)
     return (mean, seom)
 
-def get_mean_and_SEOM_fromiterfits(kb2d, which_dct):
+def get_mean_and_SEOM_fromiterfits(kb2d, which_dct, min_chi2, max_chi2):
     """Return a 2-tuple: (mean, standard error of mean) from iterated Gaussian fits.
     
     Parameters
     ----------
+    kb2d : KinBin2D
     which_dct : str
         A dict key to unlock the appropriate fit stats dict.
         Choices:
@@ -112,14 +116,30 @@ def get_mean_and_SEOM_fromiterfits(kb2d, which_dct):
         - dpTOverpT_RC_gen_fit_dct
         - dpT_reco_gen_fit_dct
         - dpTOverpT_reco_gen_fit_dct
+    min_chi2 : float
+        The min chi^2 allowed to be considered a good fit.
+    max_chi2 : float
+        The max chi^2 allowed to be considered a good fit.
     """
     mean_ls = getattr(kb2d, which_dct)['mean_ls']
     mean_err_ls = getattr(kb2d, which_dct)['mean_err_ls']
+    chi2_ls = getattr(kb2d, which_dct)['chi2_ls']
     # Best-fit vals are at the end of lists:
-    mean = mean_ls[-1]
-    seom = mean_err_ls[-1]
-    # for val in mean_ls[]:
-    #     validate_chi2()
+    good_fit = False
+    # Start at end of chi^2 list and see if it is within allowed limits.
+    for chi2 in chi2_ls[::-1]:
+        if get_status_redchi2_fit(chi2, min_chi2, max_chi2):
+            good_fit = True
+            best_index = chi2_ls.index(chi2)
+            break
+        else:
+            print(f"bad chi^2: {chi2}")
+    assert good_fit, "Couldn't find reduced chi^2 within allowed range."
+
+    mean = mean_ls[best_index]
+    seom = mean_err_ls[best_index]
+    # mean = mean_ls[-1]
+    # seom = mean_err_ls[-1]
     return (mean, seom)
 
 def make_hist_and_errhist(internal_name, title=None, 
@@ -247,7 +267,7 @@ if __name__ == "__main__":
                                               internal_name="h2_mean_relpTRCminuspTreco_iterfit", title="Best-fit Gaussian #mu#left((p_{T}^{RC} - p_{T}^{reco})/p_{T}^{reco}#right) (%)",
                                               n_binsx=pT_binedge_ls, x_label=x_label, x_units="GeV",
                                               n_binsy=eta_binedge_ls, y_label="#left|#eta#right|", y_units=None,
-                                              z_min=-2, z_max=20, z_label_size=z_label_size,
+                                              z_min=-0.5, z_max=0.5, z_label_size=z_label_size,
                                               n_contour=n_contour)
     h2_mean_relpTRCminuspTgen_iterfit, h2_sterrofmean_relpTRCminuspTgen_iterfit = make_hist_and_errhist(
                                               internal_name="h2_mean_relpTRCminuspTgen_iterfit", title="Best-fit Gaussian #mu#left((p_{T}^{RC} - p_{T}^{gen})/p_{T}^{gen}#right) (%)",
@@ -267,12 +287,12 @@ if __name__ == "__main__":
         avg_bin_val_eta = np.mean(kb2d.eta_range)
         avg_bin_val_pT = np.mean(kb2d.pT_range)
 
-        mean_dpT_RCvsreco_iterfit, sterrofmean_dpT_RCvsreco_iterfit = get_mean_and_SEOM_fromiterfits(kb2d, "dpT_RC_reco_fit_dct")
-        mean_dpT_RCvsgen_iterfit, sterrofmean_dpT_RCvsgen_iterfit = get_mean_and_SEOM_fromiterfits(kb2d, "dpT_RC_gen_fit_dct")
-        mean_dpT_recovsgen_iterfit, sterrofmean_dpT_recovsgen_iterfit = get_mean_and_SEOM_fromiterfits(kb2d, "dpT_reco_gen_fit_dct")
-        mean_reldpT_RCvsreco_iterfit, sterrofmean_reldpT_RCvsreco_iterfit = get_mean_and_SEOM_fromiterfits(kb2d, "dpTOverpT_RC_reco_fit_dct")
-        mean_reldpT_RCvsgen_iterfit, sterrofmean_reldpT_RCvsgen_iterfit = get_mean_and_SEOM_fromiterfits(kb2d, "dpTOverpT_RC_gen_fit_dct")
-        mean_reldpT_recovsgen_iterfit, sterrofmean_reldpT_recovsgen_iterfit = get_mean_and_SEOM_fromiterfits(kb2d, "dpTOverpT_reco_gen_fit_dct")
+        mean_dpT_RCvsreco_iterfit, sterrofmean_dpT_RCvsreco_iterfit = get_mean_and_SEOM_fromiterfits(kb2d, "dpT_RC_reco_fit_dct", min_chi2, max_chi2)
+        mean_dpT_RCvsgen_iterfit, sterrofmean_dpT_RCvsgen_iterfit = get_mean_and_SEOM_fromiterfits(kb2d, "dpT_RC_gen_fit_dct", min_chi2, max_chi2)
+        mean_dpT_recovsgen_iterfit, sterrofmean_dpT_recovsgen_iterfit = get_mean_and_SEOM_fromiterfits(kb2d, "dpT_reco_gen_fit_dct", min_chi2, max_chi2)
+        mean_reldpT_RCvsreco_iterfit, sterrofmean_reldpT_RCvsreco_iterfit = get_mean_and_SEOM_fromiterfits(kb2d, "dpTOverpT_RC_reco_fit_dct", min_chi2, max_chi2)
+        mean_reldpT_RCvsgen_iterfit, sterrofmean_reldpT_RCvsgen_iterfit = get_mean_and_SEOM_fromiterfits(kb2d, "dpTOverpT_RC_gen_fit_dct", min_chi2, max_chi2)
+        mean_reldpT_recovsgen_iterfit, sterrofmean_reldpT_recovsgen_iterfit = get_mean_and_SEOM_fromiterfits(kb2d, "dpTOverpT_reco_gen_fit_dct", min_chi2, max_chi2)
 
         h2_mean_pTRCminuspTreco_iterfit.Fill(avg_bin_val_pT, avg_bin_val_eta, mean_dpT_RCvsreco_iterfit)  # Does not need unit_factor.
         h2_sterrofmean_pTRCminuspTreco_iterfit.Fill(avg_bin_val_pT, avg_bin_val_eta, sterrofmean_dpT_RCvsreco_iterfit)
@@ -283,14 +303,14 @@ if __name__ == "__main__":
         h2_mean_pTrecominuspTgen_iterfit.Fill(avg_bin_val_pT, avg_bin_val_eta, mean_dpT_recovsgen_iterfit * unit_factor)
         h2_sterrofmean_pTrecominuspTgen_iterfit.Fill(avg_bin_val_pT, avg_bin_val_eta, sterrofmean_dpT_recovsgen_iterfit * unit_factor)
 
-        h2_mean_relpTRCminuspTreco_iterfit.Fill(avg_bin_val_pT, avg_bin_val_eta, mean_reldpT_RCvsreco_iterfit * 100.0)
-        h2_sterrofmean_relpTRCminuspTreco_iterfit.Fill(avg_bin_val_pT, avg_bin_val_eta, sterrofmean_reldpT_RCvsreco_iterfit * 100.0)
+        h2_mean_relpTRCminuspTreco_iterfit.Fill(avg_bin_val_pT, avg_bin_val_eta, mean_reldpT_RCvsreco_iterfit)
+        h2_sterrofmean_relpTRCminuspTreco_iterfit.Fill(avg_bin_val_pT, avg_bin_val_eta, sterrofmean_reldpT_RCvsreco_iterfit)
 
-        h2_mean_relpTRCminuspTgen_iterfit.Fill(avg_bin_val_pT, avg_bin_val_eta, mean_reldpT_RCvsgen_iterfit * 100.0)
-        h2_sterrofmean_relpTRCminuspTgen_iterfit.Fill(avg_bin_val_pT, avg_bin_val_eta, sterrofmean_reldpT_RCvsgen_iterfit * 100.0)
+        h2_mean_relpTRCminuspTgen_iterfit.Fill(avg_bin_val_pT, avg_bin_val_eta, mean_reldpT_RCvsgen_iterfit)
+        h2_sterrofmean_relpTRCminuspTgen_iterfit.Fill(avg_bin_val_pT, avg_bin_val_eta, sterrofmean_reldpT_RCvsgen_iterfit)
 
-        h2_mean_relpTrecominuspTgen_iterfit.Fill(avg_bin_val_pT, avg_bin_val_eta, mean_reldpT_recovsgen_iterfit * 100.0)
-        h2_sterrofmean_relpTrecominuspTgen_iterfit.Fill(avg_bin_val_pT, avg_bin_val_eta, sterrofmean_reldpT_recovsgen_iterfit * 100.0)
+        h2_mean_relpTrecominuspTgen_iterfit.Fill(avg_bin_val_pT, avg_bin_val_eta, mean_reldpT_recovsgen_iterfit)
+        h2_sterrofmean_relpTrecominuspTgen_iterfit.Fill(avg_bin_val_pT, avg_bin_val_eta, sterrofmean_reldpT_recovsgen_iterfit)
     # Collect normal data.
     for kb2d in dct.values():
         avg_bin_val_eta = np.mean(kb2d.eta_range)
