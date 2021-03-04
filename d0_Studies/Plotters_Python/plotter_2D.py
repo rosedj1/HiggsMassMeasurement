@@ -1,17 +1,17 @@
 """
 # PURPOSE: 
-#  This code reads in values from a pickled dictionary, calculates the 
-#  % improvement per [eta, pT] bin, and puts the improvement into 
-#  a 2D histogram. Finally it draws the histogram to a PDF.
-# NOTES: 
-#  The values contained in the pickled dict are the best-fit sigma values
-#  from iterated Gaussian fits of kinematic distributions, like qd0 or dpT/pT.
-#  The keys in the dict look like: 2.3eta2.4_150.0pT200.0
-#  - Be sure to check all the variables in --- User Parameters ---.
-#  - If you get blank cells, try modifying your color_lim range. 
-# SYNTAX: python this_script.py
-# AUTHOR: Jake Rosenzweig
-# EDITED: 2021-03-03
+    This code reads in muon pT values from a pickled dictionary, calculates
+    differences between RC and non-RC muons, and makes 2D tables of the
+    results. Requires iterated Gaussian fits to have been performed.
+NOTES: 
+    The values contained in the pickled dict are the best-fit sigma values
+    from iterated Gaussian fits of kinematic distributions, like qd0 or dpT/pT.
+    The keys in the dict look like: 2.3eta2.4_150.0pT200.0
+    - Be sure to check all the variables in --- User Parameters ---.
+    - If you get blank cells, try modifying your color_lim range. 
+SYNTAX: python this_script.py
+AUTHOR: Jake Rosenzweig
+EDITED: 2021-03-04
 """
 import pickle
 import os

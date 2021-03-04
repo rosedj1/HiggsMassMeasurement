@@ -1,8 +1,8 @@
-"""Make and Fill KinBin2Ds.
+"""Make and Fill KinBin2Ds for RC Studies.
 
 Given a list of eta and pT bin edges, create a KB2D (eta, pT) for each
 combination. Then a ggH->4mu sample is opened and muons are selected, based on
-eta, pT, etc. Inclusive kinematic distributions are made of the muons.
+eta, pT, etc. Inclusive muon kinematic distributions are made.
 
 The plots are saved in a root file.
 The KB2Ds are saved in a pkl file.
@@ -14,7 +14,7 @@ Use:
 - roch_vs_noroch_slurm.sbatch
 
 Author: Jake Rosenzweig
-Updated: 2021-02-04
+Updated: 2021-03-04
 """
 import sys
 import ROOT
@@ -39,13 +39,14 @@ eta_ls = equal_entry_bin_edges_eta_mod1_wholenum #[0.0, 0.9, 1.7, 2.4]
 pT_ls = [5.0, 10.0, 15.0, 20.0, 30.0, 40.0, 50.0, 75.0, 200.0]
 # pT_ls = [5.0, 10.0, 15.0, 20.0, 30.0, 40.0, 50.0, 75.0, 100.0, 150.0, 200.0]
 #pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum[:-1] #[5, 25, 50, 100]
+inpath_file_RC = "/cmsuf/data/store/user/t2/users/ferrico/Full_RunII/Production_10_2_18/Higgs_VX_BS/125/GluGluHToZZTo4L_M125_2018.root"
+inpath_file_noRC = "/cmsuf/data/store/user/t2/users/ferrico/SingleBS_studies/After/NoRoch/ggF_2018.root"
+
 filename = "MC2018ggH_KB2D_onlymuoninfo_fullstats_pTbinsroundnumbers_75then200GeV"
 outpath_file = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/RochCorr/plots/tests/{filename}.pdf"
 outpath_pkl = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/RochCorr/pickles/tests/{filename}.pkl"
 outpath_root = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/RochCorr/rootfiles/tests/{filename}_inclusivekinemhists.root"
-tdrStyle = setTDRStyle(show_statsbox=True)
-tdrGrid(tdrStyle, gridOn=False)
-ROOT.gROOT.SetBatch(True)
+
 def draw_Xhists_to_canvas(c, outpath_file, h_tup):
     """Draw 4 hists in h_ls to canvas divided into 2x2 pads."""
     X = len(h_tup)
@@ -58,6 +59,9 @@ def draw_Xhists_to_canvas(c, outpath_file, h_tup):
     c.Clear()
 
 if __name__ == "__main__":
+    tdrStyle = setTDRStyle(show_statsbox=True)
+    tdrGrid(tdrStyle, gridOn=False)
+    ROOT.gROOT.SetBatch(True)
     def prep_area(file_tup):
         for f in (outpath_file, outpath_root, outpath_pkl):
             dir_ = os.path.dirname(f)
@@ -93,8 +97,8 @@ if __name__ == "__main__":
         h.Sumw2()
 
     # RC = Rochester Corrections
-    f = ROOT.TFile("/cmsuf/data/store/user/t2/users/ferrico/SingleBS_studies/After/NoRoch/ggF_2018.root")
-    f_RC = ROOT.TFile("/cmsuf/data/store/user/t2/users/ferrico/Full_RunII/Production_10_2_18/Higgs_VX_BS/125/GluGluHToZZTo4L_M125_2018.root")
+    f = ROOT.TFile(inpath_file_noRC)
+    f_RC = ROOT.TFile(inpath_file_RC)
     tree = f.Get("Ana/passedEvents")
     tree_RC = f_RC.Get("Ana/passedEvents")
     n_evts = tree.GetEntries()
