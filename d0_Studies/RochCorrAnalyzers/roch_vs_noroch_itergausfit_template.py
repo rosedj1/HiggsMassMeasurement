@@ -1,13 +1,17 @@
 """Template for Iterative Gaussian Fits on Rochester Corr. vs. Non-RC samples
 
-This is a template file whose values (IN ALL CAPS) get replaced by a SLURM
-submission script. The iterative fits are computationally intensive,
-and so you should use the following files to control this one:
+Requires an input pickled dict of KinBin2Ds.
+- You can make the input dict from roch_vs_noroch_kb2dmaker_inclusivehistplotter.py
+
+This is a template file whose values (REPLACE_x) get replaced by a SLURM
+submission script.
+
+The iterative fits are computationally intensive after about 3 fits,
+so you should use the following SLURM submission file to run this one:
 - d0_Studies/d0_Analyzers/submit_to_slurm_inbatch.py
-- 
 
 Author: Jake Rosenzweig
-Updated: 2021-03-03
+Updated: 2021-03-04
 """
 from Utils_Python.Utils_Files import open_pkl, save_to_pkl, make_dirs
 from Utils_Python.Utils_Files import check_overwrite
@@ -36,19 +40,7 @@ outdir_txt = "REPLACE_OUTDIR_TXT"  # os.path.join("REPLACE_OUTDIR_TXT", filename
 outdir_pdf = "REPLACE_OUTDIR_PDF"  # os.path.join("REPLACE_OUTDIR_PDF", filename)
 eta_range = REPLACE_ETA_LS  # [0.0, 0.2]
 
-# def prep_area(eta_range, iters, outdir_pkl, outdir_txt, outdir_pdf, overwrite):
-#     """Return a 3-tuple of paths to the output files."""
-#     eta_str = f"{eta_range[0]}eta{eta_range[1]}".replace(".", "p")
-#     filename = f"REPLACE_JOB_NAME_{iters}iters_{eta_str}"
-#     outpath_pkl = os.path.join("REPLACE_OUTDIR_PKL", f"{filename}.pkl")
-#     outpath_txt = os.path.join("REPLACE_OUTDIR_TXT", f"{filename}.txt")
-#     outpath_pdf = os.path.join("REPLACE_OUTDIR_PDF", f"{filename}.pdf")
-#     for d in (outdir_pkl, outdir_txt, outdir_pdf):
-#         make_dirs(d)
-#     for f in (outpath_pkl, outpath_txt, outpath_pdf):
-#         check_overwrite(f, overwrite)
-#     return (outpath_pkl, outpath_txt, outpath_pdf)
-
 if __name__ == "__main__":
     outpath_pkl, outpath_txt, outpath_pdf = prep_area(eta_range, filename, iters, outdir_pkl, outdir_txt, outdir_pdf, overwrite)
-    run_script()
+    run_script(inpath_pkl, eta_range, binned_fit, switch_to_binned_fit, iters,
+               fit_whole_range_first_iter, use_data_in_xlim, outpath_pdf, outpath_pkl)

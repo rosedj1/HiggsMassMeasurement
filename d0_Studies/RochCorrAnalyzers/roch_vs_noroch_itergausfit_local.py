@@ -3,14 +3,13 @@
 Requires an input pickled dict of KinBin2Ds.
 - You can make the input dict from roch_vs_noroch_kb2dmaker_inclusivehistplotter.py
 
-This is a template file whose values (IN ALL CAPS) get replaced by a SLURM
-submission script. The iterative fits are computationally intensive,
-and so you should use the following files to control this one:
-- d0_Studies/d0_Analyzers/submit_to_slurm_inbatch.py
-- 
+The iterative fits are computationally intensive after about 
+3 iters. If you need to submit multiple copies of this script to SLURM,
+each differing by the eta bin used, then use:
+- d0_Studies/RochCorrAnalyzers/roch_vs_noroch_itergausfit_template.py
 
 Author: Jake Rosenzweig
-Updated: 2021-03-03
+Updated: 2021-03-04
 """
 from Utils_Python.Utils_Files import open_pkl, save_to_pkl, make_dirs
 from Utils_Python.Utils_Files import check_overwrite
@@ -21,8 +20,8 @@ import ROOT
 import os
 import gc
 #----- User Switches -----#
-overwrite = 1
-iters = 5
+overwrite = 0
+iters = 1
 verbose = 1
 fit_whole_range_first_iter = False  # False gives more consistent fits (with no outlier data).
 use_data_in_xlim = 1
@@ -33,7 +32,7 @@ switch_to_binned_fit = 20000
 inpath_pkl = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/RochCorr/pickles/MC2018ggH_KB2D_onlymuoninfo_fullstats_pTbinsroundnumbers_75then200GeV.pkl"
 # inpath_pkl = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/RochCorr/pickles/test/fixitergaussfits_test01_3kbds.pkl"
 #--- Output ---#
-filename = "RC_vs_NoRC_itergaussfits_fullstats_fixitergauss"
+filename = "RC_vs_NoRC_itergaussfits_fullstats_fixitergauss_test02"
 outdir_pkl = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/RochCorr/pickles/"
 outdir_txt = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/RochCorr/output/{filename}/"
 outdir_pdf = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/RochCorr/plots/{filename}/"
@@ -71,7 +70,8 @@ def make_pdf_kb2d_frames(dct, attr, outpath_pdf):
             print(f"  Its __dict__ is:\n{kb2d.__dict__}")
     c.Print(outpath_pdf + "]")
 
-def run_script():
+def run_script(inpath_pkl, eta_range, binned_fit, switch_to_binned_fit, iters,
+               fit_whole_range_first_iter, use_data_in_xlim, outpath_pdf, outpath_pkl):
     tdrStyle = setTDRStyle(show_statsbox=True)
     tdrGrid(tdrStyle, gridOn=False)
     ROOT.gROOT.SetBatch(True)
@@ -148,4 +148,5 @@ def run_script():
 
 if __name__ == "__main__":
     outpath_pkl, outpath_txt, outpath_pdf = prep_area(eta_range, filename, iters, outdir_pkl, outdir_txt, outdir_pdf, overwrite)
-    run_script()
+    run_script(inpath_pkl, eta_range, binned_fit, switch_to_binned_fit, iters,
+               fit_whole_range_first_iter, use_data_in_xlim, outpath_pdf, outpath_pkl)

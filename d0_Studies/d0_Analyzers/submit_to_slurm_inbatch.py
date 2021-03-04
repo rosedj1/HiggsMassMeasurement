@@ -13,20 +13,15 @@ and of the SLURM submission script using eta_bin = [0.2, 0.4].
 The next copy will use eta_bin = [0.4, 0.6], etc.
 
 NOTE:
-    The main template script should have the following replacement strings:
-    - `REPLACE_ETA_LS` : wherever you want a 2-elem list of eta vals to go.
-    - `REPLACE_JOB_NAME` : will be used as file name of pdf and output.txt files
-    Example SLURM script should have: 
-    - `REPLACE_JOB_NAME`
-    - `REPLACE_ETA_NAME`
-    - `REPLACE_NEW_FILE` : file path to main template script
-    - FIXME: A few more were added. Update docstring.
+    The main template script should have replacement strings that start with
+    "REPLACE_". Check the `replace_vals_in_files` function to see what values
+    get replaced.
 
 Requires an input pickled dict of KinBin2Ds.
 - You can make the input dict from roch_vs_noroch_kb2dmaker_inclusivehistplotter.py
 
 Author: Jake Rosenzweig
-Updated: 2021-03-03
+Updated: 2021-03-04
 """
 from Utils_Python.Utils_Files import replace_value, make_dirs
 from d0_Studies.kinematic_bins import equal_entry_bin_edges_eta_mod1_wholenum, bin_edges_pT_sevenfifths_to1000GeV_wholenum
@@ -35,28 +30,6 @@ import subprocess
 import shutil
 import os
 import sys
-
-class SlurmManager:
-    """A class to handle the details of working with SLURM.
-    FIXME: Not implemented yet.
-    """
-    def __init__(self): #, path_main, path_sbatch):
-        self.file_copies_ls = []
-        pass
-
-    def copy_file(self, src, dst):
-        """Copy `src` file to `dst`. Store the paths."""
-        try:
-            shutil.copyfile(src, dst)
-            self.file_copies_ls.append(dst)
-        except:
-            print(f"[WARNING] Could not copy\n{src}to\n{dst}")
-
-    def write_copies_to_file(self, outf):
-        """Save the file paths of file_copies_ls to file `outf`."""
-        # with open(outf) as f:
-        #     f.
-        pass
 
 #-----------------------#
 #--- User Parameters ---#
@@ -70,7 +43,7 @@ use_data_in_xlim = 1
 binned_fit = False
 switch_to_binned_fit = 20000
 
-job_name = "RC_vs_NoRC_itergaussfits_fullstats_doublecheck"
+job_name = "RC_vs_NoRC_itergaussfits_fullstats_final"
 
 template_script_main = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/RochCorrAnalyzers/roch_vs_noroch_itergausfit_template.py"
 # template_script_main = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/derive_pTcorrfactors_from_ggH_sample_template.py"
@@ -143,6 +116,7 @@ def replace_vals_in_files(eta_ls, job_name, fullpath_new_main_script,
         replace_value("REPLACE_ETA_NAME", eta_name, template)
         replace_value("REPLACE_JOB_NAME", job_name, template)
         replace_value("REPLACE_NEW_SCRIPT", fullpath_new_main_script, template)
+        replace_value("REPLACE_INPATH_PKL", inpath_pkl, template)
         replace_value("REPLACE_OUTDIR_PKL", outdir_pkl.rstrip('/'), template)
         replace_value("REPLACE_OUTDIR_PDF", outdir_pdf.rstrip('/'), template)
         replace_value("REPLACE_OUTDIR_TXT", outdir_txt.rstrip('/'), template)
