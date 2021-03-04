@@ -12,8 +12,6 @@ from d0_Studies.d0_Utils.d0_dicts import color_dict_RooFit
 def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None, 
                     count=1, 
                     x_label="Independent Var", units="", x_lim=None,
-                    # fit_whole_range_first_iter=True,
-                    # bins_only_across_data=False,
                     verbose=False,
                     n_bins=100,
                     line_color=4, marker_color=1, 
@@ -199,6 +197,11 @@ def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None,
     # x_var.setBins(n_bins)
     if xframe is None:
         xframe = x_var.frame(r.RooFit.Range(x_min, x_max), r.RooFit.Title(x_label))
+    #---------------------#
+    # FIXME: Needs testing:
+    # if x_lim is not None:
+    #     xframe.setRange("x_window", *x_lim)
+    #---------------------#
     # tmp_hist.SetLineColor(r.kBlue)
     # tmp_hist.SetStats(True)
     tmp_hist.SetLineWidth(0)  # Don't show hist.
@@ -352,6 +355,12 @@ def RooFit_iterative_gaus_fit(data, binned_fit=False, switch_to_binned_fit=2000,
     fit_whole_range_first_iter : bool, optional
         If True, the entire x-axis range will be fit over for first iteration.
         Otherwise, first fit range is: mean(data) +- num_sigmas * rms(data)
+        NOTE:
+        - When the std(distribution) >> sigma(core Gaussian),
+        then mean(dist) +- N*std(dist) is HUGE.
+        This has a tendency to give inconsistent fits.
+        You should set this param to True.
+        Otherwise, you will probably get consistent fits when this is False.
     x_label : str, optional
         Label of the x-axis. Can accommodate ROOT LaTeX by using '#'.
     units : str, optional
