@@ -67,12 +67,12 @@ python HiggsMassMeasurement/d0_Studies/Plotters/plot_m4mu_kinematics_withpTcorr_
       * A `.csv` is also produced to validate the info by eye.
       It has the same info as the `.pkl`.
 
-1. Do **iterated gaus fit** in DeltapT/pT dists to retrieve best
+1. Do **iterated Gaussian fits** in dpT/pT dists to retrieve best fit params.
+`HiggsMassMeasurement/d0_Studies/d0_Analyzers/findKinBins_doFits_makePDFs.py`
    - This can take a very long time. 
-   Example: 13 minutes to produce 2 PDFs.
+      - Example: 13 minutes to produce 2 PDFs.
    Each PDF had 12 pages. 
    Each page had ~6 plots.
-`HiggsMassMeasurement/d0_Studies/d0_Analyzers/findKinBins_doFits_makePDFs.py`
 
 1. Make dpT/pT vs. qd0 graphs.
 

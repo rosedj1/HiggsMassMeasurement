@@ -5,11 +5,12 @@ opens up the pickled dictionary contained within,
 and merges all these dictionaries into a single one
 saving the final 'combined' pickled dict.
 
-NOTE: infile_name_template should have the globbing characters
+NOTE: infile_name_template should have globbing characters
 (e.g. '*') to grab all matching files.
 
 Author: Jake Rosenzweig
-Updated: 2021-02-05
+Created: <2021-02-05
+Updated: 2021-03-10
 """
 import pickle
 import os
@@ -19,11 +20,10 @@ from Utils_Python.Utils_Files import open_pkl, save_to_pkl, check_overwrite
 #-----------------------#
 #--- User Parameters ---#
 #-----------------------#
-infile_name_template = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/RochCorr/pickles/RC_vs_NoRC_itergaussfits_fullstats_pT75then200GeV_extendedxaxis_5iters*.pkl"
+infile_name_template = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/pickles/MC2016_DY_dpTOverpT_1E6events/MC2016_DY_dpTOverpT_1E6events*sigs.pkl"
 outdir = None    # If None, then put new dict in same place as src dicts.
-namebase = "RC_vs_NoRC_itergaussfits_fullstats_pT75then200GeV_extendedxaxis_5iters.pkl"  # If None, then name of combined pickle will be: 'combined_dcts.pkl'
+namebase = "MC2016_DY_dpTOverpT_1E6events_12qd0reg_1000minmu_3itergausfit_2p5sigs.pkl"  # If None, then name of combined pickle will be: 'combined_dcts.pkl'
 overwrite = 0
-
 #------------------------#
 #--- Script Functions ---#
 #------------------------#

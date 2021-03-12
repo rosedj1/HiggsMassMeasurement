@@ -28,5 +28,5 @@ binedges_qd0_tracker_res = [-0.005, -0.004, -0.003, -0.002, -0.001, 0, 0.001, 0.
 binedges_qd0_tracker_res_mod = [-0.012, -0.004, -0.003, -0.002, -0.001, 0, 0.001, 0.002, 0.003, 0.004, 0.012]
 
 # The bins used in the q*d0 analysis:
-equal_entry_bin_edges_eta_mod1_wholenum = [0.00, 0.20, 0.40, 0.60, 0.80, 1.00, 1.25, 1.50, 1.75, 2.00, 2.10, 2.20, 2.30, 2.40]
-bin_edges_pT_sevenfifths_to1000GeV_wholenum = [5.0, 7.0, 10.0, 14.0, 20.0, 27.0, 38.0, 50.0, 75.0, 100.0, 150.0, 200.0, 1000.0]
+equal_entry_bin_edges_eta_mod1_wholenum = [0.00, 0.20, 0.40, 0.60, 0.80, 1.00, 1.25, 1.50, 1.75, 2.00, 2.10, 2.20, 2.30, 2.40]  # 13 eta bins.
+bin_edges_pT_sevenfifths_to1000GeV_wholenum = [5.0, 7.0, 10.0, 14.0, 20.0, 27.0, 38.0, 50.0, 75.0, 100.0, 150.0, 200.0, 1000.0]  # 12 pT bins.

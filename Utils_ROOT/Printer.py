@@ -21,20 +21,20 @@ class CanvasPrinter:
         """For each plot in plot_ls, draw the plots to outpdf_path."""
         print(f"Drawing plots to:\n{outpdf_path}")
         self.canv.Print(outpdf_path + "[")
-        self.add_plots_to_pdf(plot_ls, outpdf_path=outpdf_path, add_plots_to_pdf=True)
+        self.draw_plots(plot_ls, outpdf_path=outpdf_path)
         self.canv.Print(outpdf_path + "]")
 
-    def draw_plots(self, plot_ls, outpdf_path="", show_statsbox=True, add_plots_to_pdf=False, canv=None):
+    def draw_plots(self, plot_ls, outpdf_path, show_statsbox=True, add_plots_to_pdf=True, canv=None):
         """For each plot in plot_ls, draw the plots.
         
         If add_plots_to_pdf, then draw each plot on its own page in the
         growing pdf. The pdf will be saved at outpdf_path.
         """
         for plot in plot_ls:
-            if isinstance(plot, r.RooPlot):
-                plot.Draw()
             if isinstance(plot, r.TH1):
                 plot.Draw("hist")
+            if isinstance(plot, r.RooPlot):
+                plot.Draw()
             if isinstance(plot, r.TH2):
                 # Don't show under-overflow bin stats matrix.
                 r.gStyle.SetOptStat("iRMe")

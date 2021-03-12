@@ -1,23 +1,17 @@
 """
 # PURPOSE: 
-#  This code reads in values from a pickled dictionary, calculates the 
-#  % improvement per [eta, pT] bin, and puts the improvement into 
-#  a 2D histogram. Finally it draws the histogram to a PDF.
-# NOTES: 
-#  The values contained in the pickled dict are the best-fit sigma values
-#  from iterative Gaussian fits of kinematic distributions, like qd0 or dpT/pT.
-#  The keys in an "improvement dictionary" come in pairs: 
-#    there is a corrected key and an uncorrected key. Example:
-#    h_2.3eta2.4_150.0pT200.0_combined_dpToverpTcorr <--> h_2.3eta2.4_150.0pT200.0_combined_dpToverpT
-#  We must be clever to grab these associated values and calculate the % diff. 
-#  The main purpose of this code is to make the 2D plot without having to 
-#  reproduce all the kinematic distributions and perform the iter. Gaus. fits.
-#  FIXME: Use keys from kb2d dict to automatically make h2 bins.
-#  - Be sure to check all the variables in --- User Parameters ---.
-#  - If you get blank cells, try modifying your color_lim range. 
-# SYNTAX: python this_script.py
-# AUTHOR: Jake Rosenzweig
-# EDITED: 2021-02-10
+    This code reads in muon pT values from a pickled dictionary, calculates
+    differences between RC and non-RC muons, and makes 2D tables of the
+    results. Requires iterated Gaussian fits to have been performed.
+NOTES: 
+    The values contained in the pickled dict are the best-fit sigma values
+    from iterated Gaussian fits of kinematic distributions, like qd0 or dpT/pT.
+    The keys in the dict look like: 2.3eta2.4_150.0pT200.0
+    - Be sure to check all the variables in --- User Parameters ---.
+    - If you get blank cells, try modifying your color_lim range. 
+SYNTAX: python this_script.py
+AUTHOR: Jake Rosenzweig
+EDITED: 2021-03-04
 """
 import pickle
 import os
@@ -29,16 +23,16 @@ from Utils_Python.Utils_StatsAndFits import get_status_redchi2_fit
 from Utils_ROOT.ROOT_classes import make_TH2F
 #--- User Parameters ---#
 # inpath_pkl = f"/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/plots/qd0/MC{year}JpsiDY_2D_plot_qd0dist_gausiterfitsigmas_4unbinnedfits_0p0eta2p4_5p0pT1000p0GeV.pkl"
-filename = "test15.pdf"
-inpath_pkl = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/RochCorr/pickles/RC_vs_NoRC_itergaussfits_fullstats_pT75then200GeV_extendedxaxis_5iters.pkl"
+filename = "test17.pdf"
+inpath_pkl = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/RochCorr/pickles/RC_vs_NoRC_itergaussfits_fullstats_final/RC_vs_NoRC_itergaussfits_fullstats_final_5iters.pkl"
 # outpath_pdf = f"/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/plots/2D_tables_etavspT/MC{year}JpsiDY_2Dplot_dpToverpTimprovement_gausiterfitsigmas_6unbinnedfits_0p0eta2p4_5p0pT1000p0GeV_final.pdf"
 outpath_pdf = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/RochCorr/plots/tables2D/test/{filename}"
 overwrite = 0
 show_plots = 0
 make_pdf = 1
 
-min_chi2 = 0.01
-max_chi2 = 199
+min_chi2 = 0.05
+max_chi2 = 30
 
 z_label_size = 0.02
 text_size = 0.85
@@ -185,19 +179,19 @@ if __name__ == "__main__":
     #--- Make 2D hists for plain data ---#
     #------------------------------------# 
     h2_mean_pT_RC, h2_sterrofmean_pT_RC = make_hist_and_errhist(
-                                              internal_name="h2_mean_pT_RC", title="<p_{T}^{RC}>",
+                                              internal_name="h2_mean_pT_RC", title="<p_{T}^{RC}> (GeV)",
                                               n_binsx=pT_binedge_ls, x_label=x_label, x_units="GeV",
                                               n_binsy=eta_binedge_ls, y_label="#left|#eta#right|", y_units=None,
                                               z_min=None, z_max=None, z_label_size=z_label_size,
                                               n_contour=n_contour)
     h2_mean_pT_reco, h2_sterrofmean_pT_reco = make_hist_and_errhist(
-                                              internal_name="h2_mean_pT_reco", title="<p_{T}^{reco}>",
+                                              internal_name="h2_mean_pT_reco", title="<p_{T}^{reco}> (GeV)",
                                               n_binsx=pT_binedge_ls, x_label=x_label, x_units="GeV",
                                               n_binsy=eta_binedge_ls, y_label="#left|#eta#right|", y_units=None,
                                               z_min=0, z_max=200, z_label_size=z_label_size,
                                               n_contour=n_contour)
     h2_mean_pT_gen, h2_sterrofmean_pT_gen = make_hist_and_errhist(
-                                              internal_name="h2_mean_pT_gen", title="<p_{T}^{gen}>",
+                                              internal_name="h2_mean_pT_gen", title="<p_{T}^{gen}> (GeV)",
                                               n_binsx=pT_binedge_ls, x_label=x_label, x_units="GeV",
                                               n_binsy=eta_binedge_ls, y_label="#left|#eta#right|", y_units=None,
                                               z_min=0, z_max=200, z_label_size=z_label_size,

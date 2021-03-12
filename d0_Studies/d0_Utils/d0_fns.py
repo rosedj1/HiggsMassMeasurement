@@ -160,8 +160,8 @@ def correct_muon_pT(eta, pT, q, d0,
         # There can be different pT bin edges for different eta bins.
         eta_min, eta_max, pT_min, pT_max = get_binedges_from_keys(eta, pT, pT_corr_factor_dict)
     elif "man" in det:
-        eta_min, eta_max = find_bin_edges_of_value(abs(eta), np.array(eta_binedge_ls))
-        pT_min,  pT_max  = find_bin_edges_of_value(pT,       np.array(pT_binedge_ls))
+        eta_min, eta_max = find_bin_edges_of_value(abs(eta), np.array(eta_binedge_ls), verbose=verbose)
+        pT_min,  pT_max  = find_bin_edges_of_value(pT,       np.array(pT_binedge_ls), verbose=verbose)
     else:
         raise ValueError("Parameter `detection` must be either 'manual' or 'auto'.")
     
@@ -395,7 +395,7 @@ def check_edge_cases(val, bin_edge_arr):
     else:
         return (None, None)
 
-def find_bin_edges_of_value(val, bin_edge_arr):
+def find_bin_edges_of_value(val, bin_edge_arr, verbose=False):
     """
     Return the adjacent bin edges of bin_edge_arr, where:
     this_bin_edge < val <= next_bin_edge
@@ -445,7 +445,8 @@ def find_bin_edges_of_value(val, bin_edge_arr):
     except IndexError:
         # Most likely the val is less than min or greater than max of bin_edge_arr.
         if (val < min(bin_edge_arr)) or (val > max(bin_edge_arr)):
-            print(f"[WARNING] Tried putting {val:.6f} into {bin_edge_arr}")
+            if verbose:
+                print(f"[WARNING] Tried putting {val:.6f} into {bin_edge_arr}")
             return none_tup
         else:
             msg = f"val ({bin_edge_arr}) could not be placed in or next to bin_edge_arr:\n"
@@ -822,7 +823,6 @@ def find_equal_hist_regions_unbinned(vals_arr, regions, algo=("normal", -1), ver
     Returns
     -------
     2-tuple : (bin_reg_ls, regions)
-    where,
     bin_reg_ls : list
         A list of the edges of each region along the x-axis. 
         The number of entries between regions should have ~same number of entries.
@@ -838,6 +838,14 @@ def find_equal_hist_regions_unbinned(vals_arr, regions, algo=("normal", -1), ver
     mode = algo[0]
     entries_total = len(vals_arr)
 
+    if entries_total == 0:
+        msg = (
+            f"[WARNING] vals_arr contains 0 elements."
+            f"[WARNING] Returning: (bin_reg_ls=[], regions=0)"
+        )
+        print(msg)
+        return ([], 0)
+        
     if mode in "normal":
         try:
             # If you have 4 elements in vals_arr, then you can only make a max of 3 regions

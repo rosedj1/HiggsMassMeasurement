@@ -39,7 +39,7 @@ matplotlib.use('Agg')
 #---------------------------#
 #----- User Parameters -----#
 #---------------------------#
-outdir = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/plots/dpToverpT/"
+FIXME: outdir = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/plots/dpToverpT/"
 filename_base = "gausiterfitsigmas_final"
 sample_ls = [
     Sample("MC", "2018", "Jpsi", "hdf5"),

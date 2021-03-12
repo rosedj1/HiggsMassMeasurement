@@ -1,3 +1,5 @@
+import ROOT
+
 charge_dict = {
     '+':'-13', 
     '-':'13',
@@ -23,13 +25,52 @@ color_dict_RooFit = {
     1:600,#,'kBlue',
     2:632,#'kRed',
     3:416,#'kGreen',
-    4:616,#'kMagenta',
+    4:880,#'kViolet',
     5:800,#'kOrange',
-    6:432,#'kCyan',
-    7:880,#'kViolet',
-    8:840,#'kTeal',
-    9:900,#'kPink',
-    10:920,#'kGray',
+    # Now cycle the colors, but go darker:
+    6:ROOT.kBlue+2,#'kCyan',
+    7:ROOT.kRed+2,#'kMagenta', # looks like kViolet
+    8:ROOT.kGreen+2,#'kTeal', # looks like kCyan
+    9:ROOT.kViolet+2,#'kPink', # looks like kRed
+    10:ROOT.kOrange+2,#'kSpring', # looks like kGreen
+    11:920,#'kGray',
+    # 6:432,#'kCyan',
+    # 7:616,#'kMagenta', # looks like kViolet
+    # 8:840,#'kTeal', # looks like kCyan
+    # 9:900,#'kPink', # looks like kRed
+    # 10:820,#'kSpring', # looks like kGreen
+    # From https://root.cern.ch/doc/master/classTColor.html
+    # kWhite  = 0,   kBlack  = 1,   kGray    = 920,  kRed    = 632,  kGreen  = 416,
+    # kBlue   = 600, kYellow = 400, kMagenta = 616,  kCyan   = 432,  kOrange = 800,
+    # kSpring = 820, kTeal   = 840, kAzure   =  860, kViolet = 880,  kPink   = 900
+}
+
+process_dct = {
+    "DY2mu" : {"process" : r"q#bar{q} #rightarrow Z #rightarrow #mu#mu",
+               "m_inv_label" : r"m_{2#mu}",
+               "m_inv_lim" : [60, 120],
+               "m_inv_nbins" : 120},
+    "DY2e"  : {"process" : r"q#bar{q} #rightarrow Z #rightarrow ee",
+               "m_inv_label" : r"m_{2e}",
+               "m_inv_lim" : [105, 140],
+               "m_inv_nbins" : 120},
+    "H4mu"  : {"process" : r"H #rightarrow ZZ #rightarrow 4#mu",
+               "m_inv_label" : r"m_{4#mu}",
+               "m_inv_lim" : [105, 140],
+               "m_inv_nbins" : 140},
+    "H4e"  : {"process" : r"H #rightarrow ZZ #rightarrow 4e",
+               "m_inv_label" : r"m_{4e}",
+               "m_inv_lim" : [105, 140],
+               "m_inv_nbins" : 140},
+    "H2mu"  : {"process" : r"H rightarrow #mu#mu",
+               "m_inv_label" : r"m_{2#mu}",
+               "m_inv_lim" : [105, 140],
+               "m_inv_nbins" : 140},
+    "H2e"  : {"process" : r"H rightarrow ee",
+               "m_inv_label" : r"m_{2e}",
+               "m_inv_lim" : [105, 140],
+               "m_inv_nbins" : 140},
+
 }
 
 label_LaTeX_dict = {

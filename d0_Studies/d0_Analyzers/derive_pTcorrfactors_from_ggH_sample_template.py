@@ -1,6 +1,9 @@
 """Ad Hoc pT Correction Analyzer
 
-FIXME: This doc string is old!
+FIXME: 
+    - Delete most of this since this template should pull main() from:
+    d0_Studies/d0_Analyzers/derive_pTcorrfactors_from_ggH_sample_template.py
+    - This doc string is old!
 
 Purpose:
     Select "good" H->ZZ->4mu events.

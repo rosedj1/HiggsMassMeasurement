@@ -141,9 +141,7 @@ if do_binned_analysis:
     if make_dpTOverpT_vs_qd0_graphs:
         muon_collection.make_KinBin2D_graphs()
         muon_collection.collect_KinBin2D_plots()
-        # Make a TMultiGraph for each eta bin.
-        for eta_min,eta_max in zip(eta_ls[:-1], eta_ls[1:]):
-            muon_collection.make_multigraph(eta_min, eta_max)
+        muon_collection.make_all_multigraphs(eta_ls)
     muon_collection.collect_KinBin3D_plots()
 
     print(f"Drawing plots to:\n{outpdf_path}")
