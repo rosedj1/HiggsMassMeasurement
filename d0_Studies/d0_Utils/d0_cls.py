@@ -36,6 +36,8 @@ class KinBin2D:
         multiple KinBin3Ds.
         It would be more efficient to then delete the KinBin2D.muon_ls
         since the information is now stored among all the KinBin3Ds.
+        - I have attempted to overwrite self.muon_ls,
+        but not sure if that clears the memory.
         """
 
     def __init__(self, eta_range, pT_range):
@@ -133,7 +135,7 @@ class KinBin2D:
             h.Fill(val)
         self.h_qd0 = h
 
-    def make_dpTOverpT_hist(self, n_bins=100, x_lim=[-0.4, 0.4]):
+    def make_dpTOverpT_hist(self, n_bins=100, x_lim=[-0.12, 0.12]):
         """Make and fill a delta_pT/pT hist using the muon info in this KinBin.
         
         x_lim [x_min, x_max] determines the x-axis range for viewing.
@@ -300,13 +302,13 @@ class KinBin2D:
             key = self.make_3Dbin_key(qd0_min, qd0_max, title_friendly=title_friendly)
             self.KinBin3D_dict[key] = kb3d
 
-    def store_muon_info_in_KinBin3Ds(self, title_friendly=False):
+    def store_muon_info_in_KinBin3Ds(self, title_friendly=False, verbose=False):
         """Save KinBin2D muon info in correct KinBin3Ds, based on (eta, pT, qd0) values of each muon."""
         for muon in self.muon_ls:
             # Decide which (eta, pT, qd0) bin this muon belongs to.
             qd0 = muon.charge * muon.d0
             # qd0_min, qd0_max = find_bin_edges_of_value(qd0, qd0_bin_edges_tmp)
-            qd0_min, qd0_max = find_bin_edges_of_value(qd0, self.equalentry_qd0_bin_edges)
+            qd0_min, qd0_max = find_bin_edges_of_value(qd0, self.equalentry_qd0_bin_edges, verbose=verbose)
             if any([x is None for x in (qd0_min, qd0_max)]):
                 msg = f"[WARNING] This muon has a strange qd0 value: qd0={[qd0_min, qd0_max]}"
                 print(msg)
@@ -654,9 +656,11 @@ class KinBin3D(KinBin2D):
         return cut
     
     def analyze_KinBin3D(self, bins_dpTOverpT, bins_qd0,
-                         x_lim_dpTOverpT, x_lim_qd0, fit_whole_range_first_iter=True,
+                         x_lim_dpTOverpT, x_lim_qd0,
+                         binned_fit=False, fit_whole_range_first_iter=True,
                          iters=1, num_sigmas=2,
-                         switch_to_binned_fit=2000, verbose=False, alarm_level="warning"):
+                         switch_to_binned_fit=2000, verbose=False, alarm_level="warning",
+                         use_data_in_xlim=False):
         """Analyze and store dpT/pT and qd0 muon info within this KinBin3D.
         
         Parameters
@@ -693,15 +697,16 @@ class KinBin3D(KinBin2D):
         
         self.fit_stats_dict_dpTOverpT, self.frame_dpTOverpT = RooFit_iterative_gaus_fit(
                                 self.get_dpTOverpT_ls(), 
-                                binned_fit=False, switch_to_binned_fit=switch_to_binned_fit, 
+                                binned_fit=binned_fit, switch_to_binned_fit=switch_to_binned_fit, 
                                 iters=iters, num_sigmas=num_sigmas, 
                                 n_bins=bins_dpTOverpT, x_lim=x_lim_dpTOverpT,
                                 fit_whole_range_first_iter=fit_whole_range_first_iter,
                                 xframe=None, x_label=r"(p_{T}^{REC} - p_{T}^{GEN})/p_{T}^{GEN}", 
                                 title=r"%s" % self.make_latex_bin_cut_str(), 
-                                units="",
-                                marker_color=1, only_draw_last=False, 
-                                verbose=verbose)
+                                units="", marker_color=1,
+                                force_last_line_color=None, only_draw_last=False,
+                                verbose=verbose, view_plot=False,
+                                use_data_in_xlim=use_data_in_xlim)
         for stat in ["mean_ls", "mean_err_ls", "std_ls", "std_err_ls"]:
             check_fit_convergence(self.fit_stats_dict_dpTOverpT[stat],
                                   max_perc_diff=5,

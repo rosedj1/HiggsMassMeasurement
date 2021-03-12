@@ -715,8 +715,8 @@ def fill_dict_of_dpToverpT_hists(tree, hist_dict, hist_type,
                 continue
 
             # Check this muon's eta and pT and see where it should fall in the given lists.
-            binedge_min_eta, binedge_max_eta = find_bin_edges_of_value(abs(mu.eta), np.array(eta_binedge_ls))
-            binedge_min_pT,  binedge_max_pT  = find_bin_edges_of_value(mu.pT, np.array(pT_binedge_ls))
+            binedge_min_eta, binedge_max_eta = find_bin_edges_of_value(abs(mu.eta), np.array(eta_binedge_ls), verbose=verbose)
+            binedge_min_pT,  binedge_max_pT  = find_bin_edges_of_value(mu.pT, np.array(pT_binedge_ls), verbose=verbose)
 
             # Are any of them bad? (i.e. the pT or eta was outside the bin range)
             binls = [binedge_min_eta, binedge_max_eta, binedge_min_pT, binedge_max_pT]

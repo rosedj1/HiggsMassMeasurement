@@ -8,19 +8,20 @@ def make_TH1F(internal_name, title=None, n_bins=100, xlabel=None, x_min=0, x_max
     NOTE: 
     - Don't worry about parentheses around units.
       It will be taken care of.
-    - Accommodates ROOT LaTeX (using '#' of course).
+    - Accommodates ROOT LaTeX (use '#' instead of '\').
       Use raw strings: r'your string'.
 
     Parameters
     ----------
     internal_name : str
-        asdfasdfasdf
+        ROOT's internal name for this histogram.
     title : str
         The title of the histogram.
     """
     h = ROOT.TH1F(internal_name, "", n_bins, x_min, x_max)
     bin_w = (x_max - x_min) / float(n_bins)
     ylabel = r"Events / (%s)" % bin_w
+    xlabel = "" if xlabel is None else xlabel
     if units is not None:
         xlabel += r" (%s)" % units
         ylabel = ylabel.rstrip(")") + r" %s)" % units

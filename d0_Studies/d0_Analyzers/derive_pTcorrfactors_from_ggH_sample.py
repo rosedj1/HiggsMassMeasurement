@@ -116,7 +116,7 @@ def main():
     printer.make_plots_pretty(gridOn=True)
     # Begin analysis.
     muon_collection = MyMuonCollection()
-    muon_collection.extract_muons_from_Higgs_file(infile_path, n_evts=max_n_evts, print_out_every=print_out_every)
+    muon_collection.extract_muons_from_H4mu_file(infile_path, n_evts=max_n_evts, print_out_every=print_out_every)
     # Sort muons into specified (eta, pT, qd0) bins.
     muon_collection.sort_muons(eta_ls, pT_ls, verbose=verbose)
     muon_collection.make_KinBin3Ds(regions=regions, 

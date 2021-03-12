@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=synch50qd0
+#SBATCH --job-name=MC2016DY_muons
 #SBATCH --output=job_%j.log
 #SBATCH --error=job_%j_error.log
 #SBATCH --mail-type=ALL
@@ -7,9 +7,9 @@
 #SBATCH --time=12:00:00
 #SBATCH --account=avery
 #SBATCH --qos=avery
-#SBATCH --mem=16gb
+#SBATCH --mem=4gb
 #SBATCH --partition=hpg2-compute
-#SBATCH --nodes=2
+#SBATCH --nodes=4
 
 pwd; hostname; date
 source ~/.bash_profile

@@ -1,4 +1,5 @@
 from Particles import MyMuon
+from Utils_Python.Utils_Physics import calc_dphi, calc_dR
 
 class Selector():
     """
@@ -106,6 +107,54 @@ def passed_Hmumu_evt_selection(evt):
     selec_ls = [True]
     return all(selec_ls)
 
+def passed_DY_evt_selection(evt):
+    """Return True if this is a good Z->2mu event."""
+    # Note to self:
+    # Using many if, return False statements is a very fast way
+    # to leave the function as soon as this event is labeled bad.
+    rec_id_ls = list(evt.lep_id)
+    gen_id_ls = list(evt.GENlep_id)
+    # Reco muons.
+    if len(rec_id_ls) != 2:  # 2 muons per event.
+        return False
+    if sum(rec_id_ls) != 0:  # OSSF.
+        return False
+    if any(abs(x) != 13 for x in rec_id_ls):
+        return False
+    # Gen muons.
+    if len(gen_id_ls) != 2:
+        return False
+    if sum(gen_id_ls) != 0:
+        return False
+    if any(abs(x) != 13 for x in gen_id_ls):
+        return False
+    # Additional cuts.
+    if any(x != 1 for x in list(evt.lep_tightId)):
+        return False
+    if any(x > 0.35 for x in list(evt.lep_RelIso)):
+        return False
+    # Looks like a good event!
+    return True
+
+    # #--- Below was my first attempt: Pythonic and clever, but slow!
+    # id_ls = list(evt.lep_id)
+    # # Make list of pass/fail selections (bools):
+    # selec_ls = [
+    #     # Reco muons.
+    #     len(list(evt.lep_id)) == 2,  # 2 muons per event.
+    #     sum(list(evt.lep_id)) == 0,  # OSSF.
+    #     all(abs(x) == 13 for x in list(evt.lep_id)),
+    #     # Gen muons.
+    #     len(list(evt.GENlep_id)) == 2,  # 2 muons per event.
+    #     sum(list(evt.GENlep_id)) == 0,  # OSSF.
+    #     all(abs(x) == 13 for x in list(evt.GENlep_id)),
+    #     # Additional cuts.
+    #     all(x == 1 for x in list(evt.lep_tightId)),
+    #     all(x < 0.35 for x in list(evt.lep_RelIso)),
+    # ]
+    # return all(selec_ls)
+    # #--- Above is clever, but slow!
+
 def initialize_muon(evt, reco_ndx, gen_ndx):
     """
     For a given event (evt), build a muon (mu) using: 
@@ -129,6 +178,7 @@ def initialize_muon(evt, reco_ndx, gen_ndx):
     # mu = ROOT.Math.PtEtaPhiMVector(evt.lepFSR_pt[reco_ndx], evt.lepFSR_eta[reco_ndx], evt.lepFSR_phi[reco_ndx], evt.lepFSR_mass[reco_ndx])
     charge = evt.lep_id[reco_ndx] / -13.
     mu = MyMuon(charge)
+    mu.charge_gen = evt.GENlep_id[gen_ndx] / -13.
     # Set gen, reco, and reco_withFSR kinematics.
     mu.set_GENPtEtaPhiMass(evt.GENlep_pt[gen_ndx],
                            evt.GENlep_eta[gen_ndx],
@@ -229,27 +279,37 @@ def make_muon_ls_fromliteskim(evt):
     """
     return [initialize_Htomumu_muons_fromliteskim(evt, num) for num in [1,2]]
 
-def apply_kinem_selections(mu_ls, eta_bin=[0,2.4], pT_bin=[5,200], d0_max=1):
+def apply_kinem_selections(mu_ls, eta_bin=[0, 2.4], pT_bin=[5, 200],
+                           d0_max=1, dR_max=None):
     """
     Make sure all muons passed selections and do final pT checks.
     Returns True if all muons passed, False otherwise.
 
     Parameters
     ----------
+    mu_ls : list
+        Contains MyMuon objects.
     eta_bin : 2-elem list
         Keep muons with reco abs(eta) in range: [eta_min, eta_max]
     pT_bin : 2-elem list
         Keep muons with reco pT in range: [pT_min, pT_max] (GeV)
     d0_max : float
         Keep muons with abs(d0) < d0_max (cm).
+    dR_max : float or None
+        If not None, keep muons with dR(gen,reco) < dR_max.
     """
+    passed_genrecomatch = True  # Only test this if dR_max was provided.
     eta_min, eta_max = eta_bin[0], eta_bin[1]
     pT_min, pT_max = pT_bin[0], pT_bin[1]
     for mu in mu_ls:
         passed_eta = (eta_min < abs(mu.eta)) and (abs(mu.eta) < eta_max)
         passed_pT = (pT_min < mu.pT) and (mu.pT < pT_max)
         passed_d0 = abs(mu.d0) < d0_max
-        pass_kinem = all([passed_eta, passed_pT, passed_d0])
+        if dR_max is not None:
+            deta = mu.eta - mu.gen_eta
+            dphi = calc_dphi(mu.phi, mu.gen_phi)
+            passed_genrecomatch = (calc_dR(deta, dphi) < dR_max)
+        pass_kinem = all([passed_eta, passed_pT, passed_d0, passed_genrecomatch])
         if not pass_kinem:
             return False
     return True
@@ -266,21 +326,74 @@ def get_ndcs_gen(rec_ndcs_ls, lep_genindex):
     """
     return [lep_genindex[ndx] for ndx in rec_ndcs_ls]
 
-# def account_for_FSR(t, mu):
-#     """
+# @profile
+def build_muons_from_DY_event(evt, evt_num, eta_bin=[0, 2.4], pT_bin=[5, 200],
+                              d0_max=1, dR_max=0.002, verbose=False):
+    """Return a 2-tuple of MyMuon objects which pass muon selections in qq->Z->2mu sample.
 
-#     Parameters
-#     ----------
-#     t : ROOT.TTree
-#     mu : MyMuon object
-#     """
-#     fsr_pT_ls = list(t.fsrPhotons_pt)
-#     list(t.fsrPhotons_eta)
-#     list(t.fsrPhotons_phi)
+    NOTE: This function works for post-UFHZZ4L analyzer, not lite skim.
+    
+    Parameters
+    ----------
+    evt : ROOT.TTree event
+        The event from the TTree.
+    evt_num : int
+        Event number of the TTree.
+    eta_bin : 2-elem list
+        Keep muons with reco eta in range: [eta_min, eta_max]
+    pT_bin : 2-elem list
+        Keep muons with reco pT in range: [pT_min, pT_max] (GeV)
+    d0_max : float
+        Keep muons with d0 < d0_max (cm).
+    dR_max : float
+        Keep muons with dR(gen,reco) < dR_max.
+    verbose : bool
+        Print out debug info.
 
-#     composite = mu + 
-#     mu.
+    Returns
+    -------
+    If event passes selections: 
+        2-tuple of MyMuon objects.
+    If event does NOT pass selections: 
+        2-tuple of NoneType (None, None).
+    """
+    # global n_evts_passed
+    bad_muons = (None, None)
+    # t.GetEntry(evt_num)
+    
+    # if not passed_DY_evt_selection(t):
+    if not passed_DY_evt_selection(evt):
+        return bad_muons
 
+    # Requesting only 2mu events.
+    # Manually make muon list:
+    lep_genindex_ls = list(evt.lep_genindex)
+    rec_ndcs_ls = [0, 1]
+    gen_ndcs_ls = get_ndcs_gen(rec_ndcs_ls, lep_genindex_ls)
+
+    mu_ls = make_muon_ls(evt, rec_ndcs_ls, gen_ndcs_ls)
+
+    if not apply_kinem_selections(mu_ls, eta_bin=eta_bin, pT_bin=pT_bin,
+                                  d0_max=d0_max, dR_max=dR_max):
+        return bad_muons
+    
+    if verbose:
+        rec_ID_ls = list(evt.lep_id)
+        gen_ID_ls = list(evt.GENlep_id)
+        print(
+            f"Good event #{evt_num} passed selections:\n"
+            f"gen_ID_ls:       {gen_ID_ls}\n"
+            f"rec_ID_ls:       {rec_ID_ls}\n"
+            f"lep_genindex_ls: {lep_genindex_ls}\n"
+            f"rec_ndcs_ls:     {rec_ndcs_ls}\n"
+            f"gen_ndcs_ls:     {gen_ndcs_ls}\n"
+            f"Reco and gen IDs match?: {all(mu.charge==mu.charge_gen for mu in mu_ls)}"
+        )
+
+    # Return the 2 good muons.
+    assert len(mu_ls) == 2
+    return tuple(mu_ls)
+                              
 def build_muons_from_HZZ4mu_event(t, evt_num, eta_bin=[0,2.4], pT_bin=[5,200], d0_max=1):
     """Return a 4-tuple of MyMuon objects which pass muon selections in H->ZZ->4mu sample.
 
@@ -306,9 +419,8 @@ def build_muons_from_HZZ4mu_event(t, evt_num, eta_bin=[0,2.4], pT_bin=[5,200], d
     If event does NOT pass selections: 
         4-tuple of NoneType (None, None, None, None).
     """
-    # global n_evts_passed
-    bad_muons = (None, None, None, None)
     t.GetEntry(evt_num)
+    bad_muons = (None, None, None, None)
     
     if not passed_Higgs_evt_selection(t):
         return bad_muons
@@ -348,9 +460,8 @@ def build_muons_from_HZZ4mu_event(t, evt_num, eta_bin=[0,2.4], pT_bin=[5,200], d
     # n_evts_passed += 1
 
     # Return the 4 good muons.
-    good_muons = tuple(mu_ls)
-    assert len(good_muons) == 4
-    return good_muons
+    assert len(mu_ls) == 4
+    return tuple(mu_ls)
 
 def build_muons_from_Hmumu_event(t, evt_num, eta_bin=[0,2.4], pT_bin=[20,200], d0_max=1):
     """Return a 2-tuple of MyMuon objects which pass muon selections in H->2mu sample.
@@ -405,6 +516,5 @@ def build_muons_from_Hmumu_event(t, evt_num, eta_bin=[0,2.4], pT_bin=[20,200], d
     # n_evts_passed += 1
 
     # Return the 2 good muons.
-    good_muons = tuple(mu_ls)
-    assert len(good_muons) == 2
-    return good_muons
+    assert len(mu_ls) == 2
+    return tuple(mu_ls)

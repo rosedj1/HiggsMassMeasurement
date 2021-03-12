@@ -23,16 +23,16 @@ from Utils_Python.Utils_StatsAndFits import get_status_redchi2_fit
 from Utils_ROOT.ROOT_classes import make_TH2F
 #--- User Parameters ---#
 # inpath_pkl = f"/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/plots/qd0/MC{year}JpsiDY_2D_plot_qd0dist_gausiterfitsigmas_4unbinnedfits_0p0eta2p4_5p0pT1000p0GeV.pkl"
-filename = "test15.pdf"
-inpath_pkl = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/RochCorr/pickles/RC_vs_NoRC_itergaussfits_fullstats_pT75then200GeV_extendedxaxis_5iters.pkl"
+filename = "test17.pdf"
+inpath_pkl = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/RochCorr/pickles/RC_vs_NoRC_itergaussfits_fullstats_final/RC_vs_NoRC_itergaussfits_fullstats_final_5iters.pkl"
 # outpath_pdf = f"/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/plots/2D_tables_etavspT/MC{year}JpsiDY_2Dplot_dpToverpTimprovement_gausiterfitsigmas_6unbinnedfits_0p0eta2p4_5p0pT1000p0GeV_final.pdf"
 outpath_pdf = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/RochCorr/plots/tables2D/test/{filename}"
 overwrite = 0
 show_plots = 0
 make_pdf = 1
 
-min_chi2 = 0.01
-max_chi2 = 199
+min_chi2 = 0.05
+max_chi2 = 30
 
 z_label_size = 0.02
 text_size = 0.85
