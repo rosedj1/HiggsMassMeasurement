@@ -346,7 +346,7 @@ class KinBin2D:
         Parameters
         ----------
         data : list or array-like
-            The data be plotted and on which Gaussian fits will be done.
+            The data to be plotted and on which Gaussian fits will be done.
         bins_dpTOverpT : int
             The number of bins along the x-axis of the dpTOverpT distribution.
         bins_qd0 : int, DEPRECATED
@@ -389,7 +389,7 @@ class KinBin2D:
             try:
                 assert len(data) > 0
             except AssertionError:
-                print("You did not specify any data to be plotted.")
+                print("There are no data to be plotted.")
                 return
         # Make sure that the MyMuon has the requested attribute.
         msg = f"MyMuon doesn't have attribute `{attr}`"
@@ -662,6 +662,7 @@ class KinBin3D(KinBin2D):
                          switch_to_binned_fit=2000, verbose=False, alarm_level="warning",
                          use_data_in_xlim=False):
         """Analyze and store dpT/pT and qd0 muon info within this KinBin3D.
+        Also perform iterated Gaussian fits on the dpT/pT dist.
         
         Parameters
         ----------
