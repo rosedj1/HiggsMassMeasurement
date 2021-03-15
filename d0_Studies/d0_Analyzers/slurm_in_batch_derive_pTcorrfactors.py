@@ -38,14 +38,14 @@ import sys
 overwrite = 1
 iters = 5
 regions = 12
-verbose = 0
+verbose = 1
 max_n_evts = -1
 print_out_every = 100000
 
 fit_whole_range_first_iter = False  # False gives more consistent fits (with no outlier data).
 use_data_in_xlim = True
 binned_fit = False  # Bin q*d0 axis in: dpT/pT vs. q*d0 plot.
-switch_to_binned_fit = 5000
+switch_to_binned_fit = 999999999
 min_muons_per_qd0_bin = 3000
 
 job_name = "MC2016DY_deriveAdHocpTcorrfactors_fullstats"

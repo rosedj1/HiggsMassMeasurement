@@ -535,8 +535,8 @@ class MyMuonCollection:
 
     def do_3D_iter_gaus_fits(self, binned_fit=False, bins_dpTOverpT=100, bins_qd0=100, 
                              x_lim_dpTOverpT=[-0.4,0.4], x_lim_qd0=[-0.01,0.01],
-                             fit_whole_range_first_iter=True,
-                             iters=1, num_sigmas=2, switch_to_binned_fit=2000,
+                             fit_whole_range_first_iter=False,
+                             iters=1, num_sigmas=2.5, switch_to_binned_fit=2000,
                              alarm_level="warning",
                              verbose=False, use_data_in_xlim=False):
         """
