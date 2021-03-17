@@ -11,6 +11,8 @@ Notes:
     Should be used with Python 3.X.
     `inpkl_path` should be a pickle of pT correction factors with the
     following structure:
+    FIXME: Structure has been updated!
+    Now it is 3 nested dicts.
     {
     '0.0eta0.2_30.0pT40.0':
         {'intercept': -0.0005623984813579679,
@@ -25,7 +27,7 @@ Notes:
     }
 Author:  Jake Rosenzweig
 Created: 2020-08-24
-Updated: 2021-03-10
+Updated: 2021-03-15
 """
 from ParticleCollections import MyMuonCollection
 from Utils_Python.Utils_Files import check_overwrite
@@ -40,11 +42,12 @@ use_GeoFit_algo = False  # Will use Hmumu group's GeoFit factors and method.
 force_zero_intercept = True
 
 infile_path = "/cmsuf/data/store/user/t2/users/ferrico/Full_RunII/Production_10_2_18/Higgs_VX_BS/125/GluGluHToZZTo4L_M125_2016.root"
-inpkl_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/pickles/MC2016_DY_dpTOverpT_1E6events/MC2016_DY_dpTOverpT_1E6events.pkl"
+inpkl_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/CorrFactors/AdHoc/AdHocpTcorrfact_derivedfromMC2016DY_12etabins12pTbins_0p0eta2p4_5p0pT1000p0_newformat.pkl"
+# inpkl_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/pickles/MC2016_DY_dpTOverpT_1E6events/MC2016_DY_dpTOverpT_1E6events.pkl"
 # inpkl_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/CorrFactors/GeoFit/GeoFitcorrfact_derivedfromMC2018_3etabins_0p0eta2p4.pkl"
 # inpkl_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/CorrFactors/AdHoc/AdHocpTcorrfact_derivedfromMC2018DYJpsi_13etabins12pTbins_0p0eta2p4_5p0pT1000p0.pkl"
 # inpkl_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/CorrFactors/MC2018_d0_pT_corrfactors_0p0eta2p4_5p0pT1000p0_derivedfromDYJpsi_final.pkl"
-outpath_rootfile = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2016_m4mu_m4mucorrfromAdHocfactors_1E6events_zerointerc.root"
+outpath_rootfile = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2016_m4mu_m4mucorrfromAdHocfactors_fullstats_zerointerc_new.root"
 # outpath_rootfile = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2018_m4mu_m4mucorrfromGeoFitfactors_fullstats.root"
 # outpath_rootfile = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2018_m4mu_m4mucorrfromAdHocfactors_fullstats.root"
 # outpath_rootfile = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2018_m4mu_m4mucorrfromGeoFitfactors_fullstats_noFSR_zerointerc.root"

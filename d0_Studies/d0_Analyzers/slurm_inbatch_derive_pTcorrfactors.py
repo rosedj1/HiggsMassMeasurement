@@ -65,7 +65,6 @@ outdir_txt    = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0
 full_eta_ls = equal_entry_bin_edges_eta_mod1_wholenum[7:]  #[2.1, 2.2]
 # full_pT_ls = [30.0, 40.0, 50.0]  #[2.1, 2.2]
 full_pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum #[50.0, 75.0, 100.0, 200.0]  #[2.1, 2.2]
-
 delete_copies = False
 #------------------------#
 #--- Script functions ---#

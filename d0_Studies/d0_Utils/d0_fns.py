@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from Utils_Python.Utils_Physics import perc_diff
 
-def get_pT_corr_factors(pT_corr_factor_dict, eta_min, eta_max, pT_min, pT_max):
+def get_pT_corr_factors(pT_corr_factor_dict, eta_min, eta_max, pT_min, pT_max, scale_by_1divpT=False):
     """
     Return the slope and intercept from the best fit lines of 
     dpT/pT vs. q*d0 plots. 
@@ -12,6 +12,7 @@ def get_pT_corr_factors(pT_corr_factor_dict, eta_min, eta_max, pT_min, pT_max):
     Parameters
     ----------
     pT_corr_factor_dict : dict
+        FIXME: Contains new structure.
         Contains the best-fit parameters to correct muon pT. 
         Key : str
             The bin that muon lands in: e.g., '0.0eta0.2_10.0pT14.0'
@@ -25,6 +26,8 @@ def get_pT_corr_factors(pT_corr_factor_dict, eta_min, eta_max, pT_min, pT_max):
         Lower edge of pT bin.
     pT_max : float
         Upper edge of pT bin.
+    scale_by_1divpT : bool
+        FIXME: Not yet implemented below.
         
     Returns
     -------
@@ -34,8 +37,9 @@ def get_pT_corr_factors(pT_corr_factor_dict, eta_min, eta_max, pT_min, pT_max):
         Intercept of best-fit line for that eta, pT bin.
     """
     key = f"{eta_min}eta{eta_max}_{pT_min}pT{pT_max}"
-    interc = pT_corr_factor_dict[key]["intercept"]
-    slope = pT_corr_factor_dict[key]["slope"]
+    graph_type = "dpTOverpTscaled_vs_qd0" if scale_by_1divpT else "dpTOverpT_vs_qd0"
+    interc = pT_corr_factor_dict[graph_type][key]["intercept"]
+    slope = pT_corr_factor_dict[graph_type][key]["slope"]
     return (slope, interc)
 
 def parse_etapT_key(key):
@@ -63,7 +67,7 @@ def get_binedges_from_keys(eta, pT, pT_corr_factor_dict):
     NOTE: Eta bin edges are always positive.
     """
     abs_eta = abs(eta)
-    key_ls = list(pT_corr_factor_dict.keys())
+    key_ls = list(pT_corr_factor_dict['dpTOverpT_vs_qd0'].keys())
     for key in key_ls:
         eta_min, eta_max, pT_min, pT_max = parse_etapT_key(key)
         within_eta = (eta_min < abs_eta) and (abs_eta < eta_max)
@@ -114,6 +118,7 @@ def correct_muon_pT(eta, pT, q, d0,
     d0 : float
         The signed transverse impact parameter of the muon.
     pT_corr_factor_dict : dict
+        FIXME: Contains new structure! dict(dict)
         Contains the best-fit parameters to correct muon pT. 
         Key : str
             The bin that muon lands in: e.g., '0.0eta0.2_10.0pT14.0'

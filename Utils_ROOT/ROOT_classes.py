@@ -300,3 +300,26 @@ def get_normcoord_from_screenshot(canv_width, canv_height,
     y_min = bot_offset / float(canv_height)
     y_max = 1 - (top_offset / float(canv_height))
     return (x_min, x_max, y_min, y_max)
+
+def get_coord_ls_from_TGraph(gr, axis):
+    """Return a list of x- or y-coordinates of gr.
+    
+    Parameters
+    ----------
+    gr : TGraph
+    axis : str
+        "x" or "y"
+    """
+    n_pts = gr.GetN()
+    if axis.lower() in "x":
+        pt_ls = [gr.GetPointX(pt) for pt in range(n_pts)]
+    elif axis.lower() in "y":
+        pt_ls = [gr.GetPointY(pt) for pt in range(n_pts)]
+    else:
+        raise ValueError(f"Axis type ({type(axis)}) should be in ['x', 'y'].")
+    return pt_ls
+
+def get_xcoord_ls_from_TGraph(gr):
+    """Return a list of x-coordinates of gr (TGraph)."""
+    n_pts = gr.GetN()
+    return [gr.GetPointX(pt) for pt in range(n_pts)]

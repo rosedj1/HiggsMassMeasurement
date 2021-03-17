@@ -9,8 +9,8 @@ NOTE: infile_name_template should have globbing characters
 (e.g. '*') to grab all matching files.
 
 Author: Jake Rosenzweig
-Created: <2021-02-05
-Updated: 2021-03-10
+Created: Before Halloween of 2020 - at Aunt Rachel's
+Updated: 2021-03-15
 """
 import pickle
 import os
@@ -20,9 +20,9 @@ from Utils_Python.Utils_Files import open_pkl, save_to_pkl, check_overwrite
 #-----------------------#
 #--- User Parameters ---#
 #-----------------------#
-infile_name_template = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/pickles/MC2016_DY_dpTOverpT_1E6events/MC2016_DY_dpTOverpT_1E6events*sigs.pkl"
+infile_name_template = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/pickles/MC2016DY_individKB2D_withitergaussfitsonKB3Ds/MC2016DY_individKB2D_withitergaussfitsonKB3Ds_*eta*pT*.pkl"
 outdir = None    # If None, then put new dict in same place as src dicts.
-namebase = "MC2016_DY_dpTOverpT_1E6events_12qd0reg_1000minmu_3itergausfit_2p5sigs.pkl"  # If None, then name of combined pickle will be: 'combined_dcts.pkl'
+namebase = "MC2016DY_individKB2D_withitergaussfitsonKB3Ds_fullstats.pkl"  # If None, then name of combined pickle will be: 'combined_dcts.pkl'
 overwrite = 0
 #------------------------#
 #--- Script Functions ---#

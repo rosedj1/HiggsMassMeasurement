@@ -1,3 +1,5 @@
+"""This module is under construction."""
+
 class SlurmManager:
     """A class to handle the details of working with SLURM.
     FIXME: Not implemented yet.
@@ -28,6 +30,17 @@ class SLURMSubmitter:
     """
     def __init__(self):
         self.directive_dct = {}
+        self.staple_text = """
+            pwd; hostname; date
+            source ~/.bash_profile
+            cd /blue/avery/rosedj1/HiggsMassMeasurement/
+            conda activate my_root_env
+            source setup.sh
+            echo "Packages loaded."
+
+            cd /blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/
+            echo "Starting script..."
+        """
 
     def prep_directives(self, job_name, output_txt, output_err, email, time="08:00:00", acct="avery", burst=False, mem=1, partition="hpg2-compute", nodes=1):
         """Store SLURM directives."""
@@ -67,6 +80,20 @@ class SLURMSubmitter:
             Then do: 
                 cmdtup = ("ls -l", "python code.py")
             
+
+            pwd; hostname; date
+            source ~/.bash_profile
+            cd /blue/avery/rosedj1/HiggsMassMeasurement/
+            conda activate my_root_env
+            source setup.sh
+            echo "Packages loaded."
+
+            cd /blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/
+            echo "Starting script..."
+            time python /blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/submit_kb2d_itergaussfits.py
+            # time python derive_pTcorrfactors_from_Hmumu_sample.py > /cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/Output/DeriveCorrections/2018Hmumu/output_Hmumu_derivepTcorr_fullstats_synchwithXunwuetabins_50qd0reg.txt
+            echo "Script finished!"
+
         """
         assert all(d is not None for d in self.directive_dct.values())
         check_overwrite(outpath, overwrite)
@@ -76,11 +103,6 @@ class SLURMSubmitter:
             for cmd in cmdtup:
                 f.write(f" ")
             
-
-    import subprocess
-    cmd = ["sed", "-i", f"s|{old}|{new}|g", script]
-        touch out_script_path
-
     def submit_script(self):
         """"""
         pass

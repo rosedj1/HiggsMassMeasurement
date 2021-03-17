@@ -107,7 +107,9 @@ class MyMuonCollection:
         # self.kinbin3d_plot_ls = []   # KinBin3D distributions, like qd0 and dpTOverpT.
 
         self.multigraph_ls = []
+        self.multigraph_1divpT_ls = []
         self.multigraph_leg_ls = []
+        self.multigraph_1divpT_leg_ls = []
 
     def get_prod_modes_str(self):
         """Return a title string of all the production modes of the muons."""
@@ -151,6 +153,7 @@ class MyMuonCollection:
             If no pT_corr_factor_dict is given, will default to
             self.pT_corr_factor_dict.
         pT_corr_factor_dict : dict, optional
+        FIXME: Structure got updated. This dict put inside other dict.
             Example:
             {'1.25eta1.5_75.0pT100.0': {
                 'intercept': 0.0035652354181878324,
@@ -177,7 +180,7 @@ class MyMuonCollection:
                 raise ValueError(msg)
             # If one was not supplied, use the one that already exists.
             if pT_corr_factor_dict is None:
-                pT_corr_factor_dict = self.pT_corr_factor_dict
+                pT_corr_factor_dict = self.pT_corr_factor_dict["dpTOverpTscaled_vs_qd0"] if scale_by_1divpT else self.pT_corr_factor_dict["dpTOverpT_vs_qd0"]
             if use_GeoFit_algo:
                 msg = "Using GeoFit Correction Algorithm"
                 print_header_message(msg, pad_char="@", n_center_pad_chars=5)
@@ -296,7 +299,6 @@ class MyMuonCollection:
             self.m2mu_corr_ls = self.m4mu_corr_ls
         if do_mu_pT_corr:
             assert len(self.m4mu_ls) == len(self.m4mu_corr_ls)
-
 
     def sort_muons(self, eta_ls=None, pT_ls=None,
                    pT_corr_factor_dict=None,
@@ -576,8 +578,10 @@ class MyMuonCollection:
         """
         print("...Making TGraphs for all KinBin2Ds...")
         for kb2d in self.KinBin2D_dict.values():
-            kb2d.make_dpTOverpT_graph(color=4, do_fit=True)
+            kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_1divpT=False)
+            kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_1divpT=True)
             self.kinbin2d_graph_ls.extend([kb2d.gr_dpTOverpT_vs_qd0])
+            self.kinbin2d_graph_ls.extend([kb2d.gr_dpTOverpTscaled_vs_qd0])
 
     def make_inclusive_kinematic_plots(self):
         """Store self.hist_inclusive_ls as a list of histograms.
@@ -698,9 +702,10 @@ class MyMuonCollection:
         for kb3d in self.KinBin3D_dict.values():
             kb3d.overwrite_muon_info()
         
-    def make_pT_corr_dict(self):
+    def make_pT_corr_dict(self, use_1divpT_factors=False):
         """Store each KinBin2D's pT correction factors in a nested dict.
 
+        FIXME: Dict format was updated on 2021-03-15.
         NOTE: 
             - Each KinBin2D is associated with an (eta, pT) bin.
             - Each KinBin2D has its own set of pT corr factors (intecept, slope).
@@ -722,14 +727,21 @@ class MyMuonCollection:
                     ...
             }
         """
-        self.pT_corr_factor_dict = {}
+        self.pT_corr_factor_dict = {
+            "dpTOverpT_vs_qd0"       : {},
+            "dpTOverpTscaled_vs_qd0" : {}
+        }
+        if use_1divpT_factors:
+            kb2d_graph_type = "dpTOverpTscaled_vs_qd0"
+        else:
+            kb2d_graph_type = "dpTOverpT_vs_qd0"
         for kb2d in self.KinBin2D_dict.values():
             key = kb2d.get_bin_key(title_friendly=False)
-            self.pT_corr_factor_dict[key] = {
-                "intercept"     : kb2d.interc_and_err[0],
-                "intercept_err" : kb2d.interc_and_err[1],
-                "slope"         : kb2d.slope_and_err[0],
-                "slope_err"     : kb2d.slope_and_err[1],
+            self.pT_corr_factor_dict[kb2d_graph_type][key] = {
+                "intercept"     : kb2d.dpTOverpT_vs_qd0_fit_stats_dct[kb2d_graph_type]["interc_and_err"][0],
+                "intercept_err" : kb2d.dpTOverpT_vs_qd0_fit_stats_dct[kb2d_graph_type]["interc_and_err"][1],
+                "slope"         : kb2d.dpTOverpT_vs_qd0_fit_stats_dct[kb2d_graph_type]["slope_and_err"][0],
+                "slope_err"     : kb2d.dpTOverpT_vs_qd0_fit_stats_dct[kb2d_graph_type]["slope_and_err"][1],
                 }
 
     def get_all_kb2d_plots(self, *kind):
@@ -790,39 +802,30 @@ class MyMuonCollection:
         # plot_ls.extend([kb.h_qd0 for kb in self.KinBin2D_dict.values()])
         # plot_ls.extend([kb.h_dpTOverpT for kb in self.KinBin2D_dict.values()])
         # plot_ls.extend([kb.gr_dpTOverpT_vs_qd0 for kb in self.KinBin2D_dict.values()])
-        all_plots = []
-        all_plots.extend(self.multigraph_ls)
-        all_plots.extend(self.hist_inclusive_ls)
-        all_plots.extend(self.get_all_kb2d_plots())
-        all_plots.extend(self.get_all_kb3d_plots())
+        all_plots = [
+            *self.multigraph_ls,
+            *self.multigraph_1divpT_ls,
+            *self.hist_inclusive_ls,
+            *self.get_all_kb2d_plots(),
+            *self.get_all_kb3d_plots(),
+        ]
         return all_plots
 
-    # def collect_KinBin2D_plots(self):
-    # DEPRECATED since self.make_KinBin2D_graphs() does this.
-    #     """Return all plots associated with the KinBin2D objects in this MuonCollection.
-        
-    #     Plots per KB2D:
-    #     - TGraphErros: dpT/pT vs. q*d0 (with a fit line)
-    #     """
-    #     self.kinbin2d_plot_ls.extend([kb2d.gr_dpTOverpT_vs_qd0 for kb2d in self.KinBin2D_dict.values()])
-
-    # def collect_KinBin3D_plots(self):
-    # DEPRECATED since self.do_3D_iter_gaus_fits() does this.
-    #     """Stores all plots associated with the KinBin3D objects in this MuonCollection.
-        
-    #     Plots per KB3D:
-    #     - RooPlot: Iterated Gaussian Fit of dpT/pT distribution.
-    #     - TH1F: q*d0 dist.
-    #     """
-    #     # self.kinbin3d_plot_ls.extend([kb3d.h_dpTOverpT for kb2d in self.KinBin2D_dict.values() for kb3d in kb2d.KinBin3D_dict.values()])
-    #     self.kinbin3d_plot_ls.extend([kb3d.frame_dpTOverpT for kb2d in self.KinBin2D_dict.values() for kb3d in kb2d.KinBin3D_dict.values()])
-    #     self.kinbin3d_plot_ls.extend([kb3d.h_qd0 for kb2d in self.KinBin2D_dict.values() for kb3d in kb2d.KinBin3D_dict.values()])
-    #     # self.kinbin3d_plot_ls.extend([kb3d.frame_qd0 for kb2d in self.KinBin2D_dict.values() for kb3d in kb2d.KinBin3D_dict.values()])
-
-    def make_multigraph(self, eta_min, eta_max):
+    def make_multigraph(self, eta_min, eta_max, scale_by_1divpT=False):
         """
         Combine all KinBin2D TGraphs of a given eta bin into one plot.
-        Append mg to self.multigraph_ls.
+        Append mg to either:
+        - self.multigraph_ls, or
+        - self.multigraph_1divpT_ls.append(mg).
+
+        Parameters
+        ----------
+        eta_min : float
+            Min eta value of all KB2Ds to be plotted.
+        eta_max : float
+            Max eta value of all KB2Ds to be plotted.
+        scale_by_1divpT : bool
+            If True, make dpT/pT * 1/<pT> vs. q*d0 plot for all KB2Ds.
         """
         mg = ROOT.TMultiGraph(f"{eta_min}eta{eta_max}","")
         mg.SetMinimum(-0.04)
@@ -835,8 +838,12 @@ class MyMuonCollection:
             if (eta_min != kb2d.eta_min) or (eta_max != kb2d.eta_max):
                 continue
             ct += 1
-            gr = kb2d.gr_dpTOverpT_vs_qd0
-            gr.fit_line = kb2d.fit_line
+            if scale_by_1divpT:
+                gr = kb2d.gr_dpTOverpTscaled_vs_qd0
+                gr.fit_line = kb2d.fit_line_scaled
+            else:
+                gr = kb2d.gr_dpTOverpT_vs_qd0
+                gr.fit_line = kb2d.fit_line
             gr.eta_min = eta_min
             gr.eta_max = eta_max
             gr.pT_min = kb2d.pT_min
@@ -859,14 +866,20 @@ class MyMuonCollection:
             # The `0` allows for error bars outside of range to still plot.
             # The `p` plots the points.
             mg.Add(gr, "0p")
-        self.multigraph_ls.append(mg)
+        if scale_by_1divpT:
+            self.multigraph_1divpT_ls.append(mg)
+        else:
+            self.multigraph_ls.append(mg)
 
-    def make_all_multigraphs(self, eta_ls):
-        """Make a multigraph (dpT/pT vs. q*d0) for each eta bin in eta_ls."""
+    def make_all_multigraphs(self, eta_ls, scale_by_1divpT=False):
+        """
+        Make a multigraph (dpT/pT vs. q*d0) for each eta bin in eta_ls.
+        If scale_by_1divpT, then make dpT/pT * 1/<pT> vs. q*d0 plots.
+        """
         for eta_min, eta_max in zip(eta_ls[:-1], eta_ls[1:]):
-            self.make_multigraph(eta_min, eta_max)
+            self.make_multigraph(eta_min, eta_max, scale_by_1divpT=scale_by_1divpT)
 
-    def draw_mg_and_fits(self, mg):
+    def draw_mg_and_fits(self, mg, scale_by_1divpT=False):
         """Draw one TMultiGraph and all corresponding fit lines."""
         gr_ls = list(mg.GetListOfGraphs())
         fitline_ls = [gr.fit_line for gr in gr_ls]
@@ -897,18 +910,24 @@ class MyMuonCollection:
         # Turn stats box back on.
         # ROOT.gStyle.SetOptStat("iouRMe")
         # ROOT.gStyle.SetOptFit(1)
-        for fit,gr in zip(fitline_ls, gr_ls):
+        for fit, gr in zip(fitline_ls, gr_ls):
             interc = fit.GetParameter(0)
             slope = fit.GetParameter(1)
             eqn  = r"%.0f < p_{T} < %.0f GeV: " % (gr.pT_min, gr.pT_max)
-            eqn += r"#Deltap_{T}/p_{T} = %.3E + (%.3f/cm)*qd_{0}" % (interc, slope)
+            if scale_by_1divpT:
+                eqn += r"#Deltap_{T}/p_{T} #upoint 1/<p_{T}> = %.3E/GeV + (%.3f/[cm#upointGeV]) #upoint qd_{0}" % (interc, slope)
+            else:
+                eqn += r"#Deltap_{T}/p_{T} = %.3E + (%.3f/cm)#upointqd_{0}" % (interc, slope)
             txt = pave.AddText(eqn)
             txt.SetTextColor(fit.text_color)
             fit.Draw("same")
         pave.Draw("same")
-        self.multigraph_leg_ls.append(pave)
+        if scale_by_1divpT:
+            self.multigraph_1divpT_leg_ls.append(pave)
+        else:
+            self.multigraph_leg_ls.append(pave)
 
-    def draw_all_multigraphs(self, outpath_pdf, printer):
+    def draw_all_multigraphs(self, outpath_pdf, printer, scale_by_1divpT=False):
         """Draw a list of mgs and their fit lines to a canvas, 1 mg per page.
         
         Parameters
@@ -918,13 +937,18 @@ class MyMuonCollection:
         printer : CanvasPrinter
             Should have a canvas already attached.
         """
-        for mg in self.multigraph_ls:
-            self.draw_mg_and_fits(mg)
+        if scale_by_1divpT:
+            multigraph_ls = self.multigraph_1divpT_ls#.copy()
+        else:
+            multigraph_ls = self.multigraph_ls#.copy()
+        assert len(multigraph_ls) > 0
+        for mg in multigraph_ls:
+            self.draw_mg_and_fits(mg, scale_by_1divpT=scale_by_1divpT)
             printer.canv.Print(outpath_pdf)
             ROOT.gPad.Update()
         printer.make_plots_pretty(show_statsbox=True)
         # Now draw each multigraph's line, individually.
-        for mg in self.multigraph_ls:
+        for mg in multigraph_ls:
             gr_ls = list(mg.GetListOfGraphs())
             for gr in gr_ls:
                 # color = ct + 1 if ct >= 5 else ct
