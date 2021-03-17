@@ -21,7 +21,7 @@ Requires an input pickled dict of KinBin2Ds.
 - You can make the input dict from roch_vs_noroch_kb2dmaker_inclusivehistplotter.py
 
 Author: Jake Rosenzweig
-Updated: 2021-03-10
+Updated: 2021-03-15
 """
 from Utils_Python.Utils_Files import replace_value, make_dirs
 from d0_Studies.kinematic_bins import equal_entry_bin_edges_eta_mod1_wholenum, bin_edges_pT_sevenfifths_to1000GeV_wholenum
@@ -43,11 +43,12 @@ use_data_in_xlim = 1
 binned_fit = False
 switch_to_binned_fit = 20000
 
-job_name = "RC_vs_NoRC_itergaussfits_fullstats_final"
+job_name = "MC2016DY_kb2d_withitergaussfits"
 
-template_script_main = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/RochCorrAnalyzers/roch_vs_noroch_itergausfit_template.py"
+template_script_main = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/submit_singlekb2d_itergaussfits_template.py"
 # template_script_main = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/derive_pTcorrfactors_from_ggH_sample_template.py"
-template_script_slurm = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/RochCorrAnalyzers/roch_vs_noroch_slurm.sbatch"
+template_script_slurm = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/submit_to_slurm_template.sbatch"
+# template_script_slurm = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/RochCorrAnalyzers/roch_vs_noroch_slurm.sbatch"
 
 inpath_pkl = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/RochCorr/pickles/MC2018ggH_KB2D_onlymuoninfo_fullstats_pTbinsroundnumbers_75then200GeV.pkl"
 
@@ -62,9 +63,9 @@ delete_copies = False
 #------------------------#
 #--- Script functions ---#
 #------------------------#
-def make_eta_name(eta_ls):
+def make_eta_name(eta_range):
     """Parse a 2-element list of eta values into a title string."""
-    eta_str = f"{eta_ls[0]}eta{eta_ls[1]}"
+    eta_str = f"{eta_range[0]}eta{eta_range[1]}"
     eta_str = eta_str.replace(".", "p")
     return eta_str
 
@@ -73,7 +74,7 @@ def prep_area(dir_tup):
     for d in dir_tup:
         make_dirs(d)
 
-def make_filepaths_of_copies(eta_ls, template_main, template_slurm, outdir_copies):
+def make_filepaths_of_copies(eta_range, template_main, template_slurm, outdir_copies):
     """Return the full paths of copies of the main script and the slurm script.
     
     Parameters
@@ -81,7 +82,7 @@ def make_filepaths_of_copies(eta_ls, template_main, template_slurm, outdir_copie
     outdir_copies : str
         Path to directory where copies of scripts will be stored.
     """
-    eta_name = make_eta_name(eta_ls)
+    eta_name = make_eta_name(eta_range)
     suffix = f"_{eta_name}.py"
     filename_main = os.path.split(template_main)[1]
     filename_slurm = os.path.split(template_slurm)[1]
@@ -89,12 +90,12 @@ def make_filepaths_of_copies(eta_ls, template_main, template_slurm, outdir_copie
     fullpath_copy_slurm = os.path.join(outdir_copies, filename_slurm.replace(".sbatch", f"_copy_{eta_name}.sbatch"))
     return (fullpath_copy_main, fullpath_copy_slurm)
 
-def replace_vals_in_files(eta_ls, job_name, fullpath_new_main_script,
+def replace_vals_in_files(eta_range, job_name, fullpath_new_main_script,
                           outdir_pkl, outdir_pdf, outdir_txt,
                           template_tup=()):
-    """Replace values in scripts corresponding to eta_ls and submit new SLURM script.
+    """Replace values in scripts corresponding to eta_range and submit new SLURM script.
 
-    NOTE: Works for a 2-element eta_ls: [eta_min, eta_max]
+    NOTE: Works for a 2-element eta_range: [eta_min, eta_max]
 
     Parameters
     ----------
@@ -102,7 +103,7 @@ def replace_vals_in_files(eta_ls, job_name, fullpath_new_main_script,
         Contains file paths to all template files that will have their capital
         words replaced.
     """
-    eta_name = make_eta_name(eta_ls)
+    eta_name = make_eta_name(eta_range)
     # Replace phrases in slurm script.
     for template in template_tup:
         replace_value("REPLACE_OVERWRITE", overwrite, template)
@@ -112,7 +113,7 @@ def replace_vals_in_files(eta_ls, job_name, fullpath_new_main_script,
         replace_value("REPLACE_use_data_in_xlim", use_data_in_xlim, template)
         replace_value("REPLACE_binned_fit", binned_fit, template)
         replace_value("REPLACE_switch_to_binned_fit", switch_to_binned_fit, template)
-        replace_value("REPLACE_ETA_LS", eta_ls, template)
+        replace_value("REPLACE_ETA_LS", eta_range, template)
         replace_value("REPLACE_ETA_NAME", eta_name, template)
         replace_value("REPLACE_JOB_NAME", job_name, template)
         replace_value("REPLACE_NEW_SCRIPT", fullpath_new_main_script, template)
@@ -135,17 +136,17 @@ if __name__ == "__main__":
     for eta_min, eta_max in zip(full_eta_ls[:-1], full_eta_ls[1:]):
         # print(f"...Preparing work area.")
         prep_area([outdir_copies, outdir_pkl, outdir_txt, outdir_pdf])
-        eta_ls = [eta_min, eta_max]
-        fullpath_copy_main_script, fullpath_copy_slurm_script = make_filepaths_of_copies(eta_ls, template_script_main, template_script_slurm, outdir_copies)
+        eta_range = [eta_min, eta_max]
+        fullpath_copy_main_script, fullpath_copy_slurm_script = make_filepaths_of_copies(eta_range, template_script_main, template_script_slurm, outdir_copies)
         print_info(fullpath_copy_main_script, fullpath_copy_slurm_script, 
                    outdir_copies, outdir_pkl, outdir_txt, outdir_pdf)
         
         shutil.copyfile(template_script_main, fullpath_copy_main_script)
         shutil.copyfile(template_script_slurm, fullpath_copy_slurm_script)
-        replace_vals_in_files(eta_ls, job_name, fullpath_copy_main_script,
+        replace_vals_in_files(eta_range, job_name, fullpath_copy_main_script,
                           outdir_pkl, outdir_pdf, outdir_txt,
                           template_tup=(fullpath_copy_main_script, fullpath_copy_slurm_script))
-        print(f"...Submitting SLURM script for eta range: {eta_ls}")
+        print(f"...Submitting SLURM script for eta range: {eta_range}")
         output = subprocess.run(["sbatch", fullpath_copy_slurm_script])
         if delete_copies:
             print(f"[INFO] Removing copies of scripts.")

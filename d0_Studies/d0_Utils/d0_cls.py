@@ -66,9 +66,22 @@ class KinBin2D:
         self.iters = None
         self.is_qd0_binned = None
         self.fit_func = None
-        self.interc_and_err = (None, None)
-        self.slope_and_err = (None, None)
-        self.equalentry_qd0_bin_edges = None
+        
+        self.dpTOverpT_vs_qd0_fit_stats_dct = {
+            "dpTOverpT_vs_qd0"       : {"interc_and_err" : None,
+                                        "slope_and_err"  : None,
+                                        "chi2"           : None,
+                                        "NDF"            : None},
+            "dpTOverpTscaled_vs_qd0" : {"interc_and_err" : None,
+                                        "slope_and_err"  : None,
+                                        "chi2"           : None,
+                                        "NDF"            : None},
+        }
+        # self.interc_and_err = (None, None)
+        # self.slope_and_err = (None, None)
+        # self.chi2 = None
+        # self.NDF = None
+        # self.equalentry_qd0_bin_edges = None
         self.use_mu_pT_corr = None
 
         self.fit_stats_dict_dpTOverpT = None
@@ -194,9 +207,11 @@ class KinBin2D:
             self.h_qd0.Fill(mu.charge * mu.d0)
             self.h_dpTOverpT.Fill(mu.dpTOverpT)
 
-    def make_dpTOverpT_graph(self, color=4, do_fit=True):
-        """Store a TGraph of dpT/pT vs. qd0 using the stored muons in this KinBin.
-        Also draw and store a best-fit line on the graph.
+    def make_dpTOverpT_graph(self, color=4, do_fit=True, scale_by_1divpT=False):
+        """
+        Store a TGraph of dpT/pT vs. qd0 using the stored muons in this KinBin.
+        Draw and store a best-fit line on the graph.
+        NOTE: If scale_by_1divpT, then draw dpT/pT * 1/avg(pT) vs. qd0
         """
         latex_cut_str = self.make_latex_bin_cut_str()
         print(f"...Building TGraph for bin: {latex_cut_str}")
@@ -204,10 +219,16 @@ class KinBin2D:
         x_vals, y_vals, x_err_vals, y_err_vals = [], [], [], []
         if (self.is_qd0_binned):
             y_label = r"#mu_{Gauss}(#Deltap_{T}/p_{T})"
-            for kb3d in self.KinBin3D_dict.values():
-                x_vals.append(kb3d.qd0_avg)
-                y_vals.append(kb3d.fit_stats_dict_dpTOverpT["mean_ls"][-1])
-                y_err_vals.append(kb3d.fit_stats_dict_dpTOverpT["mean_err_ls"][-1])
+            kb3d_ls = self.KinBin3D_dict.values()
+            x_vals = [kb3d.qd0_avg for kb3d in kb3d_ls]
+            y_vals = [kb3d.fit_stats_dict_dpTOverpT["mean_ls"][-1] for kb3d in kb3d_ls]
+            y_err_vals = [kb3d.fit_stats_dict_dpTOverpT["mean_err_ls"][-1] for kb3d in kb3d_ls]
+            if scale_by_1divpT:
+                avg_pT_ls = [np.mean([mu.pT for mu in kb3d.muon_ls]) for kb3d in kb3d_ls]
+                avg_pT_seom_ls = [np.std([mu.pT for mu in kb3d.muon_ls])/len(kb3d.muon_ls) for kb3d in kb3d_ls]
+                assert len(y_vals) == len(avg_pT_ls) == len(y_err_vals)
+                y_vals, y_err_vals = prop_err_x_div_y(y_vals, avg_pT_ls, y_err_vals, avg_pT_seom_ls)
+                y_label += r" #upoint #frac{1}{<p_{T}>}"
         else:
             x_vals = self.get_qd0_ls()
             y_vals = self.get_dpTOverpT_ls()
@@ -234,23 +255,30 @@ class KinBin2D:
         gr.SetTitle(graph_title)
         gr.GetXaxis().SetTitle(r"qd_{0} [cm]")
         gr.GetYaxis().SetTitle(y_label)
-        gr.GetXaxis().SetLimits(-0.005, 0.005)
-        gr.GetYaxis().SetRangeUser(-0.04, 0.04)
-        self.gr_dpTOverpT_vs_qd0 = gr
-        #         gr.GetYaxis().SetTitleOffset(1.5)
-        # Must do 2 Draw() calls to set TGraphs properly...
-        # if (draw):
-        #     gr.Draw("AP")
-        
-        if (do_fit):
-            self.fit_line = self.fit_graph_with_line(self.gr_dpTOverpT_vs_qd0)
+        gr.GetXaxis().SetLimits(-0.006, 0.006)
+        if scale_by_1divpT:
+            self.gr_dpTOverpTscaled_vs_qd0 = gr
+            gr.GetYaxis().SetRangeUser(-0.003, 0.003)
+            if do_fit:
+                self.fit_line_scaled = self.fit_graph_with_line(gr)
+        else:
+            self.gr_dpTOverpT_vs_qd0 = gr
+            gr.GetYaxis().SetRangeUser(-0.04, 0.04)
+            if do_fit:
+                self.fit_line = self.fit_graph_with_line(gr)
 
-    def fit_graph_with_line(self, gr):
-        """Return a linear fit function and after fitting it to graph."""
+    def fit_graph_with_line(self, gr, scale_by_1divpT=False):
+        """Return a linear fit function and after fitting it to graph.
+        
+        FIXME:
+        - There may be a ROOT internal name conflict in ROOT 
+        """
         if (self.is_qd0_binned):
-            # FIXME
             x_min = -0.006# Make this automatic: min([gr.GetPointX(2)])
             x_max = 0.006
+            # n_pts = gr.GetN()
+            # x_min = min([gr.GetPointX(pt) for pt in range(n_pts)])
+            # x_max = max([gr.GetPointX(pt) for pt in range(n_pts)])
         else:
             qd0_ls = self.get_qd0_ls()
             x_min = min(qd0_ls)
@@ -268,10 +296,14 @@ class KinBin2D:
         # The option 'S' saves the fit results into a pointer.
         # r.gStyle.SetOptFit(111)
         fit_func.Draw("same")
-        self.interc_and_err = (fit_func.GetParameter(0), fit_func.GetParError(0))
-        self.slope_and_err = (fit_func.GetParameter(1), fit_func.GetParError(1))
-        self.chi2 = fit_func.GetChisquare()
-        self.NDF = fit_func.GetNDF()
+        if scale_by_1divpT:
+            key = "dpTOverpTscaled_vs_qd0"
+        else:
+            key = "dpTOverpT_vs_qd0"
+        self.dpTOverpT_vs_qd0_fit_stats_dct[key]["interc_and_err"] = (fit_func.GetParameter(0), fit_func.GetParError(0))
+        self.dpTOverpT_vs_qd0_fit_stats_dct[key]["slope_and_err"]  = (fit_func.GetParameter(1), fit_func.GetParError(1))
+        self.dpTOverpT_vs_qd0_fit_stats_dct[key]["chi2"]  = fit_func.GetChisquare()
+        self.dpTOverpT_vs_qd0_fit_stats_dct[key]["NDF"]  = fit_func.GetNDF()
         return fit_func
 
     def make_empty_equalentry_KinBin3Ds(self, regions, algo=("normal", -1), verbose=False, title_friendly=False):
@@ -878,9 +910,11 @@ class GraphLineKinBin3D:
     """
     One of the lines drawn on a graph. Contains all the info that went into building this line. 
 
-    NOTE: This entire class should focus on the kinbin_obj being a dictionary
-        This provides MUCH better organization and much less 
-        automatic figuring out how everything fits together.
+    NOTE:
+    - This entire class should focus on the kinbin_obj being a dictionary
+      This provides MUCH better organization and much less 
+      automatic figuring out how everything fits together.
+    - Uses plt for plotting.
     """
     import numpy as np
     # Eventually just give this a list of KinBin3D obj.

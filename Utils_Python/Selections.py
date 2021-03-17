@@ -394,7 +394,7 @@ def build_muons_from_DY_event(evt, evt_num, eta_bin=[0, 2.4], pT_bin=[5, 200],
     assert len(mu_ls) == 2
     return tuple(mu_ls)
                               
-def build_muons_from_HZZ4mu_event(t, evt_num, eta_bin=[0,2.4], pT_bin=[5,200], d0_max=1):
+def build_muons_from_HZZ4mu_event(t, evt_num, eta_bin=[0,2.4], pT_bin=[5,200], d0_max=1, verbose=False):
     """Return a 4-tuple of MyMuon objects which pass muon selections in H->ZZ->4mu sample.
 
     NOTE: This function works for post-UFHZZ4L analyzer, not lite skim.
@@ -419,15 +419,14 @@ def build_muons_from_HZZ4mu_event(t, evt_num, eta_bin=[0,2.4], pT_bin=[5,200], d
     If event does NOT pass selections: 
         4-tuple of NoneType (None, None, None, None).
     """
-    t.GetEntry(evt_num)
     bad_muons = (None, None, None, None)
+    # t.GetEntry(evt_num)
     
     if not passed_Higgs_evt_selection(t):
         return bad_muons
 
     rec_ndcs_ls = list(t.lep_Hindex)  # Elements that correspond to 4 leptons which build Higgs candidate.
     lep_genindex_ls = list(t.lep_genindex)
-    # fsrPhotons_lepindex_ls = list(t.fsrPhotons_lepindex)
 
     # if not validate_lep_genindex(lep_genindex_ls):
     #     continue
@@ -436,21 +435,8 @@ def build_muons_from_HZZ4mu_event(t, evt_num, eta_bin=[0,2.4], pT_bin=[5,200], d
     gen_ndcs_ls = get_ndcs_gen(rec_ndcs_ls, lep_genindex_ls)
     # Now gen_ndcs_ls should be the same length as rec_ndcs_ls:
     assert len(rec_ndcs_ls) == len(gen_ndcs_ls)
-
-    rec_ID_ls = list(t.lep_id)
-    gen_ID_ls = list(t.GENlep_id)
-    # if not check_matched_IDs(rec_ndcs_ls, gen_ndcs_ls, rec_ID_ls, gen_ID_ls):
-    #     continue
-    # if not check_2_OSSF_muon_pairs(gen_ID_ls):
-    #     continue
-    # if not check_2_OSSF_muon_pairs(rec_ID_ls):
-    #     continue
-
-    # Event looks good so far. 
-    # Now check kinematics of muons.
+    
     mu_ls = make_muon_ls(t, rec_ndcs_ls, gen_ndcs_ls)
-    # if t.nFSRPhotons > 0:
-    #     mu_ls = [account_for_FSR(mu) for mu in mu_ls]
 
     all_muons_passed = apply_kinem_selections(mu_ls, eta_bin=eta_bin, pT_bin=pT_bin, d0_max=d0_max)
     if not all_muons_passed:
@@ -463,7 +449,7 @@ def build_muons_from_HZZ4mu_event(t, evt_num, eta_bin=[0,2.4], pT_bin=[5,200], d
     assert len(mu_ls) == 4
     return tuple(mu_ls)
 
-def build_muons_from_Hmumu_event(t, evt_num, eta_bin=[0,2.4], pT_bin=[20,200], d0_max=1):
+def build_muons_from_Hmumu_event(t, evt_num, eta_bin=[0,2.4], pT_bin=[20,200], d0_max=1, verbose=False):
     """Return a 2-tuple of MyMuon objects which pass muon selections in H->2mu sample.
     
     Parameters
