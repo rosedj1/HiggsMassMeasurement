@@ -1,4 +1,4 @@
-"""This module is under construction."""
+from Utils_Python.Utils_Files import check_overwrite
 
 class SlurmManager:
     """A class to handle the details of working with SLURM.
@@ -23,52 +23,94 @@ class SlurmManager:
         pass
 
 class SLURMSubmitter:
-    """FIXME: Class not complete yet.
+    """Generate a new SLURM script."""
 
-    The idea is to have this class create a SLURM script
-    and submit it for the user.
-    """
-    def __init__(self):
+    def __init__(self, verbose=False):
         self.directive_dct = {}
-        self.staple_text = """
+        self.prescript_text = """
             pwd; hostname; date
             source ~/.bash_profile
             cd /blue/avery/rosedj1/HiggsMassMeasurement/
             conda activate my_root_env
             source setup.sh
-            echo "Packages loaded."
-
+            echo 'Packages loaded.'
             cd /blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/
-            echo "Starting script..."
+            echo 'Starting script...'
         """
+        self.postscript_text = """
+            echo 'Script finished!'
+        """
+        self.verbose = verbose
 
-    def prep_directives(self, job_name, output_txt, output_err, email, time="08:00:00", acct="avery", burst=False, mem=1, partition="hpg2-compute", nodes=1):
-        """Store SLURM directives."""
+    def prep_directives(self, job_name, output_txt, email="rosedj1@ufl.edu", time="08:00:00", acct="avery", burst=False, mem=1, partition="hpg2-compute", nodes=1):
+        """Store SLURM directives.
+        
+        Parameters
+        ----------
+        job_name : str
+            The name of the job displayed when doing `squeue -u <username>`.
+        output_txt : str
+            The full path to the stdout and stderr files.
+        email : str
+            Email address to which SLURM sends alerts.
+        time : str
+            Max length of job, using this format: hh:mm:ss
+        acct : str
+            Use resources on this group account.
+        burst : bool
+            If True, use 9x more resources from your group, if available.
+        mem : str
+            RAM to use (GB).
+        partition : str
+            Send jobs to this partition on HPG.
+            Options: 'hpg2-compute', 'bigmem'
+        nodes : str
+            Number of nodes (servers, computers) to use.
+        """
         self.directive_dct["job-name"] = job_name
-        self.directive_dct["output"] = output_txt if ".log" in output_txt else f"{output_txt}.log"
-        self.directive_dct["error"] = job_%j_error.log
-        self.directive_dct["mail-type"] = ALL
-        self.directive_dct["mail-user"] = rosedj1@ufl.edu
-        self.directive_dct["time"] = 12:00:00
-        self.directive_dct["account"] = avery
-        self.directive_dct["qos"] = avery
-        self.directive_dct["mem"] = 4gb
+        self.directive_dct["output"] = output_txt
+        self.directive_dct["error"] = f"{output_txt.split('.')[0]}_error.log"
+        self.directive_dct["mail-type"] = "ALL"
+        self.directive_dct["mail-user"] = email
+        self.directive_dct["time"] = time
+        self.directive_dct["account"] = acct
+        self.directive_dct["qos"] = "avery-b" if burst else "avery"
+        self.directive_dct["mem"] = mem
         self.directive_dct["partition"] = partition
         self.directive_dct["nodes"] = nodes
 
     def write_directives(self, f):
-        """Write stored directives to file `f`."""
+        """Write stored directives to file object `f`."""
         f.write("#!/bin/bash\n")
         for dctv, val in self.directive_dct.items():
             f.write(f"#SLURM --{dctv}={val}\n")
         f.write("\n")
 
-    def make_slurm_script(self, outpath, cmdtup, overwrite=False):
-        """Write SLURM script to outpath that executes commands in `cmdtup`.
+    def write_cmds(self, cmdtup, f):
+        """Write commands in `cmdtup` to file object `f`.
+
+        cmdtup : tuple of str
+            Each element corresponds to one line of commands.
+        """
+        if isinstance(cmdtup, str):
+            # Put into a tuple so the string won't be split up.
+            cmdtup = (cmdtup, "")
+        for cmd in cmdtup:
+            self.write_text(cmd, f, newline=True)
+
+    def write_text(self, text, f, newline=True):
+        """Write `text` to file object `f`, followed by newline."""
+        nl = "\n" if newline else ""
+        f.write(f"{text}{nl}")
+
+    def make_slurm_script(self, slurm_outpath, cmdtup, overwrite=False):
+        """
+        Write SLURM script to `slurm_outpath` that executes commands in `cmdtup`.
+        Return 0 on success.
         
         Parameters
         ----------
-        outpath : str
+        slurm_outpath : str
             The absolute path of the output SLURM script.
         cmdtup : tuple of strings
             A tuple of commands to execute.
@@ -79,29 +121,36 @@ class SLURMSubmitter:
                 say you want to do `ls -l` followed by `python code.py`
             Then do: 
                 cmdtup = ("ls -l", "python code.py")
-            
-
-            pwd; hostname; date
-            source ~/.bash_profile
-            cd /blue/avery/rosedj1/HiggsMassMeasurement/
-            conda activate my_root_env
-            source setup.sh
-            echo "Packages loaded."
-
-            cd /blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/
-            echo "Starting script..."
-            time python /blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/submit_kb2d_itergaussfits.py
-            # time python derive_pTcorrfactors_from_Hmumu_sample.py > /cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/Output/DeriveCorrections/2018Hmumu/output_Hmumu_derivepTcorr_fullstats_synchwithXunwuetabins_50qd0reg.txt
-            echo "Script finished!"
-
         """
-        assert all(d is not None for d in self.directive_dct.values())
-        check_overwrite(outpath, overwrite)
-        output = shell_cmd(f"touch {outpath}")  # Doesn't delete file if file exists.
-        with open() as f:
-            f.write()
-            for cmd in cmdtup:
-                f.write(f" ")
+        try:
+            assert all(d is not None for d in self.directive_dct.values())
+        except AssertionError:
+            # User hasn't specified all directives yet.
+            print("[FAIL] You need to specify all directives.")
+            return 1
+        try:
+            assert len(cmdtup) > 0
+        except AssertionError:
+            print("[FAIL] You need to specify some commands.")
+            return 1
+        check_overwrite(slurm_outpath, overwrite)
+        # output = shell_cmd(f"touch {slurm_outpath}")  # Doesn't delete file if file exists.
+        with open(slurm_outpath, "w") as f:
+            if self.verbose:
+                print(f"Writing directives to SLURM script.")
+            self.write_directives(f)
+            if self.verbose:
+                print(f"Writing pre-script instructions to SLURM script.")
+            self.write_text(self.prescript_text, f)
+            if self.verbose:
+                print(f"Writing commands to SLURM script.")
+            self.write_cmds(cmdtup, f)
+            if self.verbose:
+                print(f"Writing post-script instructions to SLURM script.")
+            self.write_text(self.postscript_text, f)
+        if self.verbose:
+            print(f"SLURM script successfully written:\n{slurm_outpath}")
+        return 0
             
     def submit_script(self):
         """"""

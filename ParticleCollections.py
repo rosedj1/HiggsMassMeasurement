@@ -116,7 +116,8 @@ class MyMuonCollection:
         return ', '.join(self.prod_mode_ls)
 
     def extract_muons(self, infile_path, prod_mode,
-                            n_evts=-1, print_out_every=10000,
+                            n_evts=-1, n_evt_beg=None , n_evt_end=None,
+                            print_out_every=10000,
                             eta_min=0.0, eta_max=2.4,
                             pT_min=5, pT_max=1000,
                             d0_max=1, dR_max=None,
@@ -145,6 +146,10 @@ class MyMuonCollection:
         n_evts : int
             Number of events to scan over.
             Default of `-1` runs over all events.
+        n_evt_beg : int
+            Initial INCLUSIVE event number to run over.
+        n_evt_end : int
+            Final INCLUSIVE event number to run over.
         print_out_every : int
             Show which event number is being processed in batches
             of `print_out_every`.
@@ -171,6 +176,10 @@ class MyMuonCollection:
         """
         print(f"[INFO] Extracting muons from:\n{infile_path}")
 
+        specified_max_evts = (n_evts == -1)
+        specified_range = (n_evt_beg is not None and n_evt_end is not None)
+        assert not (specified_max_evts and specified_range), "Specify all events or range of events."
+
         if do_mu_pT_corr:
             print(f"...Correcting muon pT using supplied correction factors.")
             self.do_mu_pT_corr = True
@@ -185,7 +194,7 @@ class MyMuonCollection:
                 msg = "Using GeoFit Correction Algorithm"
                 print_header_message(msg, pad_char="@", n_center_pad_chars=5)
                 
-        print(f"...Opening root file:\n{infile_path}")
+        print(f"[INFO] ROOT file opened.")
         f = ROOT.TFile(infile_path, "read")
         dirname = list(f.GetListOfKeys())[0].GetName()
         if "Ana" in dirname:
@@ -194,25 +203,41 @@ class MyMuonCollection:
             t = f.Get("passedEvents")
         else:
             raise ValueError("Could not attach to TTree.")
+
         all_evts = t.GetEntries()
         if n_evts == -1:
+            print_header_message(msg, pad_char="-", n_center_pad_chars=5)
+            n_evt_beg = 0
+            n_evt_end = all_evts - 1
             n_requested_evts = all_evts
-        else:
+            msg = f"Running over ALL ({all_evts}) events."
+        elif n_evt_beg is None and n_evt_end is None:
+            print_header_message(msg, pad_char="-", n_center_pad_chars=5)
+            # User specified n_evts < max.
+            n_evt_beg = 0
+            n_evt_end = n_evts - 1
             n_requested_evts = n_evts
-        print(f"...Finding {n_requested_evts} events that pass selections...")
+            msg = f"Running over the first {n_requested_evts} events."
+        else:
+            # User specified range of events.
+            assert n_evt_beg is not None and n_evt_end is not None
+            n_requested_evts = n_evt_end - n_evt_beg + 1
+            print(f"Running over the specified range of event numbers: {n_evt_beg} -> {n_evt_end}")
+            
+        # print(f"...Finding {n_requested_evts} events that pass selections...")
+        print(f"...Running over events: ({n_evt_beg} -> {n_evt_end})")
 
         # Event loop.
         n_good_evts = 0
         time_start = time.perf_counter()
         # for evt_num, evt in enumerate(t):
-        for evt_num in range(all_evts):
+        for evt_num in range(n_evt_beg, n_evt_end + 1):
             t.GetEntry(evt_num)
             if evt_num % print_out_every == 0:
                 time_end = time.perf_counter()
                 dt = time_end - time_start
                 print(f"  Running over evt: {evt_num}. Time since last print: {dt:.6f} s")
                 time_start = time.perf_counter()
-            # mu_tup = build_muons_from_process(prod_mode, evt, evt_num,
             mu_tup = build_muons_from_process(prod_mode, t, evt_num,
                                               eta_bin=[eta_min, eta_max],
                                               pT_bin=[pT_min, pT_max],
@@ -290,8 +315,8 @@ class MyMuonCollection:
                             )
             n_good_evts += 1
             # if n_good_evts >= n_requested_evts:
-            if evt_num + 1 >= n_requested_evts:
-                break
+            # if n_evt + 1 >= n_requested_evts:
+            #     break
         # End evt loop.
         check_n_muons(prod_mode, self.muon_ls, per_event=False)
         if prod_mode in ["H2mu", "H2e"]:
