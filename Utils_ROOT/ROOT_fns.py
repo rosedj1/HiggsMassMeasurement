@@ -771,3 +771,9 @@ def fill_dict_of_dpToverpT_hists(tree, hist_dict, hist_type,
         # End muon loop for this event. 
         assert muon1.passed_m2l == muon2.passed_m2l
     # End evt loop.
+
+def get_max_evts(rootfile, path_to_tree="Ana/passedEvents"):
+    """Return the total number of events in `tree` in `rootfile`."""
+    f = ROOT.TFile(rootfile)
+    t = f.Get(path_to_tree)
+    return t.GetEntries()

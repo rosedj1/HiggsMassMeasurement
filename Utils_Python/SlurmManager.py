@@ -1,3 +1,5 @@
+import shutil
+import subprocess
 from Utils_Python.Utils_Files import check_overwrite
 
 class SlurmManager:
@@ -42,7 +44,7 @@ class SLURMSubmitter:
         """
         self.verbose = verbose
 
-    def prep_directives(self, job_name, output_txt, email="rosedj1@ufl.edu", time="08:00:00", acct="avery", burst=False, mem=1, partition="hpg2-compute", nodes=1):
+    def prep_directives(self, job_name, output_txt, email="rosedj1@ufl.edu", time="08:00:00", acct="avery", burst=False, mem=(1, "gb"), partition="hpg2-compute", nodes=1):
         """Store SLURM directives.
         
         Parameters
@@ -59,8 +61,9 @@ class SLURMSubmitter:
             Use resources on this group account.
         burst : bool
             If True, use 9x more resources from your group, if available.
-        mem : str
-            RAM to use (GB).
+        mem : tuple of (float, str)
+            float : RAM to use.
+            str : Either 'gb' (Gigabytes) or 'mb' (Megabytes).
         partition : str
             Send jobs to this partition on HPG.
             Options: 'hpg2-compute', 'bigmem'
@@ -75,7 +78,7 @@ class SLURMSubmitter:
         self.directive_dct["time"] = time
         self.directive_dct["account"] = acct
         self.directive_dct["qos"] = "avery-b" if burst else "avery"
-        self.directive_dct["mem"] = mem
+        self.directive_dct["mem"] = f"{mem[0]}{mem[1]}"
         self.directive_dct["partition"] = partition
         self.directive_dct["nodes"] = nodes
 
@@ -83,7 +86,7 @@ class SLURMSubmitter:
         """Write stored directives to file object `f`."""
         f.write("#!/bin/bash\n")
         for dctv, val in self.directive_dct.items():
-            f.write(f"#SLURM --{dctv}={val}\n")
+            f.write(f"#SBATCH --{dctv}={val}\n")
         f.write("\n")
 
     def write_cmds(self, cmdtup, f):
@@ -127,12 +130,15 @@ class SLURMSubmitter:
         except AssertionError:
             # User hasn't specified all directives yet.
             print("[FAIL] You need to specify all directives.")
+            missing = [key for key, val in self.directive_dct.items() if val is None]
+            print(f"Missing these directives: {missing}")
             return 1
         try:
             assert len(cmdtup) > 0
         except AssertionError:
             print("[FAIL] You need to specify some commands.")
             return 1
+        slurm_outpath += ".sbatch" if ".sbatch" not in slurm_outpath else ""
         check_overwrite(slurm_outpath, overwrite)
         # output = shell_cmd(f"touch {slurm_outpath}")  # Doesn't delete file if file exists.
         with open(slurm_outpath, "w") as f:
@@ -148,10 +154,9 @@ class SLURMSubmitter:
             if self.verbose:
                 print(f"Writing post-script instructions to SLURM script.")
             self.write_text(self.postscript_text, f)
-        if self.verbose:
-            print(f"SLURM script successfully written:\n{slurm_outpath}")
+        print(f"SLURM script successfully written:\n{slurm_outpath}")
         return 0
             
-    def submit_script(self):
-        """"""
-        pass
+    def submit_script(self, slurm_path):
+        """Execute `sbatch <slurm_path>` in shell. Return CompletedProcess."""
+        return subprocess.run(["sbatch", slurm_path])

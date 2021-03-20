@@ -1,3 +1,4 @@
+import os
 import time
 import pickle
 import threading
@@ -9,7 +10,7 @@ from Utils_Python.Selections import (build_muons_from_HZZ4mu_event,
                                      build_muons_from_Hmumu_event,
                                      build_muons_from_DY_event)
 from Utils_Python.Utils_Physics import calc_Hmass
-from Utils_Python.Utils_Files import check_overwrite
+from Utils_Python.Utils_Files import check_overwrite, save_to_pkl
 from Utils_ROOT.ROOT_classes import make_TH1F
 from d0_Studies.d0_Utils.d0_cls import KinBin2D
 from d0_Studies.d0_Utils.d0_fns import (correct_muon_pT, parse_etapT_key,
@@ -116,20 +117,18 @@ class MyMuonCollection:
         return ', '.join(self.prod_mode_ls)
 
     def extract_muons(self, infile_path, prod_mode,
-                            n_evts=-1, n_evt_beg=None , n_evt_end=None,
-                            print_out_every=10000,
-                            eta_min=0.0, eta_max=2.4,
-                            pT_min=5, pT_max=1000,
-                            d0_max=1, dR_max=None,
-                            do_mu_pT_corr=False,
-                            force_zero_intercept=False,
-                            pT_corr_factor_dict=None,
-                            use_GeoFit_algo=False,
-                            verbose=False):
-        """Fill self.muon_ls with all MyMuon muons from infile_path
+                      n_evts=-1, n_evt_beg=None, n_evt_end=None,
+                      print_out_every=10000,
+                      eta_min=0.0, eta_max=2.4,
+                      pT_min=5, pT_max=1000,
+                      d0_max=1, dR_max=None,
+                      do_mu_pT_corr=False,
+                      force_zero_intercept=False,
+                      pT_corr_factor_dict=None,
+                      use_GeoFit_algo=False,
+                      verbose=False):
+        """Fill self.muon_ls with all MyMuon muons from `infile_path`
         which pass selections in `prod_mode`. Also fills self.m4mu_ls per event.
-
-        FIXME: UPDATE DOCSTRING.
 
         NOTE: 
         - self.m4mu_ls will also become self.m2mu_ls if prod_mode has 2 lep
@@ -997,33 +996,9 @@ class MyMuonCollection:
         newtree.Branch("m4mu", ptr_m4mu, "m4mu/F")
         newtree.Branch("m4mu_corr", ptr_m4mu_corr, "m4mu_corr/F")
 
-        # if write_geofit_vals:
-        #     ptr_m4mu_geofit_corr = array('f', [0.])
-        #     newtree.Branch("m4mu_geofit_corr", ptr_m4mu_geofit_corr, "m4mu_geofit_corr/F")
-        
         # Loop over stored values inside MyMuonCollection.
         print(f"...Filling m4mu and m4mu_corr values...")
-        # start = time.perf_counter()
         assert len(self.m4mu_ls) == len(self.m4mu_corr_ls) != 0
-        # if write_geofit_vals:
-        #     assert len(self.m4mu_ls) == len(self.m4mu_corr_geofit_ls)
-
-        # if write_geofit_vals:
-        #     for ct,(m4mu,m4mu_corr,m4mu_corr_geofit) in enumerate(zip(self.m4mu_ls, self.m4mu_corr_ls, self.m4mu_corr_geofit_ls)):
-        #         m4mu_diff = m4mu_corr - m4mu
-        #         m4mu_diff_geofit = m4mu_corr_geofit - m4mu
-        #         rel_diff = m4mu_diff / m4mu
-        #         rel_diff_geofit = m4mu_diff_geofit / m4mu
-
-        #         if (abs(rel_diff) > 0.05) or (abs(rel_diff_geofit) > 0.05):
-        #             print(f"event {ct}:")
-        #             print(f"  m4mu={m4mu}, m4mu_corr={m4mu_corr}, rel_diff={rel_diff}, rel_diff_geofit={rel_diff_geofit}")
-
-        #         ptr_m4mu[0] = m4mu
-        #         ptr_m4mu_corr[0] = m4mu_corr
-        #         ptr_m4mu_geofit_corr[0] = m4mu_corr_geofit
-        #         newtree.Fill()
-        # else:
         for ct,(m4mu,m4mu_corr) in enumerate(zip(self.m4mu_ls, self.m4mu_corr_ls)):
             m4mu_diff = m4mu_corr - m4mu
             rel_diff = m4mu_diff / m4mu
@@ -1036,9 +1011,20 @@ class MyMuonCollection:
             ptr_m4mu_corr[0] = m4mu_corr
             newtree.Fill()
         print(f"  Number of good events found: {len(self.m4mu_ls)}")
-        # end = time.perf_counter()
-        # print(f"  (Took {end - start:.4f} seconds.)")
 
         # Save tree and close file.
         newtree.Write()
         outf.Close()
+
+    def save_KB2Ds_separate_dcts(self, outdir, file_prefix="", overwrite=False, verbose=False):
+        """
+        Saves each KB2D as its own standalone dict.
+        Useful when a MyMuonCollection is too large to hold in RAM.
+        """
+        for kb2d in self.KinBin2D_dict.values():
+            key = kb2d.get_bin_key(title_friendly=True)
+            if file_prefix[-1] not in "_":
+                file_prefix = f"{file_prefix}_" 
+            outpath = os.path.join(outdir, f"{file_prefix}{key}.pkl")
+            check_overwrite(outpath, overwrite=overwrite)
+            save_to_pkl(kb2d, outpath)

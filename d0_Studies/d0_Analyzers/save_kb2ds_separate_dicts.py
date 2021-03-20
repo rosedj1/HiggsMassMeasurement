@@ -38,9 +38,7 @@ def make_outpath(infile_path, subdir_name, file_suffix, key, overwrite):
 
 def main():
     muon_coll = open_pkl(infile_path)
-    for ct, kb2d in enumerate(muon_coll.KinBin2D_dict.values()):
-        # if ct == 1:
-        #     break
+    for kb2d in muon_coll.KinBin2D_dict.values():
         key = kb2d.get_bin_key(title_friendly=True)
         outpath = make_outpath(infile_path, subdir_name, file_suffix, key, overwrite)
         save_to_pkl(kb2d, outpath)
