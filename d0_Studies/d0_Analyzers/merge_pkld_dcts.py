@@ -43,6 +43,7 @@ if __name__ == "__main__":
     # Make combined dict of KinBin2Ds.
     comb = {}
     for f in pkl_file_ls:
+        print(f"...Opening: {os.path.basename(f)}")
         dct = open_pkl(f)
         comb.update(dct)
     save_to_pkl(comb, fullpath)

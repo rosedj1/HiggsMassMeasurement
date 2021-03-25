@@ -35,7 +35,6 @@ import numpy as np
 # Local imports.
 from Utils_Python.Utils_Files import check_overwrite, make_dirs, save_to_pkl
 from Utils_ROOT.Printer import CanvasPrinter
-from ParticleCollections import MyMuonCollection
 from d0_Studies.kinematic_bins import equal_entry_bin_edges_eta_mod1_wholenum, bin_edges_pT_sevenfifths_to1000GeV_wholenum
 #----- User Parameters -----#
 # Input.

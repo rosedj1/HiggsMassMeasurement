@@ -25,8 +25,9 @@ from vaex_Utils.vaex_dataframes import (vdf_MC_2017_DY, vdf_MC_2017_Jpsi, vdf_MC
                                         prepare_vaex_df, vaex_apply_masks)
 from d0_Studies.kinematic_bins import (equal_entry_bin_edges_eta_mod1)
 from d0_Utils.d0_dicts import label_LaTeX_dict
-from d0_Utils.d0_fns import make_binning_array, print_header_message
+from d0_Utils.d0_fns import make_binning_array
 
+from Utils_Python.printing import print_header_message
 from PyUtils.Utils_Physics import perc_diff
 from PyUtils.Utils_Files import makeDirs, make_str_title_friendly, check_overwrite
 from PyUtils.Utils_Plotting import hist_y_label, make_1D_dist, ncolsrows_from_nplots

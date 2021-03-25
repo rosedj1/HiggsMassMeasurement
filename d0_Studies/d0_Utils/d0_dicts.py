@@ -34,6 +34,7 @@ color_dict_RooFit = {
     9:ROOT.kViolet+2,#'kPink', # looks like kRed
     10:ROOT.kOrange+2,#'kSpring', # looks like kGreen
     11:920,#'kGray',
+    12:ROOT.kBlack
     # 6:432,#'kCyan',
     # 7:616,#'kMagenta', # looks like kViolet
     # 8:840,#'kTeal', # looks like kCyan

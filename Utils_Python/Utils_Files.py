@@ -47,8 +47,9 @@ def open_pkl(inpkl_path):
         obj = pickle.load(p)
         return obj
 
-def save_to_pkl(obj, outpkl_path):
+def save_to_pkl(obj, outpkl_path, overwrite=False):
     """Write one obj to pickle."""
+    check_overwrite(outpkl_path, overwrite=overwrite)
     with open(outpkl_path, 'wb') as output:
         pickle.dump(obj, output, protocol=2)
     print(f"[INFO] Pickle file written:\n{outpkl_path}\n")

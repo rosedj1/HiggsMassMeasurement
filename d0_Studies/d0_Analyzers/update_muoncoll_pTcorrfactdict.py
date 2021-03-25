@@ -6,7 +6,7 @@ then it will be updated to be a 3-nested dict with:
 fit stats for the dpT/pT vs. q*d0 corrections and
 dpT/pT * 1/<pT> vs. q*d0 corrections.
 """
-
+import sys
 from Utils_Python.Utils_Files import open_pkl, save_to_pkl
 from d0_Studies.kinematic_bins import equal_entry_bin_edges_eta_mod1_wholenum #, bin_edges_pT_sevenfifths_to1000GeV_wholenum
 from Utils_ROOT.Printer import CanvasPrinter
@@ -21,8 +21,11 @@ mucoll = open_pkl(inpath_pkl)
 
 mucoll.pT_corr_factor_dict = {
     "dpTOverpT_vs_qd0" : {},
-    "dpTOverpTscaled_vs_qd0" : {}
+    "dpTOverpTscaled_vs_qd0" : {},  # This is dpT/pT * 1/<pT> vs. qd0.
+    "dpTOverpTtimesavgOf1divpT_vs_qd0" : {},
+    "dpTOverpTtimesmuOf1divpT_vs_qd0" : {}
 }
+sys.exit("Finish filling out avgOf1divpT and muOf1divpT parts.")
 for kb2d in mucoll.KinBin2D_dict.values():
     kb2d.dpTOverpT_vs_qd0_fit_stats_dct = {
         "dpTOverpT_vs_qd0"       : {"interc_and_err" : None,
@@ -35,6 +38,17 @@ for kb2d in mucoll.KinBin2D_dict.values():
                                     "chi2"           : None,
                                     "NDF"            : None
         },
+        # TODO: Finish filling out avgOf1divpT and muOf1divpT parts.
+        # "dpTOverpTtimesavgOf1divpT_vs_qd0" : {"interc_and_err" : None,
+        #                             "slope_and_err"  : None,
+        #                             "chi2"           : None,
+        #                             "NDF"            : None
+        # },
+        # "dpTOverpTtimesmuOf1divpT_vs_qd0" : {"interc_and_err" : None,
+        #                             "slope_and_err"  : None,
+        #                             "chi2"           : None,
+        #                             "NDF"            : None
+        # },
     }
     kb2d.dpTOverpT_vs_qd0_fit_stats_dct["dpTOverpT_vs_qd0"]["interc_and_err"] = (kb2d.fit_line.GetParameter(0), kb2d.fit_line.GetParError(0))
     kb2d.dpTOverpT_vs_qd0_fit_stats_dct["dpTOverpT_vs_qd0"]["slope_and_err"]  = (kb2d.fit_line.GetParameter(1), kb2d.fit_line.GetParError(1))

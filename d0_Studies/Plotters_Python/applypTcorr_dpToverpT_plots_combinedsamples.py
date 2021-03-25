@@ -26,12 +26,13 @@ from Utils_Python.Utils_Files import make_dirs, make_str_title_friendly, check_o
 from Utils_Python.Utils_Selections import Selector
 from Utils_Python.Utils_Physics import calc_dphi, calc_dR
 from Utils_Python.Plot_Styles_ROOT.tdrstyle_official import setTDRStyle, tdrGrid
+from Utils_Python.printing import print_header_message
 
 from Utils_ROOT.ROOT_StatsAndFits import RooFit_iterative_gaus_fit
 from Utils_ROOT.ROOT_fns import (fill_dpToverpT_hist, make_hist_lookuptable, 
                                  fill_dict_of_dpToverpT_hists)
 
-from d0_Studies.d0_Utils.d0_fns import calc_num_bins, print_header_message
+from d0_Studies.d0_Utils.d0_fns import calc_num_bins
 
 #-----------------------#
 #----- User Params -----#

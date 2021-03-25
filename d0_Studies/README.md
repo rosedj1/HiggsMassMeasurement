@@ -97,4 +97,8 @@ Fit a double-sided Crystal Ball (DSCB) function
 
    - Produces a pickled dictionary :
    `d0_Studies/pkl_and_csv/Testing/20200709_MC2017_combinesamples_applycorr_fullstats_2p00sigmas__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl`
-   - Works on only 1 year at a time. 
+   - Works on only 1 year at a time.
+
+## Location of Muon Pickles
+
+`/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/201*/DY`

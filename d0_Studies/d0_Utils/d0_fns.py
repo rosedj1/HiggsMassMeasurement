@@ -3,8 +3,9 @@ import math
 import numpy as np
 import pandas as pd
 from Utils_Python.Utils_Physics import perc_diff
+from Utils_Python.printing import print_header_message
 
-def get_pT_corr_factors(pT_corr_factor_dict, eta_min, eta_max, pT_min, pT_max, scale_by_1divpT=False):
+def get_pT_corr_factors(pT_corr_factor_dict, correction_type, eta_min, eta_max, pT_min, pT_max):
     """
     Return the slope and intercept from the best fit lines of 
     dpT/pT vs. q*d0 plots. 
@@ -12,12 +13,40 @@ def get_pT_corr_factors(pT_corr_factor_dict, eta_min, eta_max, pT_min, pT_max, s
     Parameters
     ----------
     pT_corr_factor_dict : dict
-        FIXME: Contains new structure.
-        Contains the best-fit parameters to correct muon pT. 
-        Key : str
-            The bin that muon lands in: e.g., '0.0eta0.2_10.0pT14.0'
-        Val : dict
-            e.g., {'intercept': -0.0001016, 'slope': 1.01}
+        {
+            'dpTOverpT_vs_qd0' : {
+                '0.0eta0.2_10.0pT14.0' : {
+                    'intercept'     : -0.000442,
+                    'intercept_err' : 4.791e-05,
+                    'slope'         : 1.186,
+                    'slope_err'     : 0.027
+                },
+                '0.0eta0.2_100.0pT150.0' : {
+                    'intercept'     : ...,
+                },
+                ...,
+            },
+            'dpTOverpTscaled_vs_qd0' : {
+                '0.0eta0.2_10.0pT14.0' : {
+                    ...
+                },
+                ...,
+            }
+            'dpTOverpTtimesavgOf1divpT_vs_qd0' : {
+                '0.0eta0.2_10.0pT14.0' : {
+                    ...
+                },
+                ...,
+            }
+            'dpTOverpTtimesmuOf1divpT_vs_qd0' : {
+                '0.0eta0.2_10.0pT14.0' : {
+                    ...
+                },
+                ...,
+            }
+        }
+    correction_type : str
+        One of the first-level keys in pT_corr_factor_dict.
     eta_min : float
         Lower edge of eta bin.
     eta_max : float
@@ -26,8 +55,6 @@ def get_pT_corr_factors(pT_corr_factor_dict, eta_min, eta_max, pT_min, pT_max, s
         Lower edge of pT bin.
     pT_max : float
         Upper edge of pT bin.
-    scale_by_1divpT : bool
-        FIXME: Not yet implemented below.
         
     Returns
     -------
@@ -37,9 +64,8 @@ def get_pT_corr_factors(pT_corr_factor_dict, eta_min, eta_max, pT_min, pT_max, s
         Intercept of best-fit line for that eta, pT bin.
     """
     key = f"{eta_min}eta{eta_max}_{pT_min}pT{pT_max}"
-    graph_type = "dpTOverpTscaled_vs_qd0" if scale_by_1divpT else "dpTOverpT_vs_qd0"
-    interc = pT_corr_factor_dict[graph_type][key]["intercept"]
-    slope = pT_corr_factor_dict[graph_type][key]["slope"]
+    interc = pT_corr_factor_dict[correction_type][key]["intercept"]
+    slope = pT_corr_factor_dict[correction_type][key]["slope"]
     return (slope, interc)
 
 def parse_etapT_key(key):
@@ -55,6 +81,28 @@ def parse_etapT_key(key):
     pT_min = float(pT_min_str)
     pT_max = float(pT_max_str)
     return (eta_min, eta_max, pT_min, pT_max)
+
+def get_pT_part(s):
+    """Return a float of the pT portion of str `s`.
+
+    Simple example:
+    s = '150p0pT200p0'
+    returns: 150.0
+
+    Complex example:
+    s = MC2018DY_individKB2D_updated_0p0eta0p2_100p0pT150p0.pkl
+    returns: '100.0'
+
+    # Make sure 'pT' is only found once in `s`.
+    # assert len(split_ls) == 2
+    """
+    # Make sure there is an underscore between eta and pT parts.
+    after_eta = s.split('eta')[-1]
+    after_eta_before_pT = after_eta.split('pT')[0]
+    assert '_' in after_eta_before_pT
+    pT_part_str = after_eta_before_pT.split('_')[-1]
+    pT_part = pT_part_str.replace('p', '.')
+    return float(pT_part)
 
 def get_binedges_from_keys(eta, pT, pT_corr_factor_dict):
     """Return the 4-tuple corresponding to the bin info
@@ -91,7 +139,9 @@ def make_key_from_binedges(binedge_tup):
     return f"{eta_min}eta{eta_max}_{pT_min}pT{pT_max}"
 
 def correct_muon_pT(eta, pT, q, d0, 
-                    pT_corr_factor_dict, detection="manual",
+                    pT_corr_factor_dict,
+                    correction_type=None,
+                    detection="manual",
                     force_zero_intercept=False,
                     use_GeoFit_algo=False,
                     eta_binedge_ls=None, pT_binedge_ls=None,
@@ -118,12 +168,43 @@ def correct_muon_pT(eta, pT, q, d0,
     d0 : float
         The signed transverse impact parameter of the muon.
     pT_corr_factor_dict : dict
-        FIXME: Contains new structure! dict(dict)
-        Contains the best-fit parameters to correct muon pT. 
-        Key : str
-            The bin that muon lands in: e.g., '0.0eta0.2_10.0pT14.0'
-        Val : dict
-            e.g., {'intercept': -0.0001016, 'slope': 1.01}
+        {
+            'dpTOverpT_vs_qd0' : {
+                '0.0eta0.2_10.0pT14.0' : {
+                    'intercept'     : -0.0004421981787913626,
+                    'intercept_err' : 4.7910538089331156e-05,
+                    'slope'         : 1.1863059538824643,
+                    'slope_err'     : 0.02705983833855872
+                },
+                '0.0eta0.2_100.0pT150.0' : {
+                    'intercept'     : ...,
+                },
+                ...,
+            },
+            'dpTOverpTscaled_vs_qd0' : {
+                '0.0eta0.2_10.0pT14.0' : {
+                    ...
+                },
+                ...,
+            }
+            'dpTOverpTtimesavgOf1divpT_vs_qd0' : {
+                '0.0eta0.2_10.0pT14.0' : {
+                    ...
+                },
+                ...,
+            }
+            'dpTOverpTtimesmuOf1divpT_vs_qd0' : {
+                '0.0eta0.2_10.0pT14.0' : {
+                    ...
+                },
+                ...,
+            }
+        }
+    correction_type : str
+        "dpTOverpT_vs_qd0"
+        "dpTOverpTscaled_vs_qd0"
+        "dpTOverpTtimesavgOf1divpT_vs_qd0"
+        "dpTOverpTtimesmuOf1divpT_vs_qd0"
     detection : str
         How to find bin edges: either 'auto' or 'manual'
         If 'auto', then the pT_corr_factor_dict keys will be parsed
@@ -172,9 +253,12 @@ def correct_muon_pT(eta, pT, q, d0,
     
     if all([x is not None for x in [eta_min, eta_max, pT_min, pT_max]]):
         # Bin edges seem OK. Proceed to corrections.
-        # FIXME: Need to also retrieve and implement uncertainties on slope
-        # and interc.
-        slope, interc = get_pT_corr_factors(pT_corr_factor_dict, eta_min, eta_max, pT_min, pT_max)
+        # FIXME: 
+        # Need to implement uncertainties on slope and interc.
+        # FIXME:
+        # Correction formula only works with
+        # correction_type='dpTOverpT_vs_qd0'.
+        slope, interc = get_pT_corr_factors(pT_corr_factor_dict, 'dpTOverpT_vs_qd0', eta_min, eta_max, pT_min, pT_max)
         C = slope * q * d0 if force_zero_intercept else interc + slope * q * d0
         delta_pT = C * pT * pT / 10000. if use_GeoFit_algo else pT * C
     else:
@@ -553,14 +637,6 @@ def account_for_underoverflow_entries(data, x_min, x_max, bin_edges):
         # back 1 bin.
         mod_data = np.clip(mod_data, min(mod_data), x_max - last_bin_width)
     return mod_data
-
-def print_header_message(msg, pad_char="-", n_center_pad_chars=5):
-    banner = pad_char * (len(msg) + n_center_pad_chars*2 + 2)
-    pad_char_short = pad_char * n_center_pad_chars
-    middle = f"{pad_char_short} {msg} {pad_char_short}"
-    print(banner)
-    print(middle)
-    print(banner)
     
 def make_binning_array(lim_ls):
     """
