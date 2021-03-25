@@ -52,9 +52,10 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 # Local imports.
 from Utils_vaex.vaex_fns import prepare_vaex_df, vaex_apply_masks
+from Utils_Python.printing import print_header_message
 from Samples.sample_info import Sample
 from d0_Utils.d0_dicts import label_LaTeX_dict
-from d0_Utils.d0_fns import make_binning_array, print_header_message
+from d0_Utils.d0_fns import make_binning_array
 from d0_Utils.d0_cls import KinBin3D
 
 from Utils_Python.Utils_Physics import perc_diff

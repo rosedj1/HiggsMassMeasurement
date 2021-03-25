@@ -1,3 +1,23 @@
+"""MyMuonCollection Merger and Muon Sorter
+
+This code globs all MyMuonCollections stored in pickles,
+merges their muon_ls (MyMuons) and m4mu_ls together into
+a large MyMuonCollection (mu_coll).
+
+Then mu_coll makes plots of all inclusive muon kinematics.
+
+Finally, mu_coll sorts all MyMuons into their respective KB2Ds
+based on the provided eta and pT bin edges.
+MyMuonCollection.muon_ls gets overwritten,
+but muons are stored in each KB2D.
+
+KB3Ds do not get made yet.
+
+Syntax: python <this.py>
+Author: Jake Rosenzweig
+Created: 2021-03-18
+Updated: 2021-03-20
+"""
 import os
 from glob import glob
 from pprint import pprint
@@ -38,7 +58,8 @@ for ct, p in enumerate(pkl_file_ls, 1):
 
 # Can also make inclusive kinematic plots:
 mu_coll.make_inclusive_kinematic_plots()
-# Sort muons into specified (eta, pT, qd0) bins.
+# Sort muons into specified (eta, pT) bins.
+# This overwrites MyMuonCollection's muon_ls.
 mu_coll.sort_muons(eta_ls, pT_ls, pT_corr_factor_dict=None,
                    n_bins_dpTOverpT=n_bins_dpTOverpT, x_lim_dpTOverpT=x_lim_dpTOverpT,
                    n_bins_qd0=n_bins_qd0, x_lim_qd0=x_lim_qd0, verbose=verbose)

@@ -234,9 +234,9 @@ def make_TMultiGraph_and_Legend(gr_ls=[], leg_txt_ls=[], y_min=None, y_max=None,
         leg.AddEntry(gr, txt, "lpfe")
     # leg.SetLineWidth(3)
     leg.SetBorderSize(1)
-    if (y_min is not None):
+    if y_min is not None:
         mg.SetMinimum(y_min) # Change y-axis limits.
-    if (y_max is not None):
+    if y_max is not None:
         mg.SetMaximum(y_max)
     return (mg, leg)
 
@@ -262,6 +262,8 @@ def add_branch_to_TTree(tree, br):
 
 def add_branch_pTcorr_fromadhocmethod(tree, pT_corr_factor_dict, outpath_root):
     """
+    FIXME: Is this function done?
+    
     Add a branch to a clone of a TTree.
     The branch is filled with pT corrected values, using ad hoc correction
     factors from pT_corr_factor_dict.

@@ -16,7 +16,7 @@ from Utils_Python.Utils_Physics import theta2pseudorap, pseudorap2theta, calc_dR
 from Utils_Python.Utils_StatsAndFits import (linear_func, gaussian_func, 
                                             fit_with_gaussian, fit_with_line, 
                                             iterative_fit_gaus, check_fit_convergence,
-                                            prop_err_x_div_y, prop_err_on_dsigoversig,
+                                            prop_err_x_times_y, prop_err_x_div_y, prop_err_on_dsigoversig,
                                             get_bestfit_vals_from_statsdict)
 from Utils_Python.Utils_Collection_Helpers import weave_lists
 from Utils_ROOT.ROOT_StatsAndFits import RooFit_iterative_gaus_fit
@@ -25,6 +25,7 @@ from d0_Utils.d0_fns import (make_binning_array, centers_of_binning_array, get_s
                              make_kinem_subplot, combine_cut_list, calc_x_err_bins_from_bin_centers, 
                              find_equal_hist_regions_unbinned, find_bin_edges_of_value)
 from d0_Utils.d0_dicts import color_dict, label_LaTeX_dict
+from d0_Studies.Plotters_Python.plotter_2D import get_standarderrorofmean
         
 class KinBin2D:
     """A container to organize muons in an (eta, pT) bin.
@@ -34,8 +35,6 @@ class KinBin2D:
         the muons as ROOT.Math.LorentzVector objects and then
         DUPLICATES them after splitting a KinBin2D up into 
         multiple KinBin3Ds.
-        It would be more efficient to then delete the KinBin2D.muon_ls
-        since the information is now stored among all the KinBin3Ds.
         - I have attempted to overwrite self.muon_ls,
         but not sure if that clears the memory.
         """
@@ -76,6 +75,14 @@ class KinBin2D:
                                         "slope_and_err"  : None,
                                         "chi2"           : None,
                                         "NDF"            : None},
+            "dpTOverpTtimesavgOf1divpT_vs_qd0" : {"interc_and_err" : None,
+                                        "slope_and_err"  : None,
+                                        "chi2"           : None,
+                                        "NDF"            : None},
+            "dpTOverpTtimesmuOf1divpT_vs_qd0" : {"interc_and_err" : None,
+                                        "slope_and_err"  : None,
+                                        "chi2"           : None,
+                                        "NDF"            : None},
         }
         # self.interc_and_err = (None, None)
         # self.slope_and_err = (None, None)
@@ -86,6 +93,8 @@ class KinBin2D:
 
         self.fit_stats_dict_dpTOverpT = None
         self.frame_dpTOverpT = None
+        self.fit_stats_dict_1OverpT = None
+        self.frame_1OverpT = None
 
     def get_bin_key(self, title_friendly=False):
         """Return a string which identifies this 2D bin.
@@ -207,12 +216,27 @@ class KinBin2D:
             self.h_qd0.Fill(mu.charge * mu.d0)
             self.h_dpTOverpT.Fill(mu.dpTOverpT)
 
-    def make_dpTOverpT_graph(self, color=4, do_fit=True, scale_by_1divpT=False):
+    def make_dpTOverpT_graph(self, color=4, do_fit=True,
+                             scale_by_1divpT=False, scale_by_avgOf1divpT=False, scale_by_muOf1divpT=False):
         """
+        TODO: Update docstring.
+
         Store a TGraph of dpT/pT vs. qd0 using the stored muons in this KinBin.
         Draw and store a best-fit line on the graph.
-        NOTE: If scale_by_1divpT, then draw dpT/pT * 1/avg(pT) vs. qd0
+
+        NOTE: The y-axis can be scaled by one of three methods:
+        (1) scale_by_1divpT:      dpT/pT * 1/avg(pT) vs. qd0
+        (2) scale_by_avgOf1divpT: dpT/pT * avg(1/pT) vs. qd0
+        (3) scale_by_muOf1divpT:  dpT/pT * mu(1/pT)  vs. qd0
+            - mu here is the best-fit mean from the iterated Gaussian fit of 1/pT.
+
+        Parameters
+        ----------
+        color : int
+            The color of the markers and the fit line.
         """
+        # Make sure that at most only one of the scaling methods is used.
+        assert sum((scale_by_1divpT, scale_by_avgOf1divpT, scale_by_muOf1divpT)) <= 1
         latex_cut_str = self.make_latex_bin_cut_str()
         print(f"...Building TGraph for bin: {latex_cut_str}")
         # Prepare x and y vals.
@@ -224,11 +248,33 @@ class KinBin2D:
             y_vals = [kb3d.fit_stats_dict_dpTOverpT["mean_ls"][-1] for kb3d in kb3d_ls]
             y_err_vals = [kb3d.fit_stats_dict_dpTOverpT["mean_err_ls"][-1] for kb3d in kb3d_ls]
             if scale_by_1divpT:
-                avg_pT_ls = [np.mean([mu.pT for mu in kb3d.muon_ls]) for kb3d in kb3d_ls]
-                avg_pT_seom_ls = [np.std([mu.pT for mu in kb3d.muon_ls])/len(kb3d.muon_ls) for kb3d in kb3d_ls]
-                assert len(y_vals) == len(avg_pT_ls) == len(y_err_vals)
-                y_vals, y_err_vals = prop_err_x_div_y(y_vals, avg_pT_ls, y_err_vals, avg_pT_seom_ls)
+                # Scale dpT/pT by 1/<pT>.
+                scale_ls = [np.mean([mu.pT for mu in kb3d.muon_ls]) for kb3d in kb3d_ls]
+                # Standard error of the mean.
+                scale_seom_ls = [np.std([mu.pT for mu in kb3d.muon_ls])/len(kb3d.muon_ls) for kb3d in kb3d_ls]
+                # Now do bestfitmean(dpT/pT) / avg(pT).
+                y_vals, y_err_vals = prop_err_x_div_y(y_vals, scale_ls, y_err_vals, scale_seom_ls)
                 y_label += r" #upoint #frac{1}{<p_{T}>}"
+                assert len(scale_ls) == len (scale_seom_ls) == len(y_vals) == len(y_err_vals)
+            elif scale_by_avgOf1divpT:
+                # Scale dpT/pT by <1/pT>.
+                # Mean and standard error of the mean were already saved.
+                scale_ls = [kb3d.avg_1OverpT for kb3d in kb3d_ls]
+                # Standard error of the mean.
+                scale_seom_ls = [kb3d.seom_avg_1OverpT for kb3d in kb3d_ls]
+                # Now do bestfitmean(dpT/pT) * avg(1/pT).
+                y_vals, y_err_vals = prop_err_x_times_y(y_vals, scale_ls, y_err_vals, scale_seom_ls)
+                y_label += r" #upoint <#frac{1}{p_{T}}>"
+                assert len(scale_ls) == len (scale_seom_ls) == len(y_vals) == len(y_err_vals)
+            elif scale_by_muOf1divpT:
+                # Get actual bestfitmean(1/pT) dist.
+                scale_ls = [kb3d.fit_stats_dict_1OverpT["mean_ls"][-1] for kb3d in kb3d_ls]
+                # Standard error of the mean.
+                scale_seom_ls = [kb3d.fit_stats_dict_1OverpT["mean_err_ls"][-1] for kb3d in kb3d_ls]
+                # Now do bestfitmean(dpT/pT) * mu(1/pT). (mu = best_fit from iter Gauss fits.)
+                y_vals, y_err_vals = prop_err_x_times_y(y_vals, scale_ls, y_err_vals, scale_seom_ls)
+                y_label += r" #upoint #mu(#frac{1}{p_{T}})"
+                assert len(scale_ls) == len (scale_seom_ls) == len(y_vals) == len(y_err_vals)
         else:
             x_vals = self.get_qd0_ls()
             y_vals = self.get_dpTOverpT_ls()
@@ -260,25 +306,39 @@ class KinBin2D:
             self.gr_dpTOverpTscaled_vs_qd0 = gr
             gr.GetYaxis().SetRangeUser(-0.003, 0.003)
             if do_fit:
-                self.fit_line_scaled = self.fit_graph_with_line(gr)
+                self.fit_line_scaled = self.fit_graph_with_line(gr, scale_by_1divpT=scale_by_1divpT)
+        elif scale_by_avgOf1divpT:
+            self.gr_dpTOverpTtimesavgOf1divpT = gr
+            gr.GetYaxis().SetRangeUser(-0.003, 0.003)
+            if do_fit:
+                self.fit_line_scaled_avgOf1divpT = self.fit_graph_with_line(gr, scale_by_avgOf1divpT=scale_by_avgOf1divpT)
+        elif scale_by_muOf1divpT:
+            self.gr_dpTOverpTtimesmuOf1divpT = gr
+            gr.GetYaxis().SetRangeUser(-0.003, 0.003)
+            if do_fit:
+                self.fit_line_scaled_muOf1divpT = self.fit_graph_with_line(gr, scale_by_muOf1divpT=scale_by_muOf1divpT)
         else:
             self.gr_dpTOverpT_vs_qd0 = gr
             gr.GetYaxis().SetRangeUser(-0.04, 0.04)
             if do_fit:
                 self.fit_line = self.fit_graph_with_line(gr)
 
-    def fit_graph_with_line(self, gr, scale_by_1divpT=False):
-        """Return a linear fit function and after fitting it to graph.
+    def fit_graph_with_line(self, gr, scale_by_1divpT=False,
+                                      scale_by_avgOf1divpT=False,
+                                      scale_by_muOf1divpT=False):
+        """Return a linear fit function and after fitting it to graph `gr`.
         
         FIXME:
-        - There may be a ROOT internal name conflict in ROOT 
+        - There may be an internal name conflict in ROOT 
         """
-        if (self.is_qd0_binned):
-            x_min = -0.006# Make this automatic: min([gr.GetPointX(2)])
-            x_max = 0.006
-            # n_pts = gr.GetN()
-            # x_min = min([gr.GetPointX(pt) for pt in range(n_pts)])
-            # x_max = max([gr.GetPointX(pt) for pt in range(n_pts)])
+        # Make sure only 1 bool was chosen, max.
+        assert sum((scale_by_1divpT, scale_by_avgOf1divpT, scale_by_muOf1divpT)) <= 1
+        if self.is_qd0_binned:
+            # x_min = -0.006# Make this automatic: min([gr.GetPointX(2)])
+            # x_max = 0.006
+            n_pts = gr.GetN()
+            x_min = min([gr.GetPointX(pt) for pt in range(n_pts)])
+            x_max = max([gr.GetPointX(pt) for pt in range(n_pts)])
         else:
             qd0_ls = self.get_qd0_ls()
             x_min = min(qd0_ls)
@@ -298,6 +358,10 @@ class KinBin2D:
         fit_func.Draw("same")
         if scale_by_1divpT:
             key = "dpTOverpTscaled_vs_qd0"
+        elif scale_by_avgOf1divpT:
+            key = "dpTOverpTtimesavgOf1divpT_vs_qd0"
+        elif scale_by_muOf1divpT:
+            key = "dpTOverpTtimesmuOf1divpT_vs_qd0"
         else:
             key = "dpTOverpT_vs_qd0"
         self.dpTOverpT_vs_qd0_fit_stats_dct[key]["interc_and_err"] = (fit_func.GetParameter(0), fit_func.GetParError(0))
@@ -625,6 +689,8 @@ class KinBin3D(KinBin2D):
         n_entries=0, kinem=None, fit_stats_dict=None, fit_type=None, 
         pT_stats_ls=None, qd0_stats_ls=None, cut_str=None):
         """
+        TODO: Update doctstring.
+
         fit_stats_dict : dict
             {
                 "mean_ls"     : [mean_fit1, mean_fit2, ...]
@@ -647,6 +713,9 @@ class KinBin3D(KinBin2D):
         self.qd0_max = qd0_range[1]
 
         self.n_entries = n_entries
+        # self.avg_1OverpT = None  # Uncomment if found after Mar 31.
+        # self.seom_avg_1OverpT = None  # Uncomment if found after Mar 31.
+        # self.avg_pT = None  # Uncomment if found after Mar 31.
         self.qd0_avg = None
 
         self.muon_ls = []
@@ -654,6 +723,7 @@ class KinBin3D(KinBin2D):
         self.kinem = kinem
         self.fit_stats_dict = fit_stats_dict  # An older attribute from an older code.
         self.fit_stats_dict_dpTOverpT = None
+        self.fit_stats_dict_1OverpT = None
         self.fit_stats_dict_qd0 = None
         self.fit_type = fit_type
         self.pT_stats_ls = pT_stats_ls
@@ -688,14 +758,17 @@ class KinBin3D(KinBin2D):
         return cut
     
     def analyze_KinBin3D(self, bins_dpTOverpT, bins_qd0,
-                         x_lim_dpTOverpT, x_lim_qd0,
+                         x_lim_dpTOverpT=[-0.4, 0.4], x_lim_qd0=[-0.01, 0.01],
+                         bins_1OverpT=100, x_lim_1OverpT=[0, 22],
                          binned_fit=False, fit_whole_range_first_iter=True,
-                         iters=1, num_sigmas=2,
+                         iters=2, num_sigmas=2.5,
                          switch_to_binned_fit=2000, verbose=False, alarm_level="warning",
                          use_data_in_xlim=False):
         """Analyze and store dpT/pT and qd0 muon info within this KinBin3D.
         Also perform iterated Gaussian fits on the dpT/pT dist.
         
+        FIXME: Update docstring.
+
         Parameters
         ----------
         bins_dpTOverpT : int
@@ -718,18 +791,29 @@ class KinBin3D(KinBin2D):
             If True, print juicy debug info.
         """
         self.n_entries = len(self.muon_ls)
+        self.fit_type = "BINNED" if binned_fit else "UNBINNED"
         if verbose:
             print(
                 f"[INFO] Analyzing KinBin3D:"
                 f"[INFO]   {self.get_bin_key()} with {self.n_entries} entries\n"
                 f"[INFO] Performing {iters} Gaussian fit iterations using RooFit"
+                f"[INFO] Making dpT/pT and 1/pT distributions."
+                f"[INFO] Doing {self.fit_type} fits."
                 )
         self.qd0_avg = self.calc_avg_qd0()
+        oneOverpT_ls = [1/mu.pT for mu in self.muon_ls]
+        pT_ls = [mu.pT for mu in self.muon_ls]
+        self.avg_1OverpT = np.mean(oneOverpT_ls)
+        self.avg_pT = np.mean(pT_ls)
+        # Standard error of mean(1/pT):
+        self.seom_avg_1OverpT = get_standarderrorofmean(oneOverpT_ls)
+        self.seom_avg_pT = get_standarderrorofmean(pT_ls)
         self.make_dpTOverpT_hist(n_bins=bins_dpTOverpT, x_lim=x_lim_dpTOverpT)
         self.make_qd0_hist(n_bins=bins_qd0, x_lim=x_lim_qd0)
         
+        # dpT/pT fits.
         self.fit_stats_dict_dpTOverpT, self.frame_dpTOverpT = RooFit_iterative_gaus_fit(
-                                self.get_dpTOverpT_ls(), 
+                                data=self.get_dpTOverpT_ls(), 
                                 binned_fit=binned_fit, switch_to_binned_fit=switch_to_binned_fit, 
                                 iters=iters, num_sigmas=num_sigmas, 
                                 n_bins=bins_dpTOverpT, x_lim=x_lim_dpTOverpT,
@@ -742,6 +826,24 @@ class KinBin3D(KinBin2D):
                                 use_data_in_xlim=use_data_in_xlim)
         for stat in ["mean_ls", "mean_err_ls", "std_ls", "std_err_ls"]:
             check_fit_convergence(self.fit_stats_dict_dpTOverpT[stat],
+                                  max_perc_diff=5,
+                                  compare_to_last=3,
+                                  alarm_level=alarm_level)
+        # 1/pT fits.
+        self.fit_stats_dict_1OverpT, self.frame_1OverpT = RooFit_iterative_gaus_fit(
+                                data=[1/mu.pT for mu in self.muon_ls], 
+                                binned_fit=binned_fit, switch_to_binned_fit=switch_to_binned_fit, 
+                                iters=iters, num_sigmas=num_sigmas, 
+                                n_bins=bins_1OverpT, x_lim=x_lim_1OverpT,
+                                fit_whole_range_first_iter=fit_whole_range_first_iter,
+                                xframe=None, x_label=r"1/p_{T}^{RECO}", 
+                                title=r"%s" % self.make_latex_bin_cut_str(), 
+                                units="", marker_color=1,
+                                force_last_line_color=None, only_draw_last=False,
+                                verbose=verbose, view_plot=False,
+                                use_data_in_xlim=use_data_in_xlim)
+        for stat in ["mean_ls", "mean_err_ls", "std_ls", "std_err_ls"]:
+            check_fit_convergence(self.fit_stats_dict_1OverpT[stat],
                                   max_perc_diff=5,
                                   compare_to_last=3,
                                   alarm_level=alarm_level)

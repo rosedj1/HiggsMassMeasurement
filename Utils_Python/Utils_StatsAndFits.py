@@ -3,11 +3,12 @@ import numpy as np
 from scipy.optimize import curve_fit, OptimizeWarning
 
 # Local imports. 
-from d0_Utils.d0_fns import centers_of_binning_array, get_subset_mask, print_header_message
+from d0_Utils.d0_fns import centers_of_binning_array, get_subset_mask
 from d0_Utils.d0_dicts import color_dict, label_LaTeX_dict
 # from Utils_ROOT.ROOT_StatsAndFits import RooFit_gaus_fit  # FIXME: Giving circular import error.
 from Utils_Python.Utils_Plotting import make_stats_legend_for_gaus_fit
 from Utils_Python.Utils_Physics import perc_diff
+from Utils_Python.printing import print_header_message
 
 #-----------------------------#
 #----- Fitting Functions -----#
@@ -845,10 +846,37 @@ def prop_err_x_plus_y(x, y, dx, dy):
     dz = np.sqrt(dx**2 + dy**2)
     return z, dz
 
+def prop_err_x_times_y(x, y, dx, dy):
+    """
+    Return a 2-tuple:
+        tup[0]: product of two numbers (r = x * y)
+        tup[1]: corresponding uncertainty (dr), depending on (x, y, dx, dy).
+
+    The error propagation formula is:
+        (dr)^2 = (dr/dx)^2 * (dx)^2 + (dr/dy)^2 * (dy)^2 + 2*dr/dx*dr/dy * dx*dy
+        but we will ignore the final cross-term (correlation factor).
+            Newton says: 
+            dr/dx = y
+            dr/dy = x
+        So:
+            dr = sqrt((y * dx)^2  + (x * dy)^2)
+
+    *** This function been verified by an online calculator.
+    """
+    x = np.array(x, dtype=float)
+    y = np.array(y, dtype=float)
+    dx = np.array(dx, dtype=float)
+    dy = np.array(dy, dtype=float)
+    
+    r = x * y
+    dr = np.sqrt((y * dx)**2  + (x * dy)**2)
+    return r, dr
+
 def prop_err_x_div_y(x, y, dx, dy):
     """
-    Return the ratio of two numbers (r = x/y) and the 
-    corresponding uncertainty (dr), depending on (x, y, dx, dy).
+    Return a 2-tuple:
+        tup[0]: ratio of two numbers (r = x/y)
+        tup[1]: corresponding uncertainty (dr), depending on (x, y, dx, dy).
 
     The error propagation formula is:
         (dr)^2 = (dr/dx)^2 * (dx)^2 + (dr/dy)^2 * (dy)^2 + 2*dr/dx*dr/dy * dx*dy

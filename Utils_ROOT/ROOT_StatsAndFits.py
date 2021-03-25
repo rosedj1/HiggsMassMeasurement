@@ -352,6 +352,7 @@ def RooFit_iterative_gaus_fit(data, binned_fit=False, switch_to_binned_fit=2000,
         The number of bins along the x-axis.
     x_lim : 2-elem list, optional
         The min and max x-axis values to show on the plot: [x_min, x_max]
+        If None, then min(data) and max(data) are used as plot limits.
     fit_whole_range_first_iter : bool, optional
         If True, the entire x-axis range will be fit over for first iteration.
         Otherwise, first fit range is: mean(data) +- num_sigmas * rms(data)

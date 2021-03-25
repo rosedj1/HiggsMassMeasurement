@@ -47,9 +47,10 @@ from d0_Studies.kinematic_bins import (equal_entry_bin_edges_eta_mod1,
                                         binedges_qd0_tracker_res_mod
                                         )
 from d0_Utils.d0_dicts import label_LaTeX_dict
-from d0_Utils.d0_fns import make_binning_array, print_header_message
+from d0_Utils.d0_fns import make_binning_array
 from d0_Utils.d0_cls import KinBin3D
 
+from Utils_Python.printing import print_header_message
 from PyUtils.Utils_Physics import perc_diff
 from PyUtils.Utils_Files import makeDirs, make_str_title_friendly, check_overwrite
 from PyUtils.Utils_Plotting import hist_y_label, make_1D_dist, ncolsrows_from_nplots, get_stats_1Dhist
