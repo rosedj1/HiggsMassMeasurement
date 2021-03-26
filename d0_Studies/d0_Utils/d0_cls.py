@@ -301,25 +301,25 @@ class KinBin2D:
         gr.SetTitle(graph_title)
         gr.GetXaxis().SetTitle(r"qd_{0} [cm]")
         gr.GetYaxis().SetTitle(y_label)
-        gr.GetXaxis().SetLimits(-0.006, 0.006)
+        # gr.GetXaxis().SetLimits(-0.006, 0.006)  # Don't set x-lims!
         if scale_by_1divpT:
             self.gr_dpTOverpTscaled_vs_qd0 = gr
-            gr.GetYaxis().SetRangeUser(-0.003, 0.003)
+            # gr.GetYaxis().SetRangeUser(-0.003, 0.003)
             if do_fit:
                 self.fit_line_scaled = self.fit_graph_with_line(gr, scale_by_1divpT=scale_by_1divpT)
         elif scale_by_avgOf1divpT:
             self.gr_dpTOverpTtimesavgOf1divpT = gr
-            gr.GetYaxis().SetRangeUser(-0.003, 0.003)
+            # gr.GetYaxis().SetRangeUser(-0.003, 0.003)
             if do_fit:
                 self.fit_line_scaled_avgOf1divpT = self.fit_graph_with_line(gr, scale_by_avgOf1divpT=scale_by_avgOf1divpT)
         elif scale_by_muOf1divpT:
             self.gr_dpTOverpTtimesmuOf1divpT = gr
-            gr.GetYaxis().SetRangeUser(-0.003, 0.003)
+            # gr.GetYaxis().SetRangeUser(-0.003, 0.003)
             if do_fit:
                 self.fit_line_scaled_muOf1divpT = self.fit_graph_with_line(gr, scale_by_muOf1divpT=scale_by_muOf1divpT)
         else:
             self.gr_dpTOverpT_vs_qd0 = gr
-            gr.GetYaxis().SetRangeUser(-0.04, 0.04)
+            # gr.GetYaxis().SetRangeUser(-0.04, 0.04)
             if do_fit:
                 self.fit_line = self.fit_graph_with_line(gr)
 
