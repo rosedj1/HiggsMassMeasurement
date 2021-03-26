@@ -51,7 +51,7 @@ def main():
                                   n_evt_beg=n_evt_beg, n_evt_end=n_evt_end,
                                   print_out_every=print_out_every, eta_min=0.0, eta_max=2.4,
                                   pT_min=5, pT_max=1000,
-                                  d0_max=1, dR_max=0.002,
+                                  d0_max=0.01, dR_max=0.002,
                                   do_mu_pT_corr=False,
                                   force_zero_intercept=False,
                                   pT_corr_factor_dict=None,

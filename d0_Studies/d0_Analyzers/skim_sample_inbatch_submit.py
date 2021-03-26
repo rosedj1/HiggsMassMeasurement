@@ -42,6 +42,7 @@ nodes = 4
 burst = True
 
 def main():
+    assert all(year in f for f in (outfile_prefix, infile_path, outtxt_dir, outcopies_dir, outpkl_dir))
     for d in (outtxt_dir, outcopies_dir, outpkl_dir):
         make_dirs(d, verbose=verbose)
     max_evts = get_max_evts(infile_path, path_to_tree="Ana/passedEvents")
