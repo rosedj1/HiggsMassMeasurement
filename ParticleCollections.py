@@ -44,8 +44,8 @@ def check_n_muons(prod_mode, muon_ls, per_event=True):
 # def build_muons_from_process(prod_mode, t, evt_num,
 def build_muons_from_process(prod_mode, evt, evt_num,
                              eta_bin=[0, 2.4],
-                             pT_bin=[5,200],
-                             d0_max=1, dR_max=None,
+                             pT_bin=[5, 200],
+                             d0_bin=[0, 1], dR_max=None,
                              verbose=False):
     """Return a tuple of MyMuons for 1 event based on prod_mode and selections.
     
@@ -60,7 +60,7 @@ def build_muons_from_process(prod_mode, evt, evt_num,
         mu_tup = build_muons_from_DY_event(evt, evt_num,
                                         eta_bin=eta_bin,
                                         pT_bin=pT_bin,
-                                        d0_max=d0_max, 
+                                        d0_bin=d0_bin, 
                                         dR_max=dR_max,
                                         verbose=verbose)
     elif prod_mode in ["H4mu", "H4e"]:
@@ -70,7 +70,7 @@ def build_muons_from_process(prod_mode, evt, evt_num,
         mu_tup = build_muons_from_HZZ4mu_event(evt, evt_num,
                                         eta_bin=eta_bin,
                                         pT_bin=pT_bin,
-                                        d0_max=d0_max,
+                                        d0_bin=d0_bin,
                                         verbose=verbose)
     elif prod_mode in ["H2mu", "H2e"]:
         # Check if this event passes H->2mu selections.
@@ -79,7 +79,7 @@ def build_muons_from_process(prod_mode, evt, evt_num,
         mu_tup = build_muons_from_Hmumu_event(evt, evt_num,
                                         eta_bin=eta_bin,
                                         pT_bin=pT_bin,
-                                        d0_max=d0_max,
+                                        d0_bin=d0_bin,
                                         verbose=verbose)
     else:
         msg = f"""`prod_mode` ({prod_mode}) must be in:\n["DY2mu", "DY2e", "H4mu", "H4e", "H2mu", "H2e"]"""
@@ -130,7 +130,7 @@ class MyMuonCollection:
                       print_out_every=10000,
                       eta_min=0.0, eta_max=2.4,
                       pT_min=5, pT_max=1000,
-                      d0_max=1, dR_max=None,
+                      d0_min=0, d0_max=1, dR_max=None,
                       do_mu_pT_corr=False,
                       force_zero_intercept=False,
                       pT_corr_factor_dict=None,
@@ -140,6 +140,8 @@ class MyMuonCollection:
         """Fill self.muon_ls with all MyMuon muons from `infile_path`
         which pass selections in `prod_mode`. Also fills self.m4mu_ls per event.
 
+        TODO: Update docstring.
+        
         NOTE: 
         - self.m4mu_ls will also become self.m2mu_ls if prod_mode has 2 lep
         in final state.
@@ -274,7 +276,7 @@ class MyMuonCollection:
             mu_tup = build_muons_from_process(prod_mode, t, evt_num,
                                               eta_bin=[eta_min, eta_max],
                                               pT_bin=[pT_min, pT_max],
-                                              d0_max=d0_max, dR_max=dR_max, verbose=verbose)
+                                              d0_bin=[d0_min, d0_max], dR_max=dR_max, verbose=verbose)
             if None in mu_tup: 
                 continue
 

@@ -23,14 +23,15 @@ from Utils_ROOT.ROOT_fns import get_max_evts
 from Utils_Python.SlurmManager import SLURMSubmitter
 from Utils_Python.Utils_Files import replace_value, make_dirs, check_overwrite
 
+year = "2016"
 prod_mode = "DY2mu"
-outfile_prefix = "MC2017DY_skim_fullstats"
-infile_path = "/cmsuf/data/store/user/t2/users/ferrico/Full_RunII/Production_10_2_18/DY_JPsi_Upsilon/DY_2017.root"
+outfile_prefix = "MC2016DY_skim_fullstats_d0max0p01"
+infile_path = "/cmsuf/data/store/user/t2/users/ferrico/Full_RunII/Production_10_2_18/DY_JPsi_Upsilon/DY_2016.root"
 fullpath_main_script = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/skim_sample_inbatch_template.py"
 
-outtxt_dir    = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2017DY/output"
-outcopies_dir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2017DY/copies"
-outpkl_dir    = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2017/DY/"
+outtxt_dir    = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/output"
+outcopies_dir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/copies"
+outpkl_dir    = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/"
 
 verbose = 1
 overwrite = 0
@@ -41,6 +42,7 @@ nodes = 4
 burst = True
 
 def main():
+    assert all(year in f for f in (outfile_prefix, infile_path, outtxt_dir, outcopies_dir, outpkl_dir))
     for d in (outtxt_dir, outcopies_dir, outpkl_dir):
         make_dirs(d, verbose=verbose)
     max_evts = get_max_evts(infile_path, path_to_tree="Ana/passedEvents")
