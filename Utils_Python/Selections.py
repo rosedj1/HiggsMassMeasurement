@@ -280,7 +280,7 @@ def make_muon_ls_fromliteskim(evt):
     return [initialize_Htomumu_muons_fromliteskim(evt, num) for num in [1,2]]
 
 def apply_kinem_selections(mu_ls, eta_bin=[0, 2.4], pT_bin=[5, 200],
-                           d0_bin=[0, 1], d0_min=0, d0_max=1, dR_max=None):
+                           d0_bin=[0, 1], dR_max=None):
     """
     Make sure all muons passed selections and do final pT checks.
     Returns True if all muons passed, False otherwise.
@@ -307,16 +307,13 @@ def apply_kinem_selections(mu_ls, eta_bin=[0, 2.4], pT_bin=[5, 200],
             return False
         if not (pT_min < mu.pT and mu.pT < pT_max):
             return False
-        if not (d0_min < abs(mu.d0) and abs(mu.d0) < d0_max):
+        if not ((d0_min < abs(mu.d0) and abs(mu.d0) < d0_max)):
             return False
         if dR_max is not None:
             deta = mu.eta - mu.gen_eta
             dphi = calc_dphi(mu.phi, mu.gen_phi)
             if not (calc_dR(deta, dphi) < dR_max):
                 return False
-        # pass_kinem = all([passed_eta, passed_pT, passed_d0, passed_genrecomatch])
-        # if not pass_kinem:
-            # return False
     return True
 
 def get_ndcs_gen(rec_ndcs_ls, lep_genindex):

@@ -45,7 +45,7 @@ def check_n_muons(prod_mode, muon_ls, per_event=True):
 def build_muons_from_process(prod_mode, evt, evt_num,
                              eta_bin=[0, 2.4],
                              pT_bin=[5, 200],
-                             d0_bin=[0, 1], dR_max=None,
+                             d0_bin=[0, 1], dR_max=0.002,
                              verbose=False):
     """Return a tuple of MyMuons for 1 event based on prod_mode and selections.
     
@@ -128,9 +128,8 @@ class MyMuonCollection:
     def extract_muons(self, infile_path, prod_mode,
                       n_evts=-1, n_evt_beg=None, n_evt_end=None,
                       print_out_every=10000,
-                      eta_min=0.0, eta_max=2.4,
-                      pT_min=5, pT_max=1000,
-                      d0_min=0, d0_max=1, dR_max=None,
+                      eta_lim=[0.0, 2.4], pT_lim=[5, 1000], d0_lim=[0, 1],
+                      dR_max=None,
                       do_mu_pT_corr=False,
                       force_zero_intercept=False,
                       pT_corr_factor_dict=None,
@@ -274,9 +273,10 @@ class MyMuonCollection:
                 print(f"  Running over evt: {evt_num}. Time since last print: {dt:.6f} s")
                 time_start = time.perf_counter()
             mu_tup = build_muons_from_process(prod_mode, t, evt_num,
-                                              eta_bin=[eta_min, eta_max],
-                                              pT_bin=[pT_min, pT_max],
-                                              d0_bin=[d0_min, d0_max], dR_max=dR_max, verbose=verbose)
+                                              eta_bin=eta_lim,
+                                              pT_bin=pT_lim,
+                                              
+                                              d0_bin=d0_lim, dR_max=dR_max, verbose=verbose)
             if None in mu_tup: 
                 continue
 

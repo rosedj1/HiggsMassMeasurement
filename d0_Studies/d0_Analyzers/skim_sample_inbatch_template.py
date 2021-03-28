@@ -4,9 +4,12 @@ Skim a sample that was produced from the HZZ4LAnalyzer.
 Store the muon info as a pickled MyMuonCollection (.pkl).
 Muons are stored as MyMuons.
 
+NOTE: This script is controlled by:
+d0_Studies/d0_Analyzers/skim_sample_inbatch_submit.py
+
 Author:  Jake Rosenzweig
 Created: 2021-03-11
-Updated: 2021-03-18
+Updated: 2021-03-27
 """
 import os
 from ROOT import TFile
@@ -27,6 +30,11 @@ max_n_evts = None      # max_n_evts == -1 takes precedence.
 n_evt_beg = N_EVT_BEG  # Then specifying a range takes precedence.
 n_evt_end = N_EVT_END  
 print_out_every = 1E6
+
+eta_lim = ETA_LIM
+pT_lim = PT_LIM
+d0_lim = D0_LIM
+dR_max = DR_MAX
 #----- Functions -----#
 def prep_area(filename_full, outdir_pkl, overwrite=False):
     """Return the file paths for the produced files."""
@@ -39,19 +47,20 @@ def prep_area(filename_full, outdir_pkl, overwrite=False):
     return (outpath_pkl)
 
 def main():
-    f = TFile(inpath_file)
-    t = f.Get("Ana/passedEvents")
-    total_evts = t.GetEntries()
+
+    # f = TFile(inpath_file)
+    # t = f.Get("Ana/passedEvents")
+    # total_evts = t.GetEntries()
+    assert all(len(ls) == 2 for ls in (eta_lim, pT_lim, d0_lim))
     # Prep your area.
     outpath_pkl = prep_area(filename_full, outdir_pkl, overwrite=overwrite)
     # Begin analysis.
     mu_coll = MyMuonCollection(prod_mode=prod_mode)
-
     mu_coll.extract_muons(inpath_file, prod_mode=prod_mode, n_evts=max_n_evts,
                                   n_evt_beg=n_evt_beg, n_evt_end=n_evt_end,
-                                  print_out_every=print_out_every, eta_min=0.0, eta_max=2.4,
-                                  pT_min=5, pT_max=1000,
-                                  d0_max=0.01, dR_max=0.002,
+                                  print_out_every=print_out_every,
+                                  eta_lim=eta_lim, pT_lim=pT_lim, d0_lim=d0_lim,
+                                  dR_max=dR_max,
                                   do_mu_pT_corr=False,
                                   force_zero_intercept=False,
                                   pT_corr_factor_dict=None,

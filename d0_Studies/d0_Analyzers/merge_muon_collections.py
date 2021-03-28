@@ -16,29 +16,34 @@ KB3Ds do not get made yet.
 Syntax: python <this.py>
 Author: Jake Rosenzweig
 Created: 2021-03-18
-Updated: 2021-03-20
+Updated: 2021-03-27
 """
 import os
 from glob import glob
 from pprint import pprint
 from ParticleCollections import MyMuonCollection
 from Utils_Python.Utils_Files import open_pkl, save_to_pkl, check_overwrite
-from d0_Studies.kinematic_bins import equal_entry_bin_edges_eta_mod1_wholenum, bin_edges_pT_sevenfifths_to1000GeV_wholenum
+from d0_Studies.kinematic_bins import (equal_entry_bin_edges_eta_mod1_wholenum,
+                                       bin_edges_pT_sevenfifths_to1000GeV_wholenum,
+                                       eta_bins_geofitvsVXBS, pT_bins_geofitvsVXBS)
 
-eta_ls = equal_entry_bin_edges_eta_mod1_wholenum
-pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum
+year = "2016"
+eta_ls = eta_bins_geofitvsVXBS #equal_entry_bin_edges_eta_mod1_wholenum
+pT_ls = pT_bins_geofitvsVXBS #bin_edges_pT_sevenfifths_to1000GeV_wholenum
 
 n_bins_dpTOverpT = 100
 x_lim_dpTOverpT = [-0.4, 0.4]
 n_bins_qd0 = 100
 x_lim_qd0 = [-0.01, 0.01]
-verbose = True
+verbose = 1
 overwrite = 0
 
-indir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2018/DY/MC2018DY_skim_fullstats_inbatch"
-outfile = "MC2018DY_skim_fullstats"
-glob_template = "MC2018DY_skim_fullstats_skim_sample_inbatch_template_copy*.pkl"
+indir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_0p0_d0_0p01"
+# indir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2018/DY/MC2018DY_skim_fullstats_inbatch"
+outfile = "MC2016DY_skim_fullstats_0p0_d0_0p01"
+glob_template = "MC2016DY_skim_fullstats_0p0_d0_0p01_skim_sample_inbatch_template_copy*.pkl"
 
+assert all(year in f for f in (indir, outfile, glob_template))
 if ".pkl" not in outfile:
     outfile += ".pkl"
 outpkl_path = os.path.join(indir, outfile)
