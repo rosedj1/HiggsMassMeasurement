@@ -13,19 +13,21 @@ then start a dev session on HPG first:
 Syntax: python this_script.py
 Author: Jake Rosenzweig
 Created: 2021-03-14 # Happy pi day!
-Updated: 2021-03-20
+Updated: 2021-03-27
 """
-from Utils_Python.Utils_Files import open_pkl
+from Utils_Python.Utils_Files import open_pkl, make_dirs
 
-year = "2018"
-infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2018/DY/MC2018DY_skim_fullstats_new.pkl"
+year = "2016"
+infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats.pkl"
 # infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2018/DY/MC2018DY_fullstats_muoncoll_withkb3dbins.pkl"
-outdir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2018/DY/kb2d_dictsnofitinfo"
-file_prefix = "MC2018DY_fullstats_muoncoll_withkb3dbins"
-overwrite = 1
+outdir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/kb2d_dictsnofitinfo"
+file_prefix = "MC2016DY_fullstats_muoncoll_withkb3dbins"
+overwrite = 0
 verbose = 1
 
 if __name__ == "__main__":
+
     assert all(year in path for path in (infile_path, outdir, file_prefix))
+    make_dirs(outdir)
     muon_coll = open_pkl(infile_path)
     muon_coll.save_KB2Ds_separate_dcts(outdir=outdir, file_prefix=file_prefix, overwrite=overwrite, verbose=verbose)

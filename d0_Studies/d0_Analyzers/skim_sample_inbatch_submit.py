@@ -7,13 +7,13 @@ Each MyMuonCollection is then pickled ('.pkl').
 
 NOTE:
 - All events will be skimmed over, but user can specify events per batch.
-- This code uses a template skimmer, like:
+- This code uses a template skimmer:
 d0_Studies/d0_Analyzers/skim_sample_inbatch_template.py
-- 
+
 Syntax: python this_script.py
 Author: Jake Rosenzweig
 Created: 2021-03-19
-Updated:
+Updated: 2021-03-27
 """
 import os
 import shutil
@@ -25,25 +25,36 @@ from Utils_Python.Utils_Files import replace_value, make_dirs, check_overwrite
 
 year = "2016"
 prod_mode = "DY2mu"
-outfile_prefix = "MC2016DY_skim_fullstats_d0max0p01"
+outfile_prefix = "MC2016DY_skim_fullstats_0p0_d0_0p01"
 infile_path = "/cmsuf/data/store/user/t2/users/ferrico/Full_RunII/Production_10_2_18/DY_JPsi_Upsilon/DY_2016.root"
 fullpath_main_script = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/skim_sample_inbatch_template.py"
 
-outtxt_dir    = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/output"
-outcopies_dir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/copies"
+outtxt_dir    = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/output/"
+outcopies_dir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/copies/"
 outpkl_dir    = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/"
 
+# Event selection.
+eta_lim = [0.0, 2.4]
+pT_lim = [5.0, 1000.0]
+d0_lim = [0.0, 0.01]
+dR_max = 0.002  # Gen matching.
+
 verbose = 1
-overwrite = 0
+overwrite = 1
 evts_per_batch = 5E6
+# SLURM directives.
 partition = "hpg2-compute"
 mem = (8, 'gb')
 nodes = 4
 burst = True
 
 def main():
-    assert all(year in f for f in (outfile_prefix, infile_path, outtxt_dir, outcopies_dir, outpkl_dir))
-    for d in (outtxt_dir, outcopies_dir, outpkl_dir):
+    # Make a subdir for each area.
+    new_outtxt_dir = os.path.join(outtxt_dir, outfile_prefix)
+    new_outcopies_dir = os.path.join(outcopies_dir, outfile_prefix)
+    new_outpkl_dir = os.path.join(outpkl_dir, outfile_prefix)
+    assert all(year in f for f in (outfile_prefix, infile_path, new_outtxt_dir, new_outcopies_dir, new_outpkl_dir))
+    for d in (new_outtxt_dir, new_outcopies_dir, new_outpkl_dir):
         make_dirs(d, verbose=verbose)
     max_evts = get_max_evts(infile_path, path_to_tree="Ana/passedEvents")
     evt_beg = 0
@@ -54,24 +65,28 @@ def main():
         # Create main copy.
         base = os.path.basename(fullpath_main_script)
         base = base.replace(".py", f"_copy_{evt_beg}evts{evt_end}")
-        fullpath_main_script_copy = os.path.join(outcopies_dir, f"{base}.py")
+        fullpath_main_script_copy = os.path.join(new_outcopies_dir, f"{base}.py")
         check_overwrite(fullpath_main_script_copy, overwrite)
         shutil.copyfile(fullpath_main_script, fullpath_main_script_copy)
         full_file_name = f"{outfile_prefix}_{base}"
         # Modify main copy.
-        replace_value("INFILE_PATH",    infile_path,     fullpath_main_script_copy)
-        replace_value("PROD_MODE",      prod_mode,       fullpath_main_script_copy)
-        replace_value("OUTPKL_DIR",     outpkl_dir,      fullpath_main_script_copy)
-        replace_value("FILENAME_FULL",  full_file_name,  fullpath_main_script_copy)
-        replace_value("OVERWRITE",      overwrite,       fullpath_main_script_copy)
-        replace_value("VERBOSE",        verbose,         fullpath_main_script_copy)
-        replace_value("N_EVT_BEG",      evt_beg,         fullpath_main_script_copy)
-        replace_value("N_EVT_END",      evt_end,         fullpath_main_script_copy)
+        replace_value("INFILE_PATH",   infile_path,    fullpath_main_script_copy)
+        replace_value("PROD_MODE",     prod_mode,      fullpath_main_script_copy)
+        replace_value("OUTPKL_DIR",    new_outpkl_dir,     fullpath_main_script_copy)
+        replace_value("FILENAME_FULL", full_file_name, fullpath_main_script_copy)
+        replace_value("OVERWRITE",     overwrite,      fullpath_main_script_copy)
+        replace_value("VERBOSE",       verbose,        fullpath_main_script_copy)
+        replace_value("N_EVT_BEG",     evt_beg,        fullpath_main_script_copy)
+        replace_value("N_EVT_END",     evt_end,        fullpath_main_script_copy)
+        replace_value("ETA_LIM",       eta_lim,        fullpath_main_script_copy)
+        replace_value("PT_LIM",        pT_lim,         fullpath_main_script_copy)
+        replace_value("D0_LIM",        d0_lim,         fullpath_main_script_copy)
+        replace_value("DR_MAX",        dR_max,         fullpath_main_script_copy)
         # Prep and submit SLURM script copy.
         sbmtr = SLURMSubmitter(verbose=False)
         sbmtr.prep_directives(
             job_name=full_file_name,
-            output_txt=os.path.join(outtxt_dir, f"{full_file_name}.log"),
+            output_txt=os.path.join(new_outtxt_dir, f"{full_file_name}.log"),
             email="rosedj1@ufl.edu",
             time="08:00:00",
             acct="avery",
@@ -81,7 +96,7 @@ def main():
             nodes=nodes,
         )
         cmdtup = (f"time python {fullpath_main_script_copy}")
-        fullpath_slurm_copy = os.path.join(outcopies_dir, f"{full_file_name}.sbatch")
+        fullpath_slurm_copy = os.path.join(new_outcopies_dir, f"{full_file_name}.sbatch")
         result = sbmtr.make_slurm_script(fullpath_slurm_copy, cmdtup, overwrite=overwrite)
         if result == 0:
             sbmtr.submit_script(fullpath_slurm_copy)

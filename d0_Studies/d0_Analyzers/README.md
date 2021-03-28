@@ -19,8 +19,8 @@ When working with many muons (>20E6),
 it is useful to submit your jobs to SLURM.
 
 **NOTE:**
-The workflow below shows processing times for working over a MC 2018 DY sample
-which had 193E6 unskimmed events.
+The workflow below shows processing times for working over a MC 2016 DY sample
+which had 122M unskimmed events.
 The resulting skimmed file has ??? muons.
 <!-- This way assumes your root file is too big to process all at once.
 Instead you can run over different ranges of events on SLURM. -->
@@ -49,9 +49,12 @@ Instead you can run over different ranges of events on SLURM. -->
 1. Save KB2Ds into individual pickled dicts with:
 
    ```bash
+   # First start a dev session to access more RAM.
+   srun --partition=bigmem --mem=128gb --ntasks=1 --cpus-per-task=8 --time=08:00:00 --pty bash -i
+   # Then run the script.
    python save_kb2ds_separate_dicts.py
    ```
-
+   
    - Processing time: 
 
 1. Do recursive Gaussian fits on the dpT/pT and 1/pT dists of each KB3D with:

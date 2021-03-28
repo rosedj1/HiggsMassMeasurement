@@ -10,7 +10,7 @@ what this script does: only work on 1 KB2D at a time.
 The kb2d.muon_ls and kb3d.muon_ls are erased to save memory.
 
 TODO:
-- Implement SlurmManager class
+- Implement SlurmManager class.
 
 This code makes a copy of a "main template" script that you wish to run on
 SLURM. It actually makes many copies of the main script and of the SLURM
@@ -39,6 +39,7 @@ Updated: 2021-03-22
 from Utils_Python.Utils_Files import replace_value, make_dirs
 from d0_Studies.kinematic_bins import equal_entry_bin_edges_eta_mod1_wholenum, bin_edges_pT_sevenfifths_to1000GeV_wholenum
 from d0_Studies.d0_Analyzers.slurm_inbatch_derive_pTcorrfactors import make_name_from_ls
+from Utils_Python.SlurmManager import SLURMSubmitter
 # from d0_Studies.d0_Utils.d0_cls import OrganizerKB2D
 import subprocess
 import shutil
@@ -72,6 +73,13 @@ outdir_copies = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d
 outdir_pkl    = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2018DY/pickles/{job_name_base}"
 outdir_txt    = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2018DY/output/{job_name_base}"
 outdir_pdf    = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2018DY/plots/{job_name_base}"
+
+# SLURM directives.
+partition = "hpg2-compute"
+mem = (8, 'gb')
+nodes = 4
+burst = True
+time = "01:00:00"  # hh:mm:ss
 
 #------------------------#
 #--- Script functions ---#
@@ -156,8 +164,29 @@ def main():
                                 eta_name=eta_name, pT_name=pT_name,
                                 template_tup=(fullpath_copy_main_script, fullpath_copy_slurm_script)
                                 )
-            print(f"...Submitting SLURM script for: eta_range={eta_range} pT_range={pT_range}")  #GOOD
-            output = subprocess.run(["sbatch", fullpath_copy_slurm_script])  #GOOD
+            print(f"...Submitting SLURM script for: eta_range={eta_range} pT_range={pT_range}")
+
+            # Prep and submit SLURM script copy.
+            sbmtr = SLURMSubmitter(verbose=False)
+            sbmtr.prep_directives(
+                job_name=full_file_name,
+                REPLACE_OUTDIR_TXT/REPLACE_JOB_NAME_REPLACE_ETA_NAME_REPLACE_PT_NAME.log = os.path.join(new_outtxt_dir, f"{full_file_name}.log"
+                output_txt=os.path.join(new_outtxt_dir, f"{full_file_name}.log"),
+                email="rosedj1@ufl.edu",
+                time=time,
+                acct="avery",
+                burst=burst,
+                mem=mem,
+                partition=partition,
+                nodes=nodes,
+            )
+            cmdtup = (f"time python {fullpath_main_script_copy}")
+            fullpath_slurm_copy = os.path.join(new_outcopies_dir, f"{full_file_name}.sbatch")
+            result = sbmtr.make_slurm_script(fullpath_slurm_copy, cmdtup, overwrite=overwrite)
+            if result == 0:
+                sbmtr.submit_script(fullpath_slurm_copy)
+
+            output = subprocess.run(["sbatch", fullpath_copy_slurm_script])
             
 if __name__ == "__main__":
     main()
