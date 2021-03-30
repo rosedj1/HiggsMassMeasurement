@@ -83,6 +83,7 @@ The resulting skimmed `.pkl` file has 28M muons.
       - pT correction factor dict.
       - MyMuonCollection with analyzed KB2Ds and KB3Ds.
    - Processing time: `00:00:19`
+      - If you keep each `muon_ls` then ~`00:04:26`.
 
 1. Apply the pT correction factors to muons stored in a MyMuonCollection with:
 
@@ -102,10 +103,23 @@ The resulting skimmed `.pkl` file has 28M muons.
 
 ---
 
-## Applying pT Corr Factors
+## Apply pT Corr Factors
 
 
+```bash
+python apply_pTcorrfactors_to_muoncoll_submit2slurm.py
+```
 
+   - Which calls:
+      - `apply_pTcorrfactors_to_muoncoll_slurm_template.py`
+
+      
+Split and save kb2ds
+
+Submit KB2Ds to SLURM.
+
+Then merge KB2DS.
+python merge_individkb2ds_and_make_pTcorrfactordict.py
 ---
 
 ## Running locally (instead of submitting to SLURM)

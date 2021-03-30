@@ -1170,6 +1170,14 @@ class MyMuonCollection:
         """
         Saves each KB2D as its own standalone dict.
         Useful when a MyMuonCollection is too large to hold in RAM.
+
+        Parameters
+        ----------
+        outdir : str
+            The dir path where the KB2D dicts will be stored.
+        file_prefix : str
+            The prefix name of the outfile.
+            Will be appended with '__{KB2D_bin_key}.pkl'.
         """
         make_dirs(outdir, verbose=verbose)
         if len(file_prefix) > 0:
