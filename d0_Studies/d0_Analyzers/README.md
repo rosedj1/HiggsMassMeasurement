@@ -21,9 +21,7 @@ it is useful to submit your jobs to SLURM.
 **NOTE:**
 The workflow below shows processing times for working over a MC 2016 DY sample
 which had 122M unskimmed events.
-The resulting skimmed file has ??? muons.
-<!-- This way assumes your root file is too big to process all at once.
-Instead you can run over different ranges of events on SLURM. -->
+The resulting skimmed `.pkl` file has 28M muons.
 
 1. Skim a root file with:
 
@@ -33,7 +31,8 @@ Instead you can run over different ranges of events on SLURM. -->
 
    - Which calls: `skim_sample_inbatch_template.py`.
    - This will produce many pickled `MyMuonCollections`.
-   - Processing time: 
+   - Processing time: from ~`00:10:00 (hh:mm:ss)`
+      - (Requesting 2M events per batch.)
 
 1. Merge the `.pkl` files with:
    
@@ -42,9 +41,9 @@ Instead you can run over different ranges of events on SLURM. -->
    ```
 
    - Makes inclusive hists of muon kinematics.
-   - Sorts muons into KB2Ds.
-   - Overwrites `MyMuonCollection.muon_ls`
-   - Processing time: 
+   - Sorts muons into KB2Ds based on given eta and pT bins.
+   - Overwrites `MyMuonCollection.muon_ls`. Passes MyMuons to KB2Ds.
+   - Processing times: from `00:02:42` to `00:21:04`
 
 1. Save KB2Ds into individual pickled dicts with:
 
@@ -55,7 +54,7 @@ Instead you can run over different ranges of events on SLURM. -->
    python save_kb2ds_separate_dicts.py
    ```
    
-   - Processing time: 
+   - Processing time: `00:03:18`
 
 1. Do recursive Gaussian fits on the dpT/pT and 1/pT dists of each KB3D with:
 
@@ -66,12 +65,13 @@ Instead you can run over different ranges of events on SLURM. -->
    - Which calls:
       - `submit_singlekb2d_itergaussfits_template.py`
       - `submit_to_slurm_template.sbatch`
-   - This step also produces the following for each KB2D:
+   - For each KB2D, this step produces:
       - dpT/pT vs. q*d0 graph
       - dpT/pT * (1/\<pT\>) vs. q*d0 graph
       - dpT/pT * (\<1/pT\>) vs. q*d0 graph
       - dpT/pT * mu_DSCB(\<1/pT\>) vs. q*d0 graph
    - **TO DO:** Implement SlurmManager class to eliminate `.sbatch` script.
+   - Processing time (depends on size of KB3Ds): ~`00:24:00` max
 
 1. Merge KB2Ds (which contain analyzed KB3Ds) into a MyMuonCollection with:
 
@@ -100,7 +100,15 @@ Instead you can run over different ranges of events on SLURM. -->
 
    - Processing time: 
 
-### Running locally (instead of submitting to SLURM)
+---
+
+## Applying pT Corr Factors
+
+
+
+---
+
+## Running locally (instead of submitting to SLURM)
 
 1. Same as 1. above, except use `skim_sample.py`.
 
@@ -112,3 +120,12 @@ Instead you can run over different ranges of events on SLURM. -->
 d0_Studies/d0_Analyzers/
 d0_Studies/Plotters_ROOT/
 ```
+
+---
+
+## Plotting
+
+Make all plots, including KB3D fits and inclusive kinematics plots from
+MyMuonCollection with:
+
+```d0_Studies/d0_Analyzers/plot_all_KB3Diterfits.py```

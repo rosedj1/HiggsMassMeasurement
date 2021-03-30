@@ -9,7 +9,7 @@ The processed KB2D is then pickled into a new file.
 Syntax: python this_script.py
 Author: Jake Rosenzweig
 Created: 2021-03-14  # Happy pi day!
-Updated: 2021-03-24
+Updated: 2021-03-28
 """
 import os
 from pprint import pprint
@@ -20,22 +20,19 @@ from d0_Studies.d0_Utils.d0_fns import get_pT_part
 from Utils_Python.printing import print_header_message
 from d0_Studies.d0_Analyzers.slurm_inbatch_derive_pTcorrfactors import make_name_from_ls
 from ParticleCollections import MyMuonCollection
-from d0_Studies.kinematic_bins import equal_entry_bin_edges_eta_mod1_wholenum #, bin_edges_pT_sevenfifths_to1000GeV_wholenum
 from natsort import natsorted
 
-overwrite = 0
 
 # Grab all pTs.
-year = "2018"
+year = "2016"
 prod_mode = "DY2mu"
-inpkl_path_template = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2018DY/pickles/MC2018DY_individKB2D_withitergaussfitsonKB3Ds_updated/MC2018DY_individKB2D_withitergaussfitsonKB3Ds_updated_*eta*_*pT*.pkl"
+inpkl_path_template = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/pickles/MC2016DY_individKB2D_withitergaussfitsonKB3Ds_0p0_d0_0p01/MC2016DY_individKB2D_withitergaussfitsonKB3Ds_0p0_d0_0p01_*eta*_*pT*.pkl"
+overwrite = 1
 
-filename_base = "MC2018DY_finalmuoncoll_allitergaussfitsonKB2DsandKB3Ds_new"
-outpkl_dir_mucoll     = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2018DY/pickles/final_muon_coll"
-outpkl_dir_pTcorrfact = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2018DY/pickles/final_muon_coll"
-outpdf_dir            = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2018DY/pickles/final_muon_coll"
-
-eta_range = equal_entry_bin_edges_eta_mod1_wholenum
+filename_base = "MC2016DY_finalmuoncoll_allitergaussfitsonKB2DsandKB3Ds_0p0_d0_0p01"
+outpkl_dir_mucoll     = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/pickles/final_muon_coll"
+outpkl_dir_pTcorrfact = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/pickles/final_muon_coll"
+outpdf_dir            = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/pickles/final_muon_coll"
 
 def prep_area(d, overwrite=False):
     """Make directory `d` and check overwrite."""
@@ -54,10 +51,12 @@ def main():
     mu_coll = MyMuonCollection(prod_mode)
     # inpkl_path_ls = glob(inpkl_path_template.replace("ETAPART", eta_name))
     inpkl_path_ls = glob(inpkl_path_template)
+    if len(inpkl_path_ls) == 0:
+        raise ValueError('[ERROR] No files to glob!')
     # path_ls_etasorted = sorted(inpkl_path_ls)
     inpkl_path_ls_etapTsorted = natsorted(inpkl_path_ls)
-    # print("Found files:")
-    # pprint(inpkl_path_ls)
+    print("Found files:")
+    pprint(inpkl_path_ls)
     for pklfile in inpkl_path_ls_etapTsorted:
         kb2d = open_pkl(pklfile)
         print(f"Opened pkl:\n{  pklfile}")

@@ -1,27 +1,41 @@
+import os
 import pickle
 from pprint import pprint
 from glob import glob
+from Utils_Python.Utils_Files import open_pkl, save_to_pkl, save_to_json, check_overwrite
+from natsort import natsorted
 
-inpkl_ls = glob("/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pTCorrFactors/AdHoc/*.pkl")
+overwrite = 0
+inpkl_ls = glob("/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pTCorrFactors/AdHoc/AdHocpTcorrfact_derivedfromMC*.pkl")
 pprint(inpkl_ls)
 
+new_dct_format = {
+            "dpTOverpT_vs_qd0"                 : {},
+            "dpTOverpTscaled_vs_qd0"           : {},
+            "dpTOverpTtimesavgOf1divpT_vs_qd0" : {},
+            "dpTOverpTtimesmuOf1divpT_vs_qd0"  : {},
+}
+
 for inpkl in inpkl_ls:
+    new_outfile_path = inpkl.replace('.pkl', '_newerformat.pkl')
+    check_overwrite(new_outfile_path, overwrite)
     with open(inpkl, "rb") as p:
         dct = pickle.load(p)
-    print(f"{inpkl}:")
-    print(list(dct.keys())[0])
-    print(list(dct.values())[0])
-#     if "dpTOverpT_vs_qd0" not in dct.keys():
-#         old_dct_copy = dct.copy()
-#         new_dct = { 'dpTOverpT_vs_qd0': {'0.0eta0.2_100.0pT150.0': {'intercept': 2.022759454757394e-06,
-#    'intercept_err': 7.701238592076959e-07,
-#    'slope': 0.03106886975917445,
-#    'slope_err': 0.00044907629479497816},
-#   '2.3eta2.4_27.0pT38.0': {'intercept': -0.00012372292642212856,
-#    'intercept_err': 2.8639250676959453e-06,
-#    'slope': 0.23176579952234125,
-#    'slope_err': 0.0010737226458023294}
-#         }
-#         # Add the new style dict
-#         new_filename = f"{inpkl.rstrip('.pkl')}_newerformat.pkl"
-
+    print(f"...Opened {inpkl}.")
+    print("Original dct:")
+    pprint(dct)
+    print("Sorted dct:")
+    srt_key_ls = natsorted(dct)
+    
+    pprint(srt_dct)
+    if "dpTOverpT_vs_qd0" not in srt_dct.keys():
+        print(f"dpTOverpT_vs_qd0 not found in keys. Updating dict.")
+        updated_dct = {
+            "dpTOverpT_vs_qd0"                 : srt_dct,
+            "dpTOverpTscaled_vs_qd0"           : {},
+            "dpTOverpTtimesavgOf1divpT_vs_qd0" : {},
+            "dpTOverpTtimesmuOf1divpT_vs_qd0"  : {},
+        }
+        save_to_pkl(updated_dct, new_outfile_path, overwrite=overwrite)
+        save_to_json(updated_dct, new_outfile_path.replace(".pkl", ".json"), overwrite=overwrite)
+        break

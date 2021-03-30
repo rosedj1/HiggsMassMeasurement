@@ -4,12 +4,14 @@ Skim a sample that was produced from the HZZ4LAnalyzer.
 Store the muon info as a pickled MyMuonCollection (.pkl).
 Muons are stored as MyMuons.
 
+TODO: Implement inv_m_lim in non-template version of this file.
+
 NOTE: This script is controlled by:
 d0_Studies/d0_Analyzers/skim_sample_inbatch_submit.py
 
 Author:  Jake Rosenzweig
 Created: 2021-03-11
-Updated: 2021-03-27
+Updated: 2021-03-29  # Miss ya, Mom.
 """
 import os
 from ROOT import TFile
@@ -31,6 +33,7 @@ n_evt_beg = N_EVT_BEG  # Then specifying a range takes precedence.
 n_evt_end = N_EVT_END  
 print_out_every = 1E6
 
+inv_m_lim = INV_M_LIM
 eta_lim = ETA_LIM
 pT_lim = PT_LIM
 d0_lim = D0_LIM
@@ -59,14 +62,15 @@ def main():
     mu_coll.extract_muons(inpath_file, prod_mode=prod_mode, n_evts=max_n_evts,
                                   n_evt_beg=n_evt_beg, n_evt_end=n_evt_end,
                                   print_out_every=print_out_every,
-                                  eta_lim=eta_lim, pT_lim=pT_lim, d0_lim=d0_lim,
+                                  inv_m_lim=inv_m_lim, eta_lim=eta_lim,
+                                  pT_lim=pT_lim, d0_lim=d0_lim,
                                   dR_max=dR_max,
                                   do_mu_pT_corr=False,
                                   force_zero_intercept=False,
                                   pT_corr_factor_dict=None,
                                   use_GeoFit_algo=False,
                                   verbose=verbose)
-    save_to_pkl(mu_coll, outpath_pkl)
+    save_to_pkl(mu_coll, outpath_pkl, overwrite=overwrite)
 
 if __name__ == "__main__":
     main()

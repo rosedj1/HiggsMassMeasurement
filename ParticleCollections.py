@@ -25,7 +25,7 @@ def check_n_muons(prod_mode, muon_ls, per_event=True):
     prod_mode : str
         "DY2mu", "DY2e", "H2mu", "H2e", "H4mu", "H4e"
     muon_ls : list
-        List of muons.
+        List of MyMuons.
     per_event : bool
         If True, make sure final state has exactly expected number of muons
         on a per-event basis. Example: DY2e should have exactly 2 muons.
@@ -120,7 +120,6 @@ class MyMuonCollection:
         self.multigraph_muOf1divpT_ls = []
         self.multigraph_muOf1divpT_leg_ls = []
 
-
     def get_prod_modes_str(self):
         """Return a title string of all the production modes of the muons."""
         return ', '.join(self.prod_mode_ls)
@@ -128,7 +127,8 @@ class MyMuonCollection:
     def extract_muons(self, infile_path, prod_mode,
                       n_evts=-1, n_evt_beg=None, n_evt_end=None,
                       print_out_every=10000,
-                      eta_lim=[0.0, 2.4], pT_lim=[5, 1000], d0_lim=[0, 1],
+                      inv_m_lim=[60.0, 120.0], eta_lim=[0.0, 2.4],
+                      pT_lim=[5, 1000], d0_lim=[0, 1],
                       dR_max=None,
                       do_mu_pT_corr=False,
                       force_zero_intercept=False,
@@ -275,7 +275,6 @@ class MyMuonCollection:
             mu_tup = build_muons_from_process(prod_mode, t, evt_num,
                                               eta_bin=eta_lim,
                                               pT_bin=pT_lim,
-                                              
                                               d0_bin=d0_lim, dR_max=dR_max, verbose=verbose)
             if None in mu_tup: 
                 continue
@@ -284,7 +283,7 @@ class MyMuonCollection:
                 # Correct each muon's pT according to the
                 # pT correction factors given.
                 # Save the muons with old and new pTs.
-                corr_mu_ls = []
+                # corr_mu_ls = []
                 lorentzvec_corr_mu_withFSR_ls = []
                 # corr_mu_geofit_ls = []
                 for mu in mu_tup:
@@ -302,50 +301,61 @@ class MyMuonCollection:
                         verbose=verbose)
                     # lorentzvec_mu_corr = ROOT.Math.PtEtaPhiMVector(mu.pT_corr, mu.eta, mu.phi, mu.mass)
                     # corr_mu_ls.append(lorentzvec_mu_corr)
-                    corr_mu_ls.append(mu)
-                check_n_muons(prod_mode, corr_mu_ls, per_event=True)
+                    # corr_mu_ls.append(mu)
                 # Now combine any FSR photon to its muon with corrected pT.
-                for mu in corr_mu_ls:
+                # for mu in mu_tup:
                     # Clever way to rebuild the FSR photon:
                     lvec_photon = mu.get_LorentzVector(kind="withFSR") - mu.get_LorentzVector(kind="reco")
                     lvec_mu_corrpT_FSR = lvec_photon + ROOT.Math.PtEtaPhiMVector(mu.pT_corr, mu.eta, mu.phi, mu.mass)
                     lorentzvec_corr_mu_withFSR_ls.append(lvec_mu_corrpT_FSR)
+                #--- End loop over muons.
+                # check_n_muons(prod_mode, corr_mu_ls, per_event=True)
+                check_n_muons(prod_mode, mu_tup, per_event=True)
+
                 # The below is not tested, but should work!
                 # If you have problems, uncomment the second line down. 
-                m4mu_corr = calc_Hmass(lorentzvec_corr_mu_withFSR_ls)  # Can accommodate different num fs muons.
+                inv_m_corr = calc_Hmass(lorentzvec_corr_mu_withFSR_ls)  # Can accommodate different num fs muons.
+                # for mu in mu_tup:
+                #     # An attempt to get rid of self.m4mu_corr_ls.
+                #     mu.inv_m_event_corr = inv_m_corr
                 # m4mu_corr = calc_Hmass(corr_mu_ls)  # Can accommodate different num fs muons.
-                self.m4mu_corr_ls.append(m4mu_corr)
+                self.m4mu_corr_ls.append(inv_m_corr)
 
-            # Add the good muons to the final muon list.
-            self.muon_ls.extend(mu_tup)
             # Save the inv_mass(muons) info.
             lorentzvec_mu_withFSR_ls = [mu.get_LorentzVector("withFSR") for mu in mu_tup]
-            m4mu = calc_Hmass(lorentzvec_mu_withFSR_ls)
+            inv_m = calc_Hmass(lorentzvec_mu_withFSR_ls)
+            for mu in mu_tup:
+                # An attempt to get rid of self.m4mu_ls and self.m4mu_corr_ls.
+                mu.inv_m_event = inv_m
+                if do_mu_pT_corr:
+                    mu.inv_m_event_corr = inv_m_corr
             # lorentzvector_mu_ls = [mu.get_LorentzVector("reco") for mu in mu_tup]
             # m4mu = calc_Hmass(lorentzvector_mu_ls)
-            self.m4mu_ls.append(m4mu)
+            self.m4mu_ls.append(inv_m)
+            # Add the good muons to the final muon list.
+            self.muon_ls.extend(mu_tup)
 
             # Some checks to make sure FSR was computed correctly.
             if verbose:
-                perc_diff = (t.mass4l - m4mu) / m4mu * 100.0
+                perc_diff = (t.mass4l - inv_m) / inv_m * 100.0
                 if (perc_diff > 2):
                     print(
-                        f"[WARNING] (t.mass4l - m4mu) / m4mu * 100.0 > 2% spotted!\n"
+                        f"[WARNING] (t.mass4l - inv_m) / inv_m * 100.0 > 2% spotted!\n"
                         f"  Event #{evt_num}\n"
                         f"  nFSRPhotons = {t.nFSRPhotons}\n"
                         f"  t.mass4l    = {t.mass4l}\n"
-                        f"  m4mu        = {m4mu}\n"
+                        f"  inv_m        = {inv_m}\n"
                         f"  perc_diff   = {perc_diff}\n"
                         )
                 if do_mu_pT_corr:
-                    perc_diff = (t.mass4l - m4mu_corr) / m4mu_corr * 100.0
+                    perc_diff = (t.mass4l - inv_m_corr) / inv_m_corr * 100.0
                     if (perc_diff > 2):
                         print(
-                            f"[WARNING] (t.mass4l - m4mu_corr) / m4mu_corr * 100.0 > 2% spotted!\n"
+                            f"[WARNING] (t.mass4l - inv_m_corr) / inv_m_corr * 100.0 > 2% spotted!\n"
                             f"  Event #{evt_num}\n"
                             f"  nFSRPhotons = {t.nFSRPhotons}\n"
                             f"  t.mass4l    = {t.mass4l}\n"
-                            f"  m4mu_corr   = {m4mu_corr}\n"
+                            f"  inv_m_corr   = {inv_m_corr}\n"
                             f"  perc_diff   = {perc_diff}\n"
                             )
             n_good_evts += 1
@@ -989,19 +999,19 @@ class MyMuonCollection:
         # else:
         #     self.multigraph_ls.append(mg)
 
-    # def make_all_multigraphs(self, eta_ls,
-    #                                scale_by_1divpT=False,
-    #                                scale_by_avgOf1divpT=False,
-    #                                scale_by_muOf1divpT=False):
-    #     """
-    #     Make a multigraph (dpT/pT vs. q*d0) for each eta bin in eta_ls.
-    #     If scale_by_1divpT, then make dpT/pT * 1/<pT> vs. q*d0 plots.
-    #     """
-    #     for eta_min, eta_max in zip(eta_ls[:-1], eta_ls[1:]):
-    #         self.make_multigraph(eta_min, eta_max,
-    #                             scale_by_1divpT=scale_by_1divpT,
-    #                             scale_by_avgOf1divpT=scale_by_avgOf1divpT,
-    #                             scale_by_muOf1divpT=scale_by_muOf1divpT)
+        # def make_all_multigraphs(self, eta_ls,
+        #                                scale_by_1divpT=False,
+        #                                scale_by_avgOf1divpT=False,
+        #                                scale_by_muOf1divpT=False):
+        #     """
+        #     Make a multigraph (dpT/pT vs. q*d0) for each eta bin in eta_ls.
+        #     If scale_by_1divpT, then make dpT/pT * 1/<pT> vs. q*d0 plots.
+        #     """
+        #     for eta_min, eta_max in zip(eta_ls[:-1], eta_ls[1:]):
+        #         self.make_multigraph(eta_min, eta_max,
+        #                             scale_by_1divpT=scale_by_1divpT,
+        #                             scale_by_avgOf1divpT=scale_by_avgOf1divpT,
+        #                             scale_by_muOf1divpT=scale_by_muOf1divpT)
 
     def draw_mg_and_fits(self, mg, x_lim=None,
                         scale_by_1divpT=False,
@@ -1172,3 +1182,31 @@ class MyMuonCollection:
             if verbose:
                 print(f"[INFO] Saving KB2D: {key}")
             save_to_pkl(kb2d, outpath, overwrite=overwrite)
+
+    def apply_pTcorr_to_all_muons(self, pT_corr_factor_dict, use_GeoFit_algo=False,
+                                  force_zero_intercept=True, verbose=False):
+        """Apply pT corrections to all muons stored in the KB2Ds.
+        
+        TODO: Update docstring.
+        
+        NOTE: `self.KinBin2D_dict` must be populated.
+
+        Parameters
+        ----------
+        """
+        corr_type = "GeoFit" if use_GeoFit_algo else "AdHoc"
+        print(f"...Applying {corr_type} pT corr factors to MyMuonCollection.")
+        for kb2d in self.KinBin2D_dict.values():
+            if verbose:
+                print(f"...Working on: eta={kb2d.eta_range}, pT={kb2d.pT_range}")
+            mu_ls = kb2d.muon_ls
+            assert isinstance(mu_ls, list)
+            assert len(mu_ls) > 0
+            for mu in kb2d.muon_ls:
+                mu.pT_corr = correct_muon_pT(
+                    mu.eta, mu.pT, mu.charge, mu.d0,
+                    pT_corr_factor_dict, detection="auto",
+                    force_zero_intercept=force_zero_intercept,
+                    use_GeoFit_algo=use_GeoFit_algo,
+                    print_all_muon_info=False,
+                    verbose=verbose)

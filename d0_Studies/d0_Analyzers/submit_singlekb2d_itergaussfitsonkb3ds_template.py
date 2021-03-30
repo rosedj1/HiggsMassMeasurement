@@ -1,4 +1,4 @@
-"""Submit Iterated Gaussian Fit to SLURM
+"""Submit Iterated Gaussian Fits to SLURM
 
 TODO:
 [ ] Get rid of many User Parameters and put them into:
@@ -23,7 +23,7 @@ from Utils_Python.printing import print_header_message
 from d0_Studies.d0_Analyzers.slurm_inbatch_derive_pTcorrfactors import make_name_from_ls
 from pprint import pprint
 
-overwrite = 1
+overwrite = 0
 
 bins_dpTOverpT = 100
 x_lim_dpTOverpT = [-0.4, 0.4] #None
@@ -34,7 +34,7 @@ x_lim_qd0 = [-0.01, 0.01]
 bins_1OverpT = 100
 x_lim_1OverpT = [0, 0.2] #None
 
-binned_fit = False
+binned_fit = BINNED_FIT
 fit_whole_range_first_iter = False
 iters = 5
 num_sigmas = 2.5
@@ -60,9 +60,6 @@ outpkl_path = "REPLACE_OUTPATH_PKL"
 def do_itergaussfits_on_kb3ds(kb2d):
     """Do IGFs for all KB3Ds in this KB2D."""
     for kb3d in kb2d.KinBin3D_dict.values():
-        # x_lim_dct = {
-        #     "7.0pT10.0" : [0, 22]
-        # }
         # Do dpT/pT and 1/pT iterated Gaussian fits.
         kb3d.analyze_KinBin3D(bins_dpTOverpT=bins_dpTOverpT, bins_qd0=bins_qd0,
                             x_lim_dpTOverpT=x_lim_dpTOverpT, x_lim_qd0=x_lim_qd0,

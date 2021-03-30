@@ -201,8 +201,10 @@ class KinBin2D:
         """Return a list of q*d0 values for all muons in this KB2D."""
         return [mu.charge * mu.d0 for mu in self.muon_ls]
 
-    def get_dpTOverpT_ls(self):
+    def get_dpTOverpT_ls(self, use_mu_pT_corr=False):
         """Return a list of q*d0 values for all muons in this KB2D."""
+        if use_mu_pT_corr:
+            return [(mu.pT_corr - mu.gen_pT)/mu.gen_pT for mu in self.muon_ls]
         return [(mu.pT - mu.gen_pT)/mu.gen_pT for mu in self.muon_ls]
 
     def add_muon(self, muon):
@@ -427,13 +429,13 @@ class KinBin2D:
     def do_itergausfit(self, data=None, bins_dpTOverpT=100, bins_qd0=100,
                        x_lim_dpTOverpT=[-0.4,0.4], x_lim_qd0=[-0.01,0.01],
                        fit_whole_range_first_iter=True,
-                       iters=1, num_sigmas=2, marker_color=None, line_color=None,
+                       iters=3, num_sigmas=2.5, marker_color=None, line_color=None,
                        switch_to_binned_fit=2000, verbose=False, alarm_level="warning",
                        use_mu_pT_corr=False, only_draw_last=False):
         """Perform an unbinned iterated Gaussian fit on the dpT/pT
         distribution. Store the statistics and best-fit vals of this KinBin.
         
-        FIXME: Update Parameter descriptions.
+        TODO: Update docstring.
 
         NOTE:
         - Should also work for child classes, like KinBin3D.
@@ -472,14 +474,14 @@ class KinBin2D:
             If True, print juicy debug info.
         use_mu_pT_corr : bool
             If True, use the corrected muon pT (from d0 studies).
-            Make a distribution of (pT_rec_corr - pT_gen)/pT_gen.
+            Make a distribution of (pT_corr[rec] - pT_gen)/pT_gen.
         """
         self.n_entries = len(self.muon_ls)
         try:
             assert self.n_entries > 0
         except AssertionError:
             # Move along people, there's nothing to see here.
-            print("There are no muons found in this KB2D. .")
+            print("There are no muons found in this KB2D.")
             return
         if data is not None:
             try:
@@ -488,8 +490,8 @@ class KinBin2D:
                 print("There are no data to be plotted.")
                 return
         # Make sure that the MyMuon has the requested attribute.
-        msg = f"MyMuon doesn't have attribute `{attr}`"
-        assert getattr(self.muon_ls[0], attr), msg
+        # msg = f"MyMuon doesn't have attribute `{attr}`"
+        # assert getattr(self.muon_ls[0], attr), msg
 
         self.iters = iters
         if verbose:
@@ -525,12 +527,12 @@ class KinBin2D:
                                 x_label=r"(p_{T}^{REC,corr.} - p_{T}^{GEN})/p_{T}^{GEN}", 
                                 title="%s" % self.make_latex_bin_cut_str(), 
                                 units="",
-                                marker_color=marker_color_pT_corr, force_last_line_color=line_color_after_corr,
+                                marker_color=marker_color_after_corr, force_last_line_color=line_color_after_corr,
                                 only_draw_last=only_draw_last, 
                                 verbose=verbose)
 
-        # Perform iter Gauss fit on reco pT vals.
-        # dpTOverpT_ls = [mu.dpTOverpT for mu in self.muon_ls]
+        # Perform iter Gauss fit on (pT_reco - pT_gen) / pT_gen:
+        data = [(mu.pT - mu.gen_pT) / mu.gen_pT for mu in self.muon_ls]
         # data = [getattr(mu, attr) for mu in self.muon_ls]
 
         self.fit_stats_dict_dpTOverpT, self.frame_dpTOverpT = RooFit_iterative_gaus_fit(

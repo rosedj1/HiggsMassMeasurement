@@ -1,4 +1,5 @@
 import os
+import json
 from shutil import copy2
 import pickle
 import subprocess
@@ -47,7 +48,14 @@ def open_pkl(inpkl_path):
         obj = pickle.load(p)
         return obj
 
-def save_to_pkl(obj, outpkl_path, overwrite=False):
+def save_to_json(obj, outpath, overwrite=True):
+    """Write one obj to 'outpath.json'."""
+    check_overwrite(outpath, overwrite=overwrite)
+    with open(outpath, 'w') as f:
+        json.dump(obj, f, indent=4, sort_keys=True)
+    print(f"[INFO] JSON file written:\n{outpath}\n")
+
+def save_to_pkl(obj, outpkl_path, overwrite=True):
     """Write one obj to pickle."""
     check_overwrite(outpkl_path, overwrite=overwrite)
     with open(outpkl_path, 'wb') as output:

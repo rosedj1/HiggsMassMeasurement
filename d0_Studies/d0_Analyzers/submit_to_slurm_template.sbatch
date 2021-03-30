@@ -7,9 +7,9 @@
 #SBATCH --time=01:00:00
 #SBATCH --account=avery
 #SBATCH --qos=avery-b
-#SBATCH --mem=8gb
+#SBATCH --mem=24gb
 #SBATCH --partition=bigmem
-#SBATCH --nodes=2
+#SBATCH --nodes=4
 
 pwd; hostname; date
 source ~/.bash_profile
