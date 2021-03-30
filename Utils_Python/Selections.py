@@ -1,7 +1,8 @@
+import numpy as np
 from Particles import MyMuon
-from Utils_Python.Utils_Physics import calc_dphi, calc_dR
+from Utils_Python.Utils_Physics import calc_dphi, calc_dR, calc_Hmass
 
-class Selector():
+class Selector:
     """
     A class to organize the selections for different samples. 
     """
@@ -107,31 +108,51 @@ def passed_Hmumu_evt_selection(evt):
     selec_ls = [True]
     return all(selec_ls)
 
-def passed_DY_evt_selection(evt):
-    """Return True if this is a good Z->2mu event."""
+def passed_muon_ID_checks(evt, rec_ndcs_arr, gen_ndcs_arr):
+    """Return True if this is a good Z->2mu event.
+    
+    TODO: Update other passed_X_evt_selection fns to look like this one.
+    """
     # Note to self:
     # Using many if, return False statements is a very fast way
     # to leave the function as soon as this event is labeled bad.
-    rec_id_ls = list(evt.lep_id)
-    gen_id_ls = list(evt.GENlep_id)
+    #--- Preselection ---#
+
+    # Get the indices of reco muons that pass criteria.
+    # good_tightid_ndcs = [ndx for ndx, ID in enumerate(list(evt.lep_tightId)) if ID == 1]
+    # good_reliso_ndcs  = [ndx for ndx, iso in enumerate(list(evt.lep_RelIso)) if iso < 0.35]
+    # if not (good_tightid_ndcs == good_reliso_ndcs):
+    #     # Not the same muons.
+    #     return False
+    # if not (len(good_tightid_ndcs) == 2):
+    #     # Need 2 muons per event.
+    #     return False
+    # # if any(x != 1 for x in list(evt.lep_tightId)):
+    # #     return False
+    # # if any(x > 0.35 for x in list(evt.lep_RelIso)):
+    # #     return False
+
+    # rec_ndx_arr = np.array(good_reliso_ndcs)  #list(evt.lep_id)
+    # gen_ndx_arr = get_ndcs_gen(rec_ndx_arr, list(evt.lep_genindex))
+    if not (len(rec_ndcs_arr) == len(gen_ndcs_arr)):
+        return False
+    rec_id_arr = np.array(evt.lep_id)[rec_ndcs_arr]
+    gen_id_arr = np.array(evt.GENlep_id)[gen_ndcs_arr]
+    if not all([rec_id == gen_id for rec_id, gen_id in zip(rec_id_arr, gen_id_arr)]):
+        return False
     # Reco muons.
-    if len(rec_id_ls) != 2:  # 2 muons per event.
+    # if len(rec_id_ls) != 2:
+    #     return False
+    if sum(rec_id_arr) != 0:  # OSSF.
         return False
-    if sum(rec_id_ls) != 0:  # OSSF.
-        return False
-    if any(abs(x) != 13 for x in rec_id_ls):
+    if any(abs(x) != 13 for x in rec_id_arr):
         return False
     # Gen muons.
-    if len(gen_id_ls) != 2:
+    # if len(gen_id_ls) != 2:
+    #     return False
+    if sum(gen_id_arr) != 0:
         return False
-    if sum(gen_id_ls) != 0:
-        return False
-    if any(abs(x) != 13 for x in gen_id_ls):
-        return False
-    # Additional cuts.
-    if any(x != 1 for x in list(evt.lep_tightId)):
-        return False
-    if any(x > 0.35 for x in list(evt.lep_RelIso)):
+    if any(abs(x) != 13 for x in gen_id_arr):
         return False
     # Looks like a good event!
     return True
@@ -174,6 +195,9 @@ def initialize_muon(evt, reco_ndx, gen_ndx):
     -------
     mu : MyMuon object
     """
+    # Encountered some weird numpy.int64 problems.
+    reco_ndx = int(reco_ndx)
+    gen_ndx = int(gen_ndx)
     # Record reco info. 
     # mu = ROOT.Math.PtEtaPhiMVector(evt.lepFSR_pt[reco_ndx], evt.lepFSR_eta[reco_ndx], evt.lepFSR_phi[reco_ndx], evt.lepFSR_mass[reco_ndx])
     charge = evt.lep_id[reco_ndx] / -13.
@@ -265,7 +289,7 @@ def make_muon_ls(evt, rec_ndcs_ls, gen_ndcs_ls):
         Should be the same length as rec_ndcs_ls.
     """
     assert len(rec_ndcs_ls) == len(gen_ndcs_ls)
-    return [initialize_muon(evt, reco_ndx, gen_ndx) for reco_ndx,gen_ndx in zip(rec_ndcs_ls, gen_ndcs_ls)]
+    return [initialize_muon(evt, reco_ndx, gen_ndx) for reco_ndx, gen_ndx in zip(list(rec_ndcs_ls), list(gen_ndcs_ls))]
 
 def make_muon_ls_fromliteskim(evt):
     """Return a 2-elem list of MyMuon objects with stored reco and gen info.
@@ -279,7 +303,7 @@ def make_muon_ls_fromliteskim(evt):
     """
     return [initialize_Htomumu_muons_fromliteskim(evt, num) for num in [1,2]]
 
-def apply_kinem_selections(mu_ls, eta_bin=[0, 2.4], pT_bin=[5, 200],
+def apply_kinem_selections(mu_ls, inv_mass_bin=[60, 120], eta_bin=[0, 2.4], pT_bin=[5, 200],
                            d0_bin=[0, 1], dR_max=None):
     """
     Make sure all muons passed selections and do final pT checks.
@@ -289,6 +313,8 @@ def apply_kinem_selections(mu_ls, eta_bin=[0, 2.4], pT_bin=[5, 200],
     ----------
     mu_ls : list
         Contains MyMuon objects.
+    inv_mass_bin : 2-elem list
+        Keep muons with combined invariant mass in range: [inv_m_min, inv_m_max]
     eta_bin : 2-elem list
         Keep muons with reco abs(eta) in range: [eta_min, eta_max]
     pT_bin : 2-elem list
@@ -299,9 +325,14 @@ def apply_kinem_selections(mu_ls, eta_bin=[0, 2.4], pT_bin=[5, 200],
         If not None, keep muons with dR(gen,reco) < dR_max.
     """
     # passed_genrecomatch = True  # Only test this if dR_max was provided.
+    inv_m_min, inv_m_max = inv_mass_bin
     eta_min, eta_max = eta_bin[0], eta_bin[1]
     pT_min, pT_max = pT_bin[0], pT_bin[1]
     d0_min, d0_max = d0_bin[0], d0_bin[1]
+    lorentzvec_mu_withFSR_ls = [mu.get_LorentzVector("withFSR") for mu in mu_ls]
+    inv_m = calc_Hmass(lorentzvec_mu_withFSR_ls)
+    if not (inv_m_min < inv_m and  inv_m < inv_m_max):
+        return False
     for mu in mu_ls:
         if not (eta_min < abs(mu.eta) and abs(mu.eta) < eta_max):
             return False
@@ -362,19 +393,47 @@ def build_muons_from_DY_event(evt, evt_num, eta_bin=[0, 2.4], pT_bin=[5, 200],
     # global n_evts_passed
     bad_muons = (None, None)
     # t.GetEntry(evt_num)
-    
-    # if not passed_DY_evt_selection(t):
-    if not passed_DY_evt_selection(evt):
+    # Get the indices of all reco muons that pass criteria (could be >2).
+    tightid_ls = list(evt.lep_tightId)
+    reliso_ls = list(evt.lep_RelIso)
+    if len(tightid_ls) == 0 or len(reliso_ls) == 0:
+        return bad_muons
+    good_tightid_ndcs = [ndx for ndx, ID in enumerate(tightid_ls) if ID == 1]
+    rec_ndcs_ls  = [ndx for ndx, iso in enumerate(reliso_ls) if iso < 0.35]
+    if not len(rec_ndcs_ls) == 2:
+        # Request only 2 muons per event.
+        return bad_muons
+    if not good_tightid_ndcs == rec_ndcs_ls:
+        # Not all reco muons passed tightID and RelIso.
+        return bad_muons
+    # rec_ndcs_ls = np.array(good_reliso_ndcs)  #list(evt.lep_id)
+    assert -1 not in rec_ndcs_ls
+    gen_ndcs_arr = np.array(evt.lep_genindex, dtype=int)[rec_ndcs_ls]
+    if -1 in gen_ndcs_arr:
+        return bad_muons
+    gen_ndcs_ls = list(gen_ndcs_arr)  #get_ndcs_gen(rec_ndcs_ls, list(evt.lep_genindex))
+    # if any(x != 1 for x in list(evt.lep_tightId)):
+    #     return False
+    # if any(x > 0.35 for x in list(evt.lep_RelIso)):
+    #     return False
+    # rec_id_arr = np.array(evt.lep_id)[rec_ndx_arr]
+    # gen_id_arr = np.array(evt.GENlep_id)[gen_ndx_arr]
+
+    # See if muons 
+    if not passed_muon_ID_checks(evt, rec_ndcs_ls, gen_ndcs_ls):
         return bad_muons
 
-    # Requesting only 2mu events.
-    # Manually make muon list:
-    lep_genindex_ls = list(evt.lep_genindex)
-    rec_ndcs_ls = [0, 1]
-    gen_ndcs_ls = get_ndcs_gen(rec_ndcs_ls, lep_genindex_ls)
+    # lep_genindex_ls = list(evt.lep_genindex)
+    # rec_ndcs_ls = list(range(len(lep_genindex_ls)))#[0, 1]
+    # gen_ndcs_ls = get_ndcs_gen(rec_ndcs_ls, lep_genindex_ls)
 
+    # def get_reco_ndcs(evt):
+    #     """Return a list of the reco ndcs which """
+    print(f"Evt num = {evt_num}")
+    print(f"rec_ndcs_ls = {rec_ndcs_ls}")
+    print(f"gen_ndcs_ls = {gen_ndcs_ls}")
     mu_ls = make_muon_ls(evt, rec_ndcs_ls, gen_ndcs_ls)
-
+    # See if good muons pass, eta, pT, d0, dR cuts.
     if not apply_kinem_selections(mu_ls, eta_bin=eta_bin, pT_bin=pT_bin,
                                   d0_bin=d0_bin, dR_max=dR_max):
         return bad_muons
@@ -386,7 +445,7 @@ def build_muons_from_DY_event(evt, evt_num, eta_bin=[0, 2.4], pT_bin=[5, 200],
             f"Good event #{evt_num} passed selections:\n"
             f"gen_ID_ls:       {gen_ID_ls}\n"
             f"rec_ID_ls:       {rec_ID_ls}\n"
-            f"lep_genindex_ls: {lep_genindex_ls}\n"
+            f"lep_genindex_ls: {list(evt.lep_genindex)}\n"
             f"rec_ndcs_ls:     {rec_ndcs_ls}\n"
             f"gen_ndcs_ls:     {gen_ndcs_ls}\n"
             f"Reco and gen IDs match?: {all(mu.charge==mu.charge_gen for mu in mu_ls)}"

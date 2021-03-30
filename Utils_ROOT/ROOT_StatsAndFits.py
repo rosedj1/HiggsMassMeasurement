@@ -1,6 +1,7 @@
 import ROOT as r
 import numpy as np
 from array import array
+from pprint import pprint
 
 from Utils_Python.Plot_Styles_ROOT.tdrstyle_official import fixOverlay
 from Utils_Python.Utils_StatsAndFits import prop_err_on_dsigoversig
@@ -518,7 +519,9 @@ def RooFit_iterative_gaus_fit(data, binned_fit=False, switch_to_binned_fit=2000,
         "fit_range_ls" : fit_range_ls,
     }
     if verbose:
-        print(f"Final iterated Gaussian fit statistics:\n{fit_stats_dict}\n")
+        print("Final iterated Gaussian fit statistics:")
+        pprint(fit_stats_dict)
+        print()
     return (fit_stats_dict, xframe)
 
 def get_BWxCBplusExp_fit_stats(mean, sigma, alpha, n, tau, fsig):

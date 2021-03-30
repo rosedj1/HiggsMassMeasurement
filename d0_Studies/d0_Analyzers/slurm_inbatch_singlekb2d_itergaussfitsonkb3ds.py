@@ -2,7 +2,7 @@
 
 This code submits SLURM jobs, where each SLURM job performs iterated Gaussian
 fits on a single KB2D. Fits are done on dpT/pT and 1/pT distributions. Fit
-statistics are saved.
+statistics are saved. The updated KB2D is saved as a new '.pkl'.
 
 Iterated fits can hang for a very long time (memory issues?). A workaround is
 what this script does: only work on 1 KB2D at a time.
@@ -17,27 +17,29 @@ SLURM. It actually makes many copies of the main script and of the SLURM
 submissions script, each copy only differing from the next by the eta bin
 used.
 
-User can put in a whole list of eta values, and each bin will be considered:
+User can put in a whole list of eta values, and each bin will be processed:
 
 Example: eta_ls = [0.2, 0.4, 0.6, 0.8]
-Then this code will produce a copy of the main script
+This code will produce a copy of the main script
 and of the SLURM submission script using eta_bin = [0.2, 0.4].
-The next copy will use eta_bin = [0.4, 0.6], etc.
+This job will be submitted to SLURM.
+Then the next copy will use eta_bin = [0.4, 0.6], etc.
 
 NOTE:
     The main template script should have replacement strings that are in all
     caps: "REPLACE_". Check the `replace_vals_in_files` function to see what values
     get replaced.
 
-Requires an input pickled dict of KinBin2Ds.
-- You can make the input dict from roch_vs_noroch_kb2dmaker_inclusivehistplotter.py
+Requires an input pickled dict of KinBin2Ds. You can make the '.pkl' with:
+- save_kb2ds_separate_dicts.py
+- roch_vs_noroch_kb2dmaker_inclusivehistplotter.py
 
 Author: Jake Rosenzweig
 Created: <2021-03-15
-Updated: 2021-03-22
+Updated: 2021-03-29
 """
 from Utils_Python.Utils_Files import replace_value, make_dirs
-from d0_Studies.kinematic_bins import equal_entry_bin_edges_eta_mod1_wholenum, bin_edges_pT_sevenfifths_to1000GeV_wholenum
+from d0_Studies.kinematic_bins import eta_bins_geofitvsVXBS, pT_bins_geofitvsVXBS #equal_entry_bin_edges_eta_mod1_wholenum, bin_edges_pT_sevenfifths_to1000GeV_wholenum
 from d0_Studies.d0_Analyzers.slurm_inbatch_derive_pTcorrfactors import make_name_from_ls
 from Utils_Python.SlurmManager import SLURMSubmitter
 # from d0_Studies.d0_Utils.d0_cls import OrganizerKB2D
@@ -48,31 +50,32 @@ import sys
 #-----------------------#
 #--- User Parameters ---#
 #-----------------------#
-overwrite = 1
+year = "2016"
+overwrite = 0
 iters = 5
 verbose = 0
 fit_whole_range_first_iter = False  # False gives more consistent fits (with no outlier data).
 use_data_in_xlim = 1
-binned_fit = False
+binned_fit = True
 switch_to_binned_fit = 999999999
 
-job_name_base = "MC2018DY_individKB2D_withitergaussfitsonKB3Ds_updated"  # Also prefix for outfile.
-eta_ls = equal_entry_bin_edges_eta_mod1_wholenum
+job_name_base = "MC2016DY_individKB2D_withitergaussfitsonKB3Ds_nogenmatching_0p0_d0_0p01"  # Also prefix for outfile.
+eta_ls = eta_bins_geofitvsVXBS #equal_entry_bin_edges_eta_mod1_wholenum
 # eta_ls = equal_entry_bin_edges_eta_mod1_wholenum[7:9]
-full_pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum
+full_pT_ls = pT_bins_geofitvsVXBS  #[20.0, 30.0, 40.0, 50.0] #bin_edges_pT_sevenfifths_to1000GeV_wholenum
 
-template_script_main = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/submit_singlekb2d_itergaussfits_template.py"
+template_script_main = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/submit_singlekb2d_itergaussfitsonkb3ds_template.py"
 # template_script_main = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/derive_pTcorrfactors_from_ggH_sample_template.py"
 template_script_slurm = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/submit_to_slurm_template.sbatch"
 # template_script_slurm = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/RochCorrAnalyzers/roch_vs_noroch_slurm.sbatch"
 
-inpkl_path_template = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2018/DY/kb2d_dictsnofitinfo/MC2018DY_fullstats_muoncoll_withkb3dbins__ETAPART_PTPART.pkl"
+inpkl_path_template = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_nogenmatching/kb2d_dictsnofitinfo/MC2016DY_fullstats_muoncoll_withkb3dbins_nogenmatching_0p0_d0_0p01__ETAPART_PTPART.pkl"
 
 # /cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/output/DeriveCorrections/2016DY/individualKB2Ditergaussfits/MC2016DY_kb2d_ETARANGE_PTRANGE_error.log
-outdir_copies = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2018DY/scriptcopies/{job_name_base}"
-outdir_pkl    = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2018DY/pickles/{job_name_base}"
-outdir_txt    = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2018DY/output/{job_name_base}"
-outdir_pdf    = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2018DY/plots/{job_name_base}"
+outdir_copies = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/scriptcopies/{job_name_base}"
+outdir_pkl    = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/pickles/{job_name_base}"
+outdir_txt    = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/output/{job_name_base}"
+outdir_pdf    = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/plots/{job_name_base}"
 
 # SLURM directives.
 partition = "hpg2-compute"
@@ -130,6 +133,7 @@ def replace_vals_in_files(eta_range, pT_range, inpkl_path, outpkl_path,
         replace_value("REPLACE_NEW_SCRIPT", fullpath_new_main_script, template)
         replace_value("REPLACE_ETA_NAME", eta_name, template)
         replace_value("REPLACE_PT_NAME", pT_name, template)
+        replace_value("BINNED_FIT", binned_fit, template)
 
 def print_info(fullpath_copy_main_script, fullpath_copy_slurm_script, 
                 outdir_copies, outdir_pkl, outdir_txt, outdir_pdf):
@@ -142,6 +146,8 @@ def print_info(fullpath_copy_main_script, fullpath_copy_slurm_script,
     print(f"[INFO] Dir to pdf:    {outdir_pdf}")
 
 def main():
+    assert all(year in f for f in (job_name_base, inpkl_path_template, outdir_copies, outdir_pkl, outdir_txt, outdir_pdf))
+    prep_area([outdir_copies, outdir_pkl, outdir_txt])
     for eta_min, eta_max in zip(eta_ls[:-1], eta_ls[1:]):
         eta_range = [eta_min, eta_max]
         eta_name = make_name_from_ls(eta_range, "eta")
@@ -149,7 +155,6 @@ def main():
             pT_range = [pT_min, pT_max]
             pT_name = make_name_from_ls(pT_range, "pT")
             print(f"...Preparing work area for: eta={eta_name}, pT={pT_name}")
-            prep_area([outdir_copies, outdir_pkl, outdir_txt])
             fullpath_copy_main_script, fullpath_copy_slurm_script = make_filepaths_of_copies(eta_name, pT_name, template_script_main, template_script_slurm, outdir_copies)
             print_info(fullpath_copy_main_script, fullpath_copy_slurm_script, 
                     outdir_copies, outdir_pkl, outdir_txt, outdir_pdf)
@@ -167,24 +172,24 @@ def main():
             print(f"...Submitting SLURM script for: eta_range={eta_range} pT_range={pT_range}")
 
             # Prep and submit SLURM script copy.
-            sbmtr = SLURMSubmitter(verbose=False)
-            sbmtr.prep_directives(
-                job_name=full_file_name,
-                REPLACE_OUTDIR_TXT/REPLACE_JOB_NAME_REPLACE_ETA_NAME_REPLACE_PT_NAME.log = os.path.join(new_outtxt_dir, f"{full_file_name}.log"
-                output_txt=os.path.join(new_outtxt_dir, f"{full_file_name}.log"),
-                email="rosedj1@ufl.edu",
-                time=time,
-                acct="avery",
-                burst=burst,
-                mem=mem,
-                partition=partition,
-                nodes=nodes,
-            )
-            cmdtup = (f"time python {fullpath_main_script_copy}")
-            fullpath_slurm_copy = os.path.join(new_outcopies_dir, f"{full_file_name}.sbatch")
-            result = sbmtr.make_slurm_script(fullpath_slurm_copy, cmdtup, overwrite=overwrite)
-            if result == 0:
-                sbmtr.submit_script(fullpath_slurm_copy)
+            # sbmtr = SLURMSubmitter(verbose=False)
+            # sbmtr.prep_directives(
+            #     job_name=full_file_name,
+            #     REPLACE_OUTDIR_TXT/REPLACE_JOB_NAME_REPLACE_ETA_NAME_REPLACE_PT_NAME.log = os.path.join(new_outtxt_dir, f"{full_file_name}.log"
+            #     output_txt=os.path.join(new_outtxt_dir, f"{full_file_name}.log"),
+            #     email="rosedj1@ufl.edu",
+            #     time=time,
+            #     acct="avery",
+            #     burst=burst,
+            #     mem=mem,
+            #     partition=partition,
+            #     nodes=nodes,
+            # )
+            # cmdtup = (f"time python {fullpath_main_script_copy}")
+            # fullpath_slurm_copy = os.path.join(new_outcopies_dir, f"{full_file_name}.sbatch")
+            # result = sbmtr.make_slurm_script(fullpath_slurm_copy, cmdtup, overwrite=overwrite)
+            # if result == 0:
+            #     sbmtr.submit_script(fullpath_slurm_copy)
 
             output = subprocess.run(["sbatch", fullpath_copy_slurm_script])
             
