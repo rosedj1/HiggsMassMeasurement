@@ -79,7 +79,7 @@ class Selector:
 
 #----------------------------#
 
-def passed_Higgs_evt_selection(evt):
+def passed_Higgs_evt_selection(evt):#, inv_m_min, inv_m_max):
     """
     Returns True, if this event passes the given selections.
 
@@ -88,13 +88,19 @@ def passed_Higgs_evt_selection(evt):
         - passedFullSelection
         - finalState
         - mass4l
+    inv_m_min : float
+        Min invariant mass to pass selection.
+    inv_m_max : float
+        Max invariant mass to pass selection.
     """
-    selec_ls = []
-    selec_ls.append(evt.passedFullSelection)
-    selec_ls.append(evt.finalState == 1)
-    selec_ls.append((105 < evt.mass4l) & (evt.mass4l < 140))
-#     selec_ls.append(evt.passedFiducialSelection)
-    return all(selec_ls)
+    if not evt.passedFullSelection:
+        return False
+    if not evt.finalState == 1:
+        return False
+    if not (105 < evt.mass4l and evt.mass4l < 140):
+    # if not (inv_m_min < evt.mass4l and evt.mass4l < inv_m_max):
+        return False
+    return True
 
 def passed_Hmumu_evt_selection(evt):
     """
@@ -303,49 +309,85 @@ def make_muon_ls_fromliteskim(evt):
     """
     return [initialize_Htomumu_muons_fromliteskim(evt, num) for num in [1,2]]
 
-def apply_kinem_selections(mu_ls, inv_mass_bin=[60, 120], eta_bin=[0, 2.4], pT_bin=[5, 200],
-                           d0_bin=[0, 1], dR_max=None):
+# FIXME: THE FN BELOW IS OLD, BUT IS BEING USED NOW FOR TESTING.
+def apply_kinem_selections(mu_ls, eta_bin=[0, 2.4], pT_bin=[5, 200],
+                           d0_max=1, dR_max=None):
     """
     Make sure all muons passed selections and do final pT checks.
     Returns True if all muons passed, False otherwise.
-
     Parameters
     ----------
     mu_ls : list
         Contains MyMuon objects.
-    inv_mass_bin : 2-elem list
-        Keep muons with combined invariant mass in range: [inv_m_min, inv_m_max]
     eta_bin : 2-elem list
         Keep muons with reco abs(eta) in range: [eta_min, eta_max]
     pT_bin : 2-elem list
         Keep muons with reco pT in range: [pT_min, pT_max] (GeV)
-    d0_bin : 2-elem list
-        Keep muons with abs(d0) in range: [d0_min, d0_max] (cm)
+    d0_max : float
+        Keep muons with abs(d0) < d0_max (cm).
     dR_max : float or None
         If not None, keep muons with dR(gen,reco) < dR_max.
     """
-    # passed_genrecomatch = True  # Only test this if dR_max was provided.
-    inv_m_min, inv_m_max = inv_mass_bin
+    passed_genrecomatch = True  # Only test this if dR_max was provided.
     eta_min, eta_max = eta_bin[0], eta_bin[1]
     pT_min, pT_max = pT_bin[0], pT_bin[1]
-    d0_min, d0_max = d0_bin[0], d0_bin[1]
-    lorentzvec_mu_withFSR_ls = [mu.get_LorentzVector("withFSR") for mu in mu_ls]
-    inv_m = calc_Hmass(lorentzvec_mu_withFSR_ls)
-    if not (inv_m_min < inv_m and  inv_m < inv_m_max):
-        return False
     for mu in mu_ls:
-        if not (eta_min < abs(mu.eta) and abs(mu.eta) < eta_max):
-            return False
-        if not (pT_min < mu.pT and mu.pT < pT_max):
-            return False
-        if not ((d0_min < abs(mu.d0) and abs(mu.d0) < d0_max)):
-            return False
+        passed_eta = (eta_min < abs(mu.eta)) and (abs(mu.eta) < eta_max)
+        passed_pT = (pT_min < mu.pT) and (mu.pT < pT_max)
+        passed_d0 = abs(mu.d0) < d0_max
         if dR_max is not None:
             deta = mu.eta - mu.gen_eta
             dphi = calc_dphi(mu.phi, mu.gen_phi)
-            if not (calc_dR(deta, dphi) < dR_max):
-                return False
+            passed_genrecomatch = (calc_dR(deta, dphi) < dR_max)
+        pass_kinem = all([passed_eta, passed_pT, passed_d0, passed_genrecomatch])
+        if not pass_kinem:
+            return False
     return True
+# FIXME: THE FN ABOVE IS OLD, BUT IS BEING USED NOW FOR TESTING.
+
+# def apply_kinem_selections(mu_ls, inv_mass_bin=[60, 120], eta_bin=[0, 2.4], pT_bin=[5, 200],
+#                            d0_bin=[0, 1], dR_max=None):
+#     """
+#     Make sure all muons passed selections and do final pT checks.
+#     Returns True if all muons passed, False otherwise.
+
+#     Parameters
+#     ----------
+#     mu_ls : list
+#         Contains MyMuon objects.
+#     inv_mass_bin : 2-elem list
+#         Keep muons with combined invariant mass in range: [inv_m_min, inv_m_max]
+#     eta_bin : 2-elem list
+#         Keep muons with reco abs(eta) in range: [eta_min, eta_max]
+#     pT_bin : 2-elem list
+#         Keep muons with reco pT in range: [pT_min, pT_max] (GeV)
+#     d0_bin : 2-elem list
+#         Keep muons with abs(d0) in range: [d0_min, d0_max] (cm)
+#     dR_max : float or None
+#         If not None, keep muons with dR(gen,reco) < dR_max.
+#     """
+#     # passed_genrecomatch = True  # Only test this if dR_max was provided.
+#     inv_m_min, inv_m_max = inv_mass_bin
+#     eta_min, eta_max = eta_bin[0], eta_bin[1]
+#     pT_min, pT_max = pT_bin[0], pT_bin[1]
+#     d0_min, d0_max = d0_bin[0], d0_bin[1]
+#     lorentzvec_mu_withFSR_ls = [mu.get_LorentzVector("withFSR") for mu in mu_ls]
+#     inv_m = calc_Hmass(lorentzvec_mu_withFSR_ls)
+#     if not (inv_m_min < inv_m and  inv_m < inv_m_max):
+#         return False
+#     for mu in mu_ls:
+#         if not (eta_min < abs(mu.eta) and abs(mu.eta) < eta_max):
+#             return False
+#         if not (pT_min < mu.pT and mu.pT < pT_max):
+#             return False
+#         if not ((d0_min < abs(mu.d0) and abs(mu.d0) < d0_max)):
+#             return False
+#         if dR_max is not None:
+#             deta = mu.eta - mu.gen_eta
+#             dphi = calc_dphi(mu.phi, mu.gen_phi)
+#             if not (calc_dR(deta, dphi) < dR_max):
+#                 return False
+#     return True
 
 def get_ndcs_gen(rec_ndcs_ls, lep_genindex):
     """ 
@@ -455,7 +497,7 @@ def build_muons_from_DY_event(evt, evt_num, eta_bin=[0, 2.4], pT_bin=[5, 200],
     assert len(mu_ls) == 2
     return tuple(mu_ls)
                               
-def build_muons_from_HZZ4mu_event(t, evt_num, eta_bin=[0,2.4], pT_bin=[5,200], d0_bin=[0, 1], verbose=False):
+def build_muons_from_HZZ4mu_event(t, evt_num, eta_bin=[0,2.4], pT_bin=[5,200], d0_max=1, verbose=False):
     """Return a 4-tuple of MyMuon objects which pass muon selections in H->ZZ->4mu sample.
 
     NOTE: This function works for post-UFHZZ4L analyzer, not lite skim.
@@ -498,8 +540,9 @@ def build_muons_from_HZZ4mu_event(t, evt_num, eta_bin=[0,2.4], pT_bin=[5,200], d
     assert len(rec_ndcs_ls) == len(gen_ndcs_ls)
     
     mu_ls = make_muon_ls(t, rec_ndcs_ls, gen_ndcs_ls)
-
-    all_muons_passed = apply_kinem_selections(mu_ls, eta_bin=eta_bin, pT_bin=pT_bin, d0_bin=d0_bin)
+    
+    # all_muons_passed = apply_kinem_selections(mu_ls, eta_bin=eta_bin, pT_bin=pT_bin, d0_max=d0_max, dR_max=dR_max)
+    all_muons_passed = apply_kinem_selections(mu_ls, eta_bin=eta_bin, pT_bin=pT_bin, d0_max=d0_max)
     if not all_muons_passed:
         return bad_muons
 

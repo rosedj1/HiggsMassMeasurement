@@ -67,10 +67,13 @@ def build_muons_from_process(prod_mode, evt, evt_num,
         # Check if this event passes Higgs selections.
         # Build the 4 MyMuons from the event.
         # mu_tup = build_muons_from_HZZ4mu_event(t, evt_num,
+        # FIXME: Update the fn below!
         mu_tup = build_muons_from_HZZ4mu_event(evt, evt_num,
                                         eta_bin=eta_bin,
                                         pT_bin=pT_bin,
-                                        d0_bin=d0_bin,
+                                        d0_max=d0_bin[1],
+                                        # d0_bin=d0_bin,
+                                        # dR_max=dR_max,
                                         verbose=verbose)
     elif prod_mode in ["H2mu", "H2e"]:
         # Check if this event passes H->2mu selections.

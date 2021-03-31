@@ -96,7 +96,7 @@ The resulting skimmed `.pkl` file has 28M muons.
 1. Do an unbinned DSCB fit of the m(4mu) dist and plot it with:
 
    ```bash
-   root DSCB_fit_m4mu_beforeafterpTcorr.C
+   root -l DSCB_fit_m4mu_beforeafterpTcorr.C
    ```
 
    - Processing time: 
