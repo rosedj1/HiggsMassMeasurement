@@ -9,15 +9,15 @@ switch_to_binned_fit = SWITCH2BINNED
 kb2d = open_pkl(inpkl_path_kb2d)
 # Without pT corr.
 kb2d.do_itergausfit(bins_dpTOverpT=1000, bins_qd0=100, 
-                    x_lim_dpTOverpT=[-0.2, 0.2], x_lim_qd0=[-0.01, 0.01], 
-                    fit_whole_range_first_iter=False, 
+                    x_lim_dpTOverpT=[-0.5, 0.5], x_lim_qd0=[-0.01, 0.01], 
+                    fit_whole_range_first_iter=True, 
                     iters=5, num_sigmas=2.5, marker_color=None, line_color=None, 
                     switch_to_binned_fit=switch_to_binned_fit, verbose=True, alarm_level="warning", 
                     use_mu_pT_corr=False, only_draw_last=False) 
 # WITH pT corr.
 kb2d.do_itergausfit(bins_dpTOverpT=1000, bins_qd0=100, 
-                    x_lim_dpTOverpT=[-0.2, 0.2], x_lim_qd0=[-0.01, 0.01], 
-                    fit_whole_range_first_iter=False, 
+                    x_lim_dpTOverpT=[-0.5, 0.5], x_lim_qd0=[-0.01, 0.01], 
+                    fit_whole_range_first_iter=True, 
                     iters=5, num_sigmas=2.5, marker_color=None, line_color=None, 
                     switch_to_binned_fit=switch_to_binned_fit, verbose=True, alarm_level="warning", 
                     use_mu_pT_corr=True, only_draw_last=False)

@@ -105,21 +105,46 @@ The resulting skimmed `.pkl` file has 28M muons.
 
 ## Apply pT Corr Factors
 
+Apply pT corr factors to MyMuonCollection:
 
-```bash
-python apply_pTcorrfactors_to_muoncoll_submit2slurm.py
-```
+   ```bash
+   python applypTcorrfactors_to_muoncoll.py
+   ```
+
+   - Processing time: 
+   
+Separate KB2Ds into their own dicts:
+
+   ```bash
+   # First start a dev session to access more RAM.
+   srun --partition=bigmem --mem=128gb --ntasks=1 --cpus-per-task=8 --time=08:00:00 --pty bash -i
+   # Then run the script.
+   python save_kb2ds_separate_dicts.py
+   ```
+
+   Submit KB2Ds to SLURM.
+   Do unbinned IGFs on each KB2D's dpT/pT and dpTcorr/pT distribution:
+
+   ```bash
+   python singlekb2ditergaussfit_submit2slurm.py
+   ```
 
    - Which calls:
-      - `apply_pTcorrfactors_to_muoncoll_slurm_template.py`
+      - `singlekb2ditergaussfit_slurm_template.py`
 
-      
-Split and save kb2ds
-
-Submit KB2Ds to SLURM.
+   - Processing time for 5 **unbinned** IGFs on 9E6 entries: `00:24:41`
 
 Then merge KB2DS.
-python merge_individkb2ds_and_make_pTcorrfactordict.py
+
+   ```bash
+   python merge_individkb2ds_and_make_pTcorrfactordict.py
+   ```
+
+Finally, print and plot the results:
+
+   ```bash
+   python make_finalplots_in_muoncoll.py
+   ```
 ---
 
 ## Running locally (instead of submitting to SLURM)

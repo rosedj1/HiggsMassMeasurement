@@ -16,20 +16,12 @@ verbose = 1
 overwrite = 0
 delete_kb2d_muon_ls = 1
 
-inpkl_kb2d_path_glob = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_nogenmatching/kb2d_dicts_beforeafterGeoFitcorr__0p0_d0_0p01/*eta*_*pT*0.pkl"
-# inpkl_kb2d_path_glob = [
-#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_nogenmatching/kb2d_dicts_beforeafterGeoFitcorr__0p0_d0_0p01/0p0eta2p4_5p0pT10p0.pkl",
-#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_nogenmatching/kb2d_dicts_beforeafterGeoFitcorr__0p0_d0_0p01/0p0eta2p4_10p0pT15p0.pkl",
-#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_nogenmatching/kb2d_dicts_beforeafterGeoFitcorr__0p0_d0_0p01/0p0eta2p4_15p0pT20p0.pkl",
-#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_nogenmatching/kb2d_dicts_beforeafterGeoFitcorr__0p0_d0_0p01/0p0eta2p4_50p0pT60p0.pkl",
-#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_nogenmatching/kb2d_dicts_beforeafterGeoFitcorr__0p0_d0_0p01/0p0eta2p4_60p0pT100p0.pkl",
-#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_nogenmatching/kb2d_dicts_beforeafterGeoFitcorr__0p0_d0_0p01/0p0eta2p4_100p0pT200p0.pkl"
-# ]
+inpkl_kb2d_path_glob = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_nogenmatching/kb2d_dicts_beforeafterGeoFitcorr__0p01_d0_1000p0/*eta*_*pT*0.pkl"
 fullpath_main_script = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/singlekb2ditergaussfit_slurm_template.py"
 
-new_filename_prefix = "unbinnedfit"
-outcopies_dir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/beforeafterGeoFitCorr/copies/"
-outtxt_dir    = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/beforeafterGeoFitCorr/output/"
+new_filename_prefix = "unbinnedfit_widerwindow_fitwholerangefirstiter"
+outcopies_dir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/beforeafterGeoFitCorr/0p01_d0_1000p0/copies/"
+outtxt_dir    = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/beforeafterGeoFitCorr/0p01_d0_1000p0/output/"
 
 switch_to_binned_fit = 99E9
 
@@ -40,20 +32,8 @@ nodes = 4
 burst = True
 time = "02:00:00"  # hh:mm:ss
 
-# inpkl_path_kb2d          = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_nogenmatching/MC2016DY_skim_fullstats_nogenmatching_0p0_d0_0p01.pkl"
-# inpkl_path_pTcorrfactors = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pTCorrFactors/GeoFit/GeoFitTcorrfact_derivedfromMC2016_3etabins_0p0eta2p4_newerformat.pkl"
-# outdir_kb2d_dicts = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_nogenmatching/kb2d_dicts_beforeafterGeoFitcorr__0p0_d0_0p01/"
-
-# outdir_kb2d_dicts
-# GOOD muon_coll           = open_pkl(inpkl_path_kb2d)
-# GOOD pT_corr_factor_dict = open_pkl(inpkl_path_pTcorrfactors)
-
-# GOOD muon_coll.apply_pTcorr_to_all_muons(pT_corr_factor_dict, use_GeoFit_algo=1, force_zero_intercept=True, verbose=True)
-# # Analyze each KB2D one at a time on SLURM.
-# GOOD muon_coll.save_KB2Ds_separate_dcts(outdir=outdir_kb2d_dicts, file_prefix="", overwrite=overwrite, verbose=verbose)
-
 # # Perform iterated Gaussian fits on each KinBin2D.
-new_outpkl_dir = os.path.dirname(inpkl_kb2d_path_glob)
+outpkl_dir = os.path.dirname(inpkl_kb2d_path_glob)
 kb2d_pkl_ls = glob(inpkl_kb2d_path_glob)
 # template_basename = template.rstrip(".py")
 for inpkl_path in kb2d_pkl_ls:
@@ -69,7 +49,7 @@ for inpkl_path in kb2d_pkl_ls:
     shutil.copyfile(fullpath_main_script, template_copy)
     outpkl_suffix = f"{kb2d_bin_key}_withkb2dfits.pkl"
     outpkl_filename = f"{new_filename_prefix}_{outpkl_suffix}" if len(new_filename_prefix) > 0 else outpkl_suffix
-    outpkl_path = os.path.join(new_outpkl_dir, outpkl_filename)
+    outpkl_path = os.path.join(outpkl_dir, outpkl_filename)
     # Modify main copy.
     replace_value("INPKL_PATH", inpkl_path, template_copy)
     replace_value("OUTPKL_PATH", outpkl_path, template_copy)
@@ -97,10 +77,4 @@ for inpkl_path in kb2d_pkl_ls:
 
 print(f"[INFO] Copies stored at:\n{outcopies_dir}")
 print(f"[INFO] Output stored at:\n{outtxt_dir}")
-# .do_itergausfit(bins_dpTOverpT=bins_dpTOverpT, bins_qd0=bins_qd0,
-#                     x_lim_dpTOverpT=x_lim_dpTOverpT, x_lim_qd0=x_lim_qd0,
-#                     fit_whole_range_first_iter=fit_whole_range_first_iter,
-#                     iters=iters, num_sigmas=num_sigmas,
-#                     switch_to_binned_fit=switch_to_binned_fit,
-#                     verbose=verbose, alarm_level=alarm_level,
-#                     use_mu_pT_corr=use_mu_pT_corr, only_draw_last=only_draw_last)
+print(f"[INFO] Pickle stored at:\n{outpkl_dir}")

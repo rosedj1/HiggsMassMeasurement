@@ -42,11 +42,15 @@ def make_str_title_friendly(str_, keep_whitespace=False):
     title = title.replace('|','or')
     return title
 
-def open_pkl(inpkl_path):
-    """Open a pickled object stored in inpkl_path."""
-    with open(inpkl_path, "rb") as p: 
-        obj = pickle.load(p)
-        return obj
+def open_pkl(inpath):
+    """Open a pickled object stored in `inpath`."""
+    with open(inpath, "rb") as p: 
+        return pickle.load(p)
+
+def open_json(inpath):
+    """Open a pickled object stored in `inpath`."""
+    with open(inpath, "rb") as p: 
+        return json.load(p)
 
 def save_to_json(obj, outpath, overwrite=True):
     """Write one obj to 'outpath.json'."""

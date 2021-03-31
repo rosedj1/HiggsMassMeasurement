@@ -15,7 +15,7 @@ The processed KB2D is then pickled into a new file.
 Syntax: python this_script.py
 Author: Jake Rosenzweig
 Created: 2021-03-14  # Happy pi day!
-Updated: 2021-03-29
+Updated: 2021-03-30
 """
 import os
 from pprint import pprint
@@ -31,12 +31,13 @@ from natsort import natsorted
 # Grab all pTs.
 year = "2016"
 prod_mode = "DY2mu"
-inpkl_path_template = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_nogenmatching/kb2d_dicts_beforeafterGeoFitcorr__0p0_d0_0p01/*eta*_*pT*_withkb2dfits.pkl"
+inpkl_path_template = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_nogenmatching/kb2d_dicts_beforeafterGeoFitcorr__0p01_d0_1000p0/unbinnedfit_widerwindow_fitwholerangefirstiter*.pkl"
+# inpkl_path_template = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_nogenmatching/kb2d_dicts_beforeafterGeoFitcorr__0p0_d0_0p01/unbinnedfit_*.pkl"
 # inpkl_path_template = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/pickles/MC2016DY_individKB2D_withitergaussfitsonKB3Ds_0p0_d0_0p01/MC2016DY_individKB2D_withitergaussfitsonKB3Ds_0p0_d0_0p01_*eta*_*pT*.pkl"
 overwrite = 0
 make_pTcorrdict = 0
 
-outfilename_base = "muoncoll_itergaussfitsonKB2Ds_0p0_d0_0p01_1000bins_neg0p2xlim0p2"
+outfilename_base = "muoncoll_itergaussfitsonKB2Ds_0p01_d0_1000p0_unbinned_widerwindow_fitwholerangefirstiter"
 # outfilename_base = "MC2016DY_finalmuoncoll_allitergaussfitsonKB2DsandKB3Ds_0p0_d0_0p01"
 outpkl_dir_mucoll     = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/pickles/final_muon_coll"
 outpkl_dir_pTcorrfact = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/pickles/final_muon_coll"

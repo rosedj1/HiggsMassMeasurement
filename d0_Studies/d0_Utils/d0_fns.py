@@ -259,8 +259,10 @@ def correct_muon_pT(eta, pT, q, d0,
         # Correction formula only works with
         # correction_type='dpTOverpT_vs_qd0'.
         slope, interc = get_pT_corr_factors(pT_corr_factor_dict, 'dpTOverpT_vs_qd0', eta_min, eta_max, pT_min, pT_max)
-        C = slope * q * d0 if force_zero_intercept else interc + slope * q * d0
-        delta_pT = C * pT * pT / 10000. if use_GeoFit_algo else pT * C
+        if force_zero_intercept:
+            interc = 0
+        C = interc + slope * q * d0
+        delta_pT = C * pT * pT / 10000.0 if use_GeoFit_algo else pT * C
     else:
         slope, interc = None, None
         delta_pT = 0
