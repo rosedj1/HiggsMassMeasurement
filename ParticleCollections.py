@@ -41,11 +41,12 @@ def check_n_muons(prod_mode, muon_ls, per_event=True):
     else:
         raise ValueError("Unknown prod_mode.")
 
-# def build_muons_from_process(prod_mode, t, evt_num,
 def build_muons_from_process(prod_mode, evt, evt_num,
                              eta_bin=[0, 2.4],
                              pT_bin=[5, 200],
-                             d0_bin=[0, 1], dR_max=0.002,
+                             d0_bin=[0, 1],
+                             inv_m_bin=[105, 140],
+                             dR_max=0.002,
                              verbose=False):
     """Return a tuple of MyMuons for 1 event based on prod_mode and selections.
     
@@ -56,25 +57,31 @@ def build_muons_from_process(prod_mode, evt, evt_num,
     - Associate the m2l, m4l, event number to each MyMuon.
     """
     if prod_mode in ["DY2mu", "DY2e"]:
-        # mu_tup = build_muons_from_DY_event(t, evt_num,
         mu_tup = build_muons_from_DY_event(evt, evt_num,
                                         eta_bin=eta_bin,
                                         pT_bin=pT_bin,
-                                        d0_bin=d0_bin, 
+                                        d0_bin=d0_bin,
+                                        inv_m_bin=inv_m_bin,
                                         dR_max=dR_max,
                                         verbose=verbose)
     elif prod_mode in ["H4mu", "H4e"]:
         # Check if this event passes Higgs selections.
         # Build the 4 MyMuons from the event.
-        # mu_tup = build_muons_from_HZZ4mu_event(t, evt_num,
-        # FIXME: Update the fn below!
-        mu_tup = build_muons_from_HZZ4mu_event(evt, evt_num,
-                                        eta_bin=eta_bin,
-                                        pT_bin=pT_bin,
-                                        d0_max=d0_bin[1],
-                                        # d0_bin=d0_bin,
-                                        # dR_max=dR_max,
-                                        verbose=verbose)
+        # DELETE CODE BELOW.
+        mu_tup = build_muons_from_HZZ4mu_event(evt, evt_num, eta_bin=[0,2.4], pT_bin=[5,200], d0_max=d0_bin[1], use_FSR=True)
+        # DELETE ABOVE BELOW.
+
+
+        # UNCOMMENT CODE BELOW.
+        # mu_tup = build_muons_from_HZZ4mu_event(evt, evt_num,
+        #                                 eta_bin=eta_bin,
+        #                                 pT_bin=pT_bin,
+        #                                 d0_bin=d0_bin,
+        #                                 inv_m_bin=inv_m_bin,
+        #                                 dR_max=dR_max,
+        #                                 verbose=verbose)
+        # UNCOMMENT CODE ABOVE.
+
     elif prod_mode in ["H2mu", "H2e"]:
         # Check if this event passes H->2mu selections.
         # Build the 2 MyMuons from the event.
@@ -83,6 +90,8 @@ def build_muons_from_process(prod_mode, evt, evt_num,
                                         eta_bin=eta_bin,
                                         pT_bin=pT_bin,
                                         d0_bin=d0_bin,
+                                        inv_m_bin=inv_m_bin,
+                                        dR_max=dR_max,
                                         verbose=verbose)
     else:
         msg = f"""`prod_mode` ({prod_mode}) must be in:\n["DY2mu", "DY2e", "H4mu", "H4e", "H2mu", "H2e"]"""
@@ -130,8 +139,10 @@ class MyMuonCollection:
     def extract_muons(self, infile_path, prod_mode,
                       n_evts=-1, n_evt_beg=None, n_evt_end=None,
                       print_out_every=10000,
-                      inv_m_lim=[60.0, 120.0], eta_lim=[0.0, 2.4],
-                      pT_lim=[5, 1000], d0_lim=[0, 1],
+                      eta_lim=[0.0, 2.4],
+                      pT_lim=[5, 1000],
+                      d0_lim=[0, 1],
+                      inv_m_lim=[60.0, 120.0], 
                       dR_max=None,
                       do_mu_pT_corr=False,
                       force_zero_intercept=False,
@@ -273,12 +284,15 @@ class MyMuonCollection:
             if evt_num % print_out_every == 0:
                 time_end = time.perf_counter()
                 dt = time_end - time_start
-                print(f"  Running over evt: {evt_num}. Time since last print: {dt:.6f} s")
+                print(f"Running over evt: {evt_num}.")
+                print(f"  Time to process last {print_out_every} events: {dt:.6f} s")
                 time_start = time.perf_counter()
             mu_tup = build_muons_from_process(prod_mode, t, evt_num,
                                               eta_bin=eta_lim,
                                               pT_bin=pT_lim,
-                                              d0_bin=d0_lim, dR_max=dR_max, verbose=verbose)
+                                              d0_bin=d0_lim,
+                                              inv_m_bin=inv_m_lim,
+                                              dR_max=dR_max, verbose=verbose)
             if None in mu_tup: 
                 continue
 
@@ -296,28 +310,35 @@ class MyMuonCollection:
                     # Correct muon pT WITHOUT accounting for FSR,
                     # then add in FSR later!
                     mu.pT_corr = correct_muon_pT(
-                        mu.eta, mu.pT, mu.charge, mu.d0, 
+                        mu.eta, mu.pT_withFSR, mu.charge, mu.d0, 
                         pT_corr_factor_dict, detection="auto",
                         force_zero_intercept=force_zero_intercept,
                         use_GeoFit_algo=use_GeoFit_algo,
                         print_all_muon_info=False,
                         verbose=verbose)
-                    # lorentzvec_mu_corr = ROOT.Math.PtEtaPhiMVector(mu.pT_corr, mu.eta, mu.phi, mu.mass)
+                    lorentzvec_mu_corr = ROOT.Math.PtEtaPhiMVector(mu.pT_corr, mu.eta, mu.phi, mu.mass)
                     # corr_mu_ls.append(lorentzvec_mu_corr)
-                    # corr_mu_ls.append(mu)
                 # Now combine any FSR photon to its muon with corrected pT.
-                # for mu in mu_tup:
+                    
+                    #--- COMMENT OUT BELOW TEMPORARILY ---#
                     # Clever way to rebuild the FSR photon:
-                    lvec_photon = mu.get_LorentzVector(kind="withFSR") - mu.get_LorentzVector(kind="reco")
-                    lvec_mu_corrpT_FSR = lvec_photon + ROOT.Math.PtEtaPhiMVector(mu.pT_corr, mu.eta, mu.phi, mu.mass)
-                    lorentzvec_corr_mu_withFSR_ls.append(lvec_mu_corrpT_FSR)
+                    # lvec_photon = mu.get_LorentzVector(kind="withFSR") - mu.get_LorentzVector(kind="reco")
+                    # lvec_mu_corrpT_FSR = lvec_photon + ROOT.Math.PtEtaPhiMVector(mu.pT_corr, mu.eta, mu.phi, mu.mass)
+                    # lorentzvec_corr_mu_withFSR_ls.append(lvec_mu_corrpT_FSR)
+                    #--- COMMENT OUT ABOVE TEMPORARILY ---#
+
+                    #--- DELETE BELOW ---#
+                    lorentzvec_corr_mu_withFSR_ls.append(lorentzvec_mu_corr)
+                    #--- DELETE ABOVE ---#
                 #--- End loop over muons.
+
                 # check_n_muons(prod_mode, corr_mu_ls, per_event=True)
                 check_n_muons(prod_mode, mu_tup, per_event=True)
 
                 # The below is not tested, but should work!
-                # If you have problems, uncomment the second line down. 
+                # If you have problems, uncomment some of the lines below.
                 inv_m_corr = calc_Hmass(lorentzvec_corr_mu_withFSR_ls)  # Can accommodate different num fs muons.
+
                 # for mu in mu_tup:
                 #     # An attempt to get rid of self.m4mu_corr_ls.
                 #     mu.inv_m_event_corr = inv_m_corr
