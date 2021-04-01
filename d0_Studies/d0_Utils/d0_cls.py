@@ -530,24 +530,24 @@ class KinBin2D:
                                 marker_color=marker_color_after_corr, force_last_line_color=line_color_after_corr,
                                 only_draw_last=only_draw_last, 
                                 verbose=verbose)
+        else:
+            # Perform iter Gauss fit on (pT_reco - pT_gen) / pT_gen:
+            data = [(mu.pT - mu.gen_pT) / mu.gen_pT for mu in self.muon_ls]
+            # data = [getattr(mu, attr) for mu in self.muon_ls]
 
-        # Perform iter Gauss fit on (pT_reco - pT_gen) / pT_gen:
-        data = [(mu.pT - mu.gen_pT) / mu.gen_pT for mu in self.muon_ls]
-        # data = [getattr(mu, attr) for mu in self.muon_ls]
-
-        self.fit_stats_dict_dpTOverpT, self.frame_dpTOverpT = RooFit_iterative_gaus_fit(
-                                data, 
-                                binned_fit=False, switch_to_binned_fit=switch_to_binned_fit, 
-                                iters=iters, num_sigmas=num_sigmas,
-                                n_bins=bins_dpTOverpT, x_lim=x_lim_dpTOverpT,
-                                fit_whole_range_first_iter=fit_whole_range_first_iter,
-                                xframe=None,
-                                x_label=r"(p_{T}^{REC} - p_{T}^{GEN})/p_{T}^{GEN}", 
-                                title="%s" % self.make_latex_bin_cut_str(), 
-                                units="",
-                                marker_color=marker_color_before_corr, force_last_line_color=line_color_before_corr,
-                                only_draw_last=only_draw_last, 
-                                verbose=verbose)
+            self.fit_stats_dict_dpTOverpT, self.frame_dpTOverpT = RooFit_iterative_gaus_fit(
+                                    data, 
+                                    binned_fit=False, switch_to_binned_fit=switch_to_binned_fit, 
+                                    iters=iters, num_sigmas=num_sigmas,
+                                    n_bins=bins_dpTOverpT, x_lim=x_lim_dpTOverpT,
+                                    fit_whole_range_first_iter=fit_whole_range_first_iter,
+                                    xframe=None,
+                                    x_label=r"(p_{T}^{REC} - p_{T}^{GEN})/p_{T}^{GEN}", 
+                                    title="%s" % self.make_latex_bin_cut_str(), 
+                                    units="",
+                                    marker_color=marker_color_before_corr, force_last_line_color=line_color_before_corr,
+                                    only_draw_last=only_draw_last, 
+                                    verbose=verbose)
 
         # Print info on fit stats convergence.
         for stat in ["mean_ls", "mean_err_ls", "std_ls", "std_err_ls"]:
@@ -556,7 +556,8 @@ class KinBin2D:
                                   max_perc_diff=5,
                                   compare_to_last=3,
                                   alarm_level=alarm_level)
-            check_fit_convergence(self.fit_stats_dict_dpTOverpT[stat],
+            else:
+                check_fit_convergence(self.fit_stats_dict_dpTOverpT[stat],
                                   max_perc_diff=5,
                                   compare_to_last=3,
                                   alarm_level=alarm_level)

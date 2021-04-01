@@ -83,6 +83,7 @@ The resulting skimmed `.pkl` file has 28M muons.
       - pT correction factor dict.
       - MyMuonCollection with analyzed KB2Ds and KB3Ds.
    - Processing time: `00:00:19`
+      - If you keep each `muon_ls` then ~`00:04:26`.
 
 1. Apply the pT correction factors to muons stored in a MyMuonCollection with:
 
@@ -95,17 +96,55 @@ The resulting skimmed `.pkl` file has 28M muons.
 1. Do an unbinned DSCB fit of the m(4mu) dist and plot it with:
 
    ```bash
-   root DSCB_fit_m4mu_beforeafterpTcorr.C
+   root -l DSCB_fit_m4mu_beforeafterpTcorr.C
    ```
 
    - Processing time: 
 
 ---
 
-## Applying pT Corr Factors
+## Apply pT Corr Factors
 
+Apply pT corr factors to MyMuonCollection:
 
+   ```bash
+   python applypTcorrfactors_to_muoncoll.py
+   ```
 
+   - Processing time: 
+   
+Separate KB2Ds into their own dicts:
+
+   ```bash
+   # First start a dev session to access more RAM.
+   srun --partition=bigmem --mem=128gb --ntasks=1 --cpus-per-task=8 --time=08:00:00 --pty bash -i
+   # Then run the script.
+   python save_kb2ds_separate_dicts.py
+   ```
+
+   Submit KB2Ds to SLURM.
+   Do unbinned IGFs on each KB2D's dpT/pT and dpTcorr/pT distribution:
+
+   ```bash
+   python singlekb2ditergaussfit_submit2slurm.py
+   ```
+
+   - Which calls:
+      - `singlekb2ditergaussfit_slurm_template.py`
+
+   - Processing time for 5 **unbinned** IGFs on 9E6 entries: `00:24:41`
+
+Then merge KB2DS.
+
+   ```bash
+   python merge_individkb2ds_and_make_pTcorrfactordict.py
+   ```
+
+Finally, print and plot the results:
+
+   ```bash
+   python make_finalplots_in_muoncoll.py
+   ```
 ---
 
 ## Running locally (instead of submitting to SLURM)

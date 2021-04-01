@@ -18,15 +18,15 @@ Updated: 2021-03-29
 from Utils_Python.Utils_Files import open_pkl, make_dirs
 
 year = "2016"
-infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_nogenmatching/MC2016DY_skim_fullstats_nogenmatching_0p0_d0_0p01.pkl"
+infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_nogenmatching/MC2016DY_skim_fullstats_nogenmatching_0p01_d0_1000p0_withGeoFitcorr.pkl"
 # infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2018/DY/MC2018DY_fullstats_muoncoll_withkb3dbins.pkl"
-outdir      = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_nogenmatching/kb2d_dictsnofitinfo"
-file_prefix = "MC2016DY_fullstats_muoncoll_withkb3dbins_nogenmatching_0p0_d0_0p01"
+outdir      = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_nogenmatching/kb2d_dicts_beforeafterGeoFitcorr__0p01_d0_1000p0"
+file_prefix = "" #"MC2016DY_fullstats_muoncoll_withkb3dbins_nogenmatching_0p0_d0_0p01"
 overwrite = 0
 verbose = 1
 
 if __name__ == "__main__":
-    assert all(year in path for path in (infile_path, outdir, file_prefix))
+    assert all(year in path for path in (infile_path, outdir))
     make_dirs(outdir)
     muon_coll = open_pkl(infile_path)
     muon_coll.save_KB2Ds_separate_dcts(outdir=outdir, file_prefix=file_prefix, overwrite=overwrite, verbose=verbose)

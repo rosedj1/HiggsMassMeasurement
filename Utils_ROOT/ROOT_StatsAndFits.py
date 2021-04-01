@@ -1,4 +1,4 @@
-import ROOT as r
+import ROOT as rt
 import numpy as np
 from array import array
 from pprint import pprint
@@ -90,9 +90,9 @@ def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None,
             Essentially a canvas with the data and Gaussian fit drawn on.
             Still need to do xframe.Draw() onto a TCanvas.
     """
-    r.RooMsgService.instance().setStreamStatus(1,False)
+    rt.RooMsgService.instance().setStreamStatus(1,False)
     # Investigate data.
-    if isinstance(data, r.TH1):
+    if isinstance(data, rt.TH1):
         msg = (
             f"[ERROR] Your data are in a histogram, but you are requesting an unbinned fit.\n"
             f"  Perhaps you should set `binned_fit = True`."
@@ -118,23 +118,23 @@ def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None,
     else:
         print(f"[INFO] Performing an UNBINNED Gaussian fit.")
     # Make fit variables.
-    x_var = r.RooRealVar("x_var", x_label, x_min, x_max, units)  # (name, title, min, max, units)
+    x_var = rt.RooRealVar("x_var", x_label, x_min, x_max, units)  # (name, title, min, max, units)
     # x_var.setRange("test_range", x_min, x_max)
-    mean = r.RooRealVar("mean","Mean of Gaussian", x_avg, x_min, x_max)
-    sigma = r.RooRealVar("sigma","Width of Gaussian", abs(x_std), 0, abs(x_std)*10.0)
-    gauss = r.RooGaussian("gauss","The Gaussian Itself", x_var, mean, sigma)
+    mean = rt.RooRealVar("mean","Mean of Gaussian", x_avg, x_min, x_max)
+    sigma = rt.RooRealVar("sigma","Width of Gaussian", abs(x_std), 0, abs(x_std)*10.0)
+    gauss = rt.RooGaussian("gauss","The Gaussian Itself", x_var, mean, sigma)
     
     # Prepare appropriate RooFit data container.
-    if isinstance(data, r.TH1):
+    if isinstance(data, rt.TH1):
         # Must do binned fit. Make RooDataHist.
         tmp_hist = data
         # x_var.setBins(n_bins)
-        ls = r.RooArgList(x_var)
-        roodata = r.RooDataHist("roodata", "RooDataHist", ls, data)
+        ls = rt.RooArgList(x_var)
+        roodata = rt.RooDataHist("roodata", "RooDataHist", ls, data)
     else:
         # Using array of data. Not sure yet if binned or unbinned fit.
         # Make a hist with data array for stats purposes.
-        tmp_hist = r.TH1F()
+        tmp_hist = rt.TH1F()
         tmp_hist.SetBins(n_bins, 
                          x_min if x_lim is None else x_lim[0], 
                          x_max if x_lim is None else x_lim[1]
@@ -146,17 +146,17 @@ def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None,
         # Check type of binning.
         if binned_fit:
             # x_var.setBins(n_bins)
-            ls = r.RooArgList(x_var)
-            roodata = r.RooDataHist("roodata", "RooDataHist", ls, tmp_hist)
+            ls = rt.RooArgList(x_var)
+            roodata = rt.RooDataHist("roodata", "RooDataHist", ls, tmp_hist)
         else:
             # Do unbinned fit.
             ptr = array('f', [0.])
-            tree = r.TTree("tree", "tree")
+            tree = rt.TTree("tree", "tree")
             tree.Branch("x_var", ptr, "x_var/F")
             for val in data:
                 ptr[0] = val
                 tree.Fill()
-            roodata = r.RooDataSet("roodata","dataset from tree", tree, r.RooArgSet(x_var))
+            roodata = rt.RooDataSet("roodata","dataset from tree", tree, rt.RooArgSet(x_var))
 
     # Modify fit range, if needed.
     if fit_range is None:
@@ -169,19 +169,19 @@ def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None,
     print(f"JAKE: find the fit range error1")
     # Find and fill the mean and sigma variables.
     if verbose:
-        # result = gauss.fitTo(roodata, r.RooFit.Range(fit_x_min, fit_x_max))
-        result = gauss.fitTo(roodata, r.RooFit.Range(fit_x_min, fit_x_max), r.RooFit.PrintLevel(3),
-        # r.RooFit.NumCPU(4, 3) # (num_cpus, strategy)  # This just hangs...
-        # r.RooFit.Timer(True),
-        # r.RooFit.BatchMode(True), # Compute batch of likelihood values. Computations are faster.
-        # r.RooFit.Offset(True)
+        # result = gauss.fitTo(roodata, rt.RooFit.Range(fit_x_min, fit_x_max))
+        result = gauss.fitTo(roodata, rt.RooFit.Range(fit_x_min, fit_x_max), rt.RooFit.PrintLevel(3),
+        # rt.RooFit.NumCPU(4, 3) # (num_cpus, strategy)  # This just hangs...
+        # rt.RooFit.Timer(True),
+        # rt.RooFit.BatchMode(True), # Compute batch of likelihood values. Computations are faster.
+        # rt.RooFit.Offset(True)
         )
         print(f"JAKE: find the fit range error2")
     else:
-        result = gauss.fitTo(roodata, r.RooFit.Range(fit_x_min, fit_x_max), r.RooFit.PrintLevel(-1),
-        # r.RooFit.NumCPU(4, 3) # (num_cpus, strategy)  # This just hangs...
-        # r.RooFit.Timer(True),
-        # r.RooFit.BatchMode(True) # Compute batch of likelihood values. Computations are faster.
+        result = gauss.fitTo(roodata, rt.RooFit.Range(fit_x_min, fit_x_max), rt.RooFit.PrintLevel(-1),
+        # rt.RooFit.NumCPU(4, 3) # (num_cpus, strategy)  # This just hangs...
+        # rt.RooFit.Timer(True),
+        # rt.RooFit.BatchMode(True) # Compute batch of likelihood values. Computations are faster.
         )
         print(f"JAKE: find the fit range error3")
     print(f"JAKE: find the fit range error4")
@@ -191,19 +191,19 @@ def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None,
     # objects to xframe and keep them persistent.
     # Be careful, if you must modify the below!
     if not view_plot: 
-        r.gROOT.SetBatch(True)
-    # c = r.TCanvas()
+        rt.gROOT.SetBatch(True)
+    # c = rt.TCanvas()
     # c.Draw("same")
     # If frame does not exist, make it.
     # x_var.setBins(n_bins)
     if xframe is None:
-        xframe = x_var.frame(r.RooFit.Range(x_min, x_max), r.RooFit.Title(x_label))
+        xframe = x_var.frame(rt.RooFit.Range(x_min, x_max), rt.RooFit.Title(x_label))
     #---------------------#
     # FIXME: Needs testing:
     # if x_lim is not None:
     #     xframe.setRange("x_window", *x_lim)
     #---------------------#
-    # tmp_hist.SetLineColor(r.kBlue)
+    # tmp_hist.SetLineColor(rt.kBlue)
     # tmp_hist.SetStats(True)
     tmp_hist.SetLineWidth(0)  # Don't show hist.
     tmp_hist.Draw("sames")
@@ -216,40 +216,40 @@ def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None,
     # Put the Gaussian fit parameters on the plot.
     if (count == 5) and not force_line_color:
         # Avoid yellow because it is difficult to read.
-        line_color = r.kOrange
+        line_color = rt.kOrange
 
     # gauss.paramOn(xframe, 
-    #     r.RooFit.Layout(0.13, 0.40, text_y_min)  # (x_min, x_max, y_max) as fraction of canvas width.
+    #     rt.RooFit.Layout(0.13, 0.40, text_y_min)  # (x_min, x_max, y_max) as fraction of canvas width.
     #     )
     # xframe.getAttText().SetTextSize(0.020)
     # xframe.getAttText().SetTextColor(line_color)
 
-    # roodata.plotOn(xframe, r.RooLinkedList())
+    # roodata.plotOn(xframe, rt.RooLinkedList())
 
     # tmp_hist.Draw("same")
     xframe.addObject(tmp_hist, "sames", True)  # Draw on same canvas. True means hist will not be drawn.
     # st.Draw("same")
-    # r.gPad.Update()
-    # r.gPad.GetPrimitive("stats")
-    roodata.plotOn(xframe, r.RooFit.MarkerColor(marker_color))
+    # rt.gPad.Update()
+    # rt.gPad.GetPrimitive("stats")
+    roodata.plotOn(xframe, rt.RooFit.MarkerColor(marker_color))
     # roodata.statOn(xframe,  
-    #                 # r.RooFit.Label("Unbinned data:"),
-    #                 r.RooFit.Layout(0.68, 0.95, 0.95), 
-    #                 r.RooFit.Format("NMRE")
+    #                 # rt.RooFit.Label("Unbinned data:"),
+    #                 rt.RooFit.Layout(0.68, 0.95, 0.95), 
+    #                 rt.RooFit.Format("NMRE")
     #                 )
     # xframe.getAttText().SetTextSize(0.020)
     # xframe.getAttText().SetTextColor(1)
 
     # RooFit insists on plotting the very first Gaussian along the x-axis.
     # Therefore, draw it with linewidth=0 and then redraw a good line.
-    gauss.plotOn(xframe, r.RooFit.LineColor(line_color), r.RooFit.Range(fit_x_min, fit_x_max), r.RooFit.LineWidth(0))
-    gauss.plotOn(xframe, r.RooFit.LineColor(line_color), r.RooFit.Range(fit_x_min, fit_x_max), r.RooFit.LineWidth(2))
+    gauss.plotOn(xframe, rt.RooFit.LineColor(line_color), rt.RooFit.Range(fit_x_min, fit_x_max), rt.RooFit.LineWidth(0))
+    gauss.plotOn(xframe, rt.RooFit.LineColor(line_color), rt.RooFit.Range(fit_x_min, fit_x_max), rt.RooFit.LineWidth(2))
     # if count == 1:
-    #     gauss.plotOn(xframe,   r.RooFit.LineColor(line_color), r.RooFit.Range(fit_x_min, fit_x_max), r.RooFit.LineWidth(0))
+    #     gauss.plotOn(xframe,   rt.RooFit.LineColor(line_color), rt.RooFit.Range(fit_x_min, fit_x_max), rt.RooFit.LineWidth(0))
 
     # Put fit stats on plot.
     text_y_min = 0.86 - 0.11*(count-1)
-    pave = r.TPaveText(0.17, text_y_min-0.11, 0.37, text_y_min, "NDC")
+    pave = rt.TPaveText(0.17, text_y_min-0.11, 0.37, text_y_min, "NDC")
     pave.SetFillColor(0)
     pave.SetBorderSize(0) # Use 0 for no border.
     pave.SetTextAlign(12) # 22 is centered vert and horiz.
@@ -262,22 +262,22 @@ def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None,
     pave.AddText("  #chi^{2}/ndf = %.4f" % xframe.chiSquare())
     pave.Draw("same")
 
-    # latex = r.TLatex()
+    # latex = rt.TLatex()
     # latex.SetNDC()
     # latex.SetTextSize(0.016)
     # latex.SetTextColor(line_color)
 
     # Ensures a stats box exists so that the hist
     # can access it down below.
-    r.gStyle.SetOptStat("iouRMe")
+    rt.gStyle.SetOptStat("iouRMe")
 
     # roodata.statOn(xframe)
     # tmp_hist.SetStats(True)
 
     # Add all objects to xframe and THEN draw it.
     # latex.DrawLatex(0.13, text_y_min, f"Fit {count}:")
-    # print(f"length = {len(r.gPad.GetListOfPrimitives())}")
-    # print(f"last one: {r.gPad.GetListOfPrimitives()[-1]}")
+    # print(f"length = {len(rt.gPad.GetListOfPrimitives())}")
+    # print(f"last one: {rt.gPad.GetListOfPrimitives()[-1]}")
     # latex.DrawLatex(0.13, text_y_min-0.02, f"  #mu = {mean.getVal():.4g} #pm {mean.getError():.4g}")
     # latex.DrawLatex(0.13, text_y_min-0.04, f"  #sigma = {sigma.getVal():.4g} #pm {sigma.getError():.4g}")
     # latex.DrawLatex(0.13, text_y_min-0.06,  "  #chi^{2}/ndf = %.4g" % xframe.chiSquare())
@@ -285,16 +285,16 @@ def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None,
     xframe.addObject(tmp_hist.FindObject("stats").Clone())
     xframe.Draw("same")
     xframe.findObject("stats").Draw()
-    # r.gPad.RedrawAxis()
-    # r.gPad.Modified()
-    # r.gPad.Update()
+    # rt.gPad.RedrawAxis()
+    # rt.gPad.Modified()
+    # rt.gPad.Update()
 
     # Make a legend.
     #     leg_text  = "#splitline{#mu = %.5f #pm %.5f}" % (mean.getVal(),  mean.getError())
     #     leg_text += "{#sigma = %.5f #pm %.5f}" % (sigma.getVal(),  sigma.getError())
-    #     leg = r.TLegend(0.10, 0.75, 0.35, 0.9)
-    #     leg = r.TLegend(0.03, 0.80, 0.20, 0.9)
-    #     leg = r.TLegend()
+    #     leg = rt.TLegend(0.10, 0.75, 0.35, 0.9)
+    #     leg = rt.TLegend(0.03, 0.80, 0.20, 0.9)
+    #     leg = rt.TLegend()
     #     leg.AddEntry("hist", leg_text, "pel")
     #     leg.Draw("same")
 
@@ -417,7 +417,7 @@ def RooFit_iterative_gaus_fit(data, binned_fit=False, switch_to_binned_fit=2000,
         if xframe is None:
             xframe = make_new_xframe(0, 1, x_lim, x_label, units, n_bins, title)[3]
         return (fit_stats_dict, xframe)
-    if isinstance(data, r.TH1):
+    if isinstance(data, rt.TH1):
         data_mean = data.GetMean()
         data_rms = data.GetRMS()
         data_x_min = data.GetBinLowEdge(1)
@@ -563,7 +563,7 @@ def get_BWxCBplusExp_fit_stats(mean, sigma, alpha, n, tau, fsig):
     return fit_stats_dict
 
 def RooFit_CBxBWplusExp_fit_binned(hist, x_lim, fit_range=None, show_params=True, params_box=[0.2, 0.4, 0.85], 
-                                   linecolor=r.kBlue, markercolor=r.kBlue):
+                                   linecolor=rt.kBlue, markercolor=rt.kBlue):
     """
     Fit a histogram with a Breit-Wigner function convoluted with a Crystal Ball function
     while adding an exponential background function.
@@ -593,7 +593,7 @@ def RooFit_CBxBWplusExp_fit_binned(hist, x_lim, fit_range=None, show_params=True
         The frame object which holds the plots. 
         Can be drawn to a TCanvas.
     """
-    #     r.RooMsgService.instance().setStreamStatus(1,False)
+    #     rt.RooMsgService.instance().setStreamStatus(1,False)
 
     BW_MEAN_PDG = 91.19
     BW_SIGMA_PDG = 2.44
@@ -601,50 +601,50 @@ def RooFit_CBxBWplusExp_fit_binned(hist, x_lim, fit_range=None, show_params=True
     x_min = x_lim[0]
     x_max = x_lim[1]
     
-    x = r.RooRealVar("x", "Mass (GeV/c^{2})", x_min, x_max)
-    h_Zboson = r.RooDataHist("h_Zboson", "h_Zboson", r.RooArgList(x), hist)
+    x = rt.RooRealVar("x", "Mass (GeV/c^{2})", x_min, x_max)
+    h_Zboson = rt.RooDataHist("h_Zboson", "h_Zboson", rt.RooArgList(x), hist)
     
     # Prepare the fit model.
     ## BW
-    BW_mean_DY = r.RooRealVar("BW_mean_DY", "BW_mean_DY", BW_MEAN_PDG)
-    BW_sigma_DY = r.RooRealVar("BW_sigma_DY", "BW_sigma_DY", BW_SIGMA_PDG)
-    BW_DY = r.RooBreitWigner("BW_DY", "BW_DY", x, BW_mean_DY, BW_sigma_DY)
+    BW_mean_DY = rt.RooRealVar("BW_mean_DY", "BW_mean_DY", BW_MEAN_PDG)
+    BW_sigma_DY = rt.RooRealVar("BW_sigma_DY", "BW_sigma_DY", BW_SIGMA_PDG)
+    BW_DY = rt.RooBreitWigner("BW_DY", "BW_DY", x, BW_mean_DY, BW_sigma_DY)
     
     ## CB
-    Mean = r.RooRealVar("Mean", "Mean", 0.0, -5.0, 5.0)
-    Sigma = r.RooRealVar("Sigma", "Sigma", 1, 0.0, 10.0)
-    CB_alpha = r.RooRealVar("CB_alpha", "CB_alpha", 1, 0., 10)
-    CB_exp = r.RooRealVar("CB_exp", "CB_exp", 5, 0., 30)
-    CB = r.RooCBShape("CB", "CB", x, Mean, Sigma, CB_alpha, CB_exp)
+    Mean = rt.RooRealVar("Mean", "Mean", 0.0, -5.0, 5.0)
+    Sigma = rt.RooRealVar("Sigma", "Sigma", 1, 0.0, 10.0)
+    CB_alpha = rt.RooRealVar("CB_alpha", "CB_alpha", 1, 0., 10)
+    CB_exp = rt.RooRealVar("CB_exp", "CB_exp", 5, 0., 30)
+    CB = rt.RooCBShape("CB", "CB", x, Mean, Sigma, CB_alpha, CB_exp)
     
     ## expo
-    tau = r.RooRealVar("tau", "tau", 0, -1, 1)
-    bkg = r.RooExponential("bkg","bkg", x, tau)
-    fsig = r.RooRealVar("fsig","signal fraction", 0.7, 0.5, 1.2)
+    tau = rt.RooRealVar("tau", "tau", 0, -1, 1)
+    bkg = rt.RooExponential("bkg","bkg", x, tau)
+    fsig = rt.RooRealVar("fsig","signal fraction", 0.7, 0.5, 1.2)
     
     # Combine models.
-    BWxCB = r.RooFFTConvPdf("BWxCB","BWxCB", x, BW_DY, CB)
-    Final_DY = r.RooAddPdf("Final_DY","Final_DY", r.RooArgList(BWxCB, bkg), r.RooArgList(fsig))
+    BWxCB = rt.RooFFTConvPdf("BWxCB","BWxCB", x, BW_DY, CB)
+    Final_DY = rt.RooAddPdf("Final_DY","Final_DY", rt.RooArgList(BWxCB, bkg), rt.RooArgList(fsig))
 
     # Plot the data and the fit.
-    xframe = x.frame(r.RooFit.Title("BW x CB + exp"))
-    h_Zboson.plotOn(xframe, r.RooFit.MarkerColor(markercolor))
-    # h_Zboson_corr.plotOn(xframe, r.RooFit.LineColor(r.kGreen+2))
+    xframe = x.frame(rt.RooFit.Title("BW x CB + exp"))
+    h_Zboson.plotOn(xframe, rt.RooFit.MarkerColor(markercolor))
+    # h_Zboson_corr.plotOn(xframe, rt.RooFit.LineColor(rt.kGreen+2))
     
     # Draw the BWxCB.
     if fit_range is None:
         Final_DY.fitTo(h_Zboson)
     else:
-        Final_DY.fitTo(h_Zboson, r.RooFit.Range(fit_range[0], fit_range[1]))
-    Final_DY.plotOn(xframe, r.RooFit.LineColor(linecolor),
-                            r.RooFit.MarkerColor(markercolor),
-                            r.RooFit.MarkerSize(0.05))
+        Final_DY.fitTo(h_Zboson, rt.RooFit.Range(fit_range[0], fit_range[1]))
+    Final_DY.plotOn(xframe, rt.RooFit.LineColor(linecolor),
+                            rt.RooFit.MarkerColor(markercolor),
+                            rt.RooFit.MarkerSize(0.05))
     # Draw the bkg.
-    Final_DY.plotOn(xframe, r.RooFit.Components("bkg"), 
-                            r.RooFit.LineColor(r.kBlue), 
-                            r.RooFit.LineStyle(r.kDashed))
+    Final_DY.plotOn(xframe, rt.RooFit.Components("bkg"), 
+                            rt.RooFit.LineColor(rt.kBlue), 
+                            rt.RooFit.LineStyle(rt.kDashed))
     if (show_params):
-        Final_DY.paramOn(xframe, r.RooFit.Layout(*params_box))
+        Final_DY.paramOn(xframe, rt.RooFit.Layout(*params_box))
     xframe.getAttText().SetTextSize(0.025)
     xframe.getAttText().SetTextColor(linecolor)
     # xframe.getAttText().SetTextColor(color_line_corr)
@@ -652,7 +652,7 @@ def RooFit_CBxBWplusExp_fit_binned(hist, x_lim, fit_range=None, show_params=True
     #     leg_text  = "#splitline{#mu = %.3f #pm %.3f}" % (mean.getVal(),  mean.getError())
     #     leg_text += "{#sigma = %.3f #pm %.3f}" % (sigma.getVal(),  sigma.getError())
         
-    #     leg = r.TLegend(0.03, 0.80, 0.20, 0.9)
+    #     leg = rt.TLegend(0.03, 0.80, 0.20, 0.9)
     #     leg.AddEntry("gauss", leg_text, "lep")
     #     leg.Draw("same")
 
@@ -737,14 +737,14 @@ class DSCBFitter:
         msg = "  * Performing DSCB fit: "
         if show_after_corr:
             msg = msg.replace(": ", "s - before and after pT corr:")
-            color_line = r.kRed
+            color_line = rt.kRed
         else:
-            color_line = r.kBlue
+            color_line = rt.kBlue
         print(msg)
         self.info_printer(m4mu_min, m4mu_max, relm4muerr_min, relm4muerr_max, n_bins)
         # Perform selections and draw to canvas.
-        integral = r.vector('Double_t')()
-        result = r.fit_and_draw_DSCB(
+        integral = rt.vector('Double_t')()
+        result = rt.fit_and_draw_DSCB(
                         tree, m4mu_min, m4mu_max, relm4muerr_min, relm4muerr_max,
                         integral, method, year, canv, outfile_pdf,
                         n_bins, color_line, show_after_corr, mean_before_corr, sigma_before_corr, zoom)
@@ -1054,9 +1054,9 @@ class DSCBFitPlotter:
         x_min = min(x) - 1
         x_max = max(x) + 1  # = 102, 118
         x_units = "GeV"
-        line_color = r.kRed if corrected_dscb else r.kBlack
+        line_color = rt.kRed if corrected_dscb else rt.kBlack
         line_width = 1
-        marker_color = r.kRed if corrected_dscb else r.kBlack
+        marker_color = rt.kRed if corrected_dscb else rt.kBlack
         marker_style = 20
         marker_size = 0.5
         # Make the plot and draw it to the canvas.
@@ -1122,7 +1122,7 @@ class DSCBFitPlotter:
     #     x_units = "GeV"
     #     line_color=1
     #     line_width=2
-    #     marker_color = r.kRed if corrected_dscb else r.kBlack
+    #     marker_color = rt.kRed if corrected_dscb else rt.kBlack
     #     marker_style=20
     #     marker_size=1
     #     # Make the plot and draw it to the canvas.
@@ -1144,24 +1144,24 @@ class DSCBFitPlotter:
 #     x_avg = hist.GetMean()
 #     x_std = hist.GetStdDev()
     
-#     x = r.RooRealVar("x","x", x_min, x_max)
-#     mean = r.RooRealVar("mean","Mean of Gaussian", x_avg, x_min, x_max)
-#     sigma = r.RooRealVar("sigma","Width of Gaussian", x_std, 0, x_max)
-#     gauss = r.RooGaussian("gauss","gauss(x,mean,sigma)", x, mean, sigma)
+#     x = rt.RooRealVar("x","x", x_min, x_max)
+#     mean = rt.RooRealVar("mean","Mean of Gaussian", x_avg, x_min, x_max)
+#     sigma = rt.RooRealVar("sigma","Width of Gaussian", x_std, 0, x_max)
+#     gauss = rt.RooGaussian("gauss","gauss(x,mean,sigma)", x, mean, sigma)
 
     
-#     r.RooRealVar("Sigma_DSCB", "Sigma_DSCB", 0.005, -0.03, 0.03)
-#     r.RooRealVar("AlphaL", "AlphaL", 1, 0, 5)
-#     r.RooRealVar("ExpL", "ExpL", 1, 0, 10)
-#     r.RooRealVar("AlphaR", "AlphaR", 1, 0, 5)
-#     r.RooRealVar("ExpR", "ExpR", 1, 0, 10)
+#     rt.RooRealVar("Sigma_DSCB", "Sigma_DSCB", 0.005, -0.03, 0.03)
+#     rt.RooRealVar("AlphaL", "AlphaL", 1, 0, 5)
+#     rt.RooRealVar("ExpL", "ExpL", 1, 0, 10)
+#     rt.RooRealVar("AlphaR", "AlphaR", 1, 0, 5)
+#     rt.RooRealVar("ExpR", "ExpR", 1, 0, 10)
     
-#     ls = r.RooArgList(x)
-#     data = r.RooDataHist("data", "data set with x", ls, hist)
+#     ls = rt.RooArgList(x)
+#     data = rt.RooDataHist("data", "data set with x", ls, hist)
 
-#     xframe = x.frame(r.RooFit.Title("Some title here?"))
-#     data.plotOn(xframe, r.RooLinkedList())
-#     data.plotOn(xframe, r.RooFit.MarkerColor(2))
+#     xframe = x.frame(rt.RooFit.Title("Some title here?"))
+#     data.plotOn(xframe, rt.RooLinkedList())
+#     data.plotOn(xframe, rt.RooFit.MarkerColor(2))
 
 #     hist.Draw("same")
 #     # Modify fit range, if needed.
@@ -1173,34 +1173,34 @@ class DSCBFitPlotter:
 #         fit_x_max = fit_range[1]
         
 #     result = gauss.fitTo(data, 
-#                          r.RooFit.Range(fit_x_min, fit_x_max), 
-#                          r.RooFit.PrintLevel(-1)
+#                          rt.RooFit.Range(fit_x_min, fit_x_max), 
+#                          rt.RooFit.PrintLevel(-1)
 #                         )
     
 #     color = skip_black_yellow_fit_line_colors(count)
         
 #     # Draw the fit. 
-#     gauss.plotOn(xframe, r.RooFit.LineColor(color))
+#     gauss.plotOn(xframe, rt.RooFit.LineColor(color))
 #     # Put the fit params on the plot.
 # #     text_y_min = 0.95 - 0.11*(count-1)  # In the top left corner of TCanvas("c","c",600,600).
-# #     gauss.paramOn(xframe, r.RooFit.Layout(0.16, 0.4, text_y_min))
+# #     gauss.paramOn(xframe, rt.RooFit.Layout(0.16, 0.4, text_y_min))
 #     text_y_min = 0.92 - 0.11*(count-1)
-#     gauss.paramOn(xframe, r.RooFit.Layout(0.19, 0.4, text_y_min))
+#     gauss.paramOn(xframe, rt.RooFit.Layout(0.19, 0.4, text_y_min))
 #     xframe.getAttText().SetTextSize(0.020)
 #     xframe.getAttText().SetTextColor(color)
     
 #     xframe.Draw("same")
     
 # #     pavelabel_x_start = ( float(x_max) + float(x_min) ) * 0.65
-# #     title = r.TPaveLabel( pavelabel_x_start, 300, x_max, 350, 'Come on dude!' )
+# #     title = rt.TPaveLabel( pavelabel_x_start, 300, x_max, 350, 'Come on dude!' )
 # #     title.SetTextFont( 50 )
 # #     title.Draw("same")
 
 #     # Make a legend.
 # #     leg_text  = "#splitline{#mu = %.5f #pm %.5f}" % (mean.getVal(),  mean.getError())
 # #     leg_text += "{#sigma = %.5f #pm %.5f}" % (sigma.getVal(),  sigma.getError())
-# #     leg = r.TLegend(0.10, 0.75, 0.35, 0.9)
-# #     leg = r.TLegend()
+# #     leg = rt.TLegend(0.10, 0.75, 0.35, 0.9)
+# #     leg = rt.TLegend()
 # #     leg.AddEntry("hist", leg_text, "pel")
 # #     leg.Draw("same")
     

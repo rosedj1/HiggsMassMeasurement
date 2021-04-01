@@ -58,7 +58,7 @@ RooFitResult* fit_and_draw_DSCB(
     // }
 
     Float_t gbl_x_min = 105.0;
-    Float_t gbl_x_max = 140.0;
+    Float_t gbl_x_max = 145.0;
     Float_t size_text  = 0.017;  // 0.02
     Double_t tex_horiz = 0.20;
     Double_t tex_vert  = 0.82;

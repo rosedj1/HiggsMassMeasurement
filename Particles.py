@@ -70,7 +70,7 @@ class MyParticle:
         q_ = ID_charge_dct[self.ID]
         assert abs(q_) == abs(self.charge)
 
-    def get_LorentzVector(self, kind="gen"):
+    def get_LorentzVector(self, kind=""):
         """Return a ROOT.Math.LorentzVector object of this particle.
         
         kind : str

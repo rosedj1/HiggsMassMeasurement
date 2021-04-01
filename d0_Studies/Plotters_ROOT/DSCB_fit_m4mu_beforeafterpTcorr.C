@@ -92,18 +92,29 @@ void DSCB_fit_m4mu_beforeafterpTcorr(Bool_t draw = false) {
 
 //----- User Params -----//
 Double_t m4mu_min = 105.0;  // 121.2, 128.4
-Double_t m4mu_max = 140.0;
+Double_t m4mu_max = 145.0;
 Int_t n_bins = 100;
-string year = "2018";
+string year = "2016";
 string fs = "ggH";
-string derive_from_sample = "q#bar{q} #rightarrow Z #rightarrow 2#mu"; // Sample from which pT corr factors were derived.
+string derive_from_sample = "GeoFit Method"; // Sample from which pT corr factors were derived.
+// string derive_from_sample = "q#bar{q} #rightarrow Z #rightarrow 2#mu"; // Sample from which pT corr factors were derived.
 // string derive_from_sample = "DY+J/#psi"; // Sample from which pT corr factors were derived.
 bool plot_residuals = true;  // If false, then ratio of hists will be plotted.
-TString infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2018_m4mu_m4mucorrfromAdHocfactors_fullstats_zerointerc_new100muonsperregion.root";
+
+// TString infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2016_m4mu_m4mucorrfromCORRECTGeoFitfactors_fullstats_zerointerc.root";
+TString infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2016_m4mu_m4mucorrfromWRONG2018GeoFitfactors_fullstats_zerointerc_105m4mu145_chasebadval01.root";
+// TString infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2018_m4mu_m4mucorrfromGeoFitfactors_fullstats.root";
+// TString infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2018_m4mu_m4mucorrfromGeoFitfactors_fullstats_nodRcut.root";
+// TString infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2016_m4mu_m4mucorrfromWRONG2018GeoFitfactors_fullstats_zerointerc_105m4mu145_nodRcut.root";
+// TString infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2018_m4mu_m4mucorrfromAdHocfactors_fullstats_zerointerc_new100muonsperregion.root";
 // TString infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2016_m4mu_m4mucorrfromAdHocfactors_fullstats_zerointerc_new.root";
 // TString infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2018ggH_m4muvals_fullstats_usingXunwuHmumucorrfactorsfrommacro_withoutFSR.root";
 // TString infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2018_m4mu_m4mucorrfromDYJpsifactors_fullstats_noFSR.root";
-TString outfile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/plots/applypTcorrplots/CorrFromMC/test/MC2018ggH_m4mu_DSCBfit_beforeaftercorr_AdHocfactors_zerointerc_new100muonsperregion.pdf";
+// TString outfile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/plots/applypTcorrplots/CorrFromMC/MC2018ggH_m4mu_DSCBfit_beforeaftercorr_fullstats_nodRcut.pdf";
+
+TString outfile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/plots/applypTcorrplots/CorrFromMC/MC2016_m4mu_m4mucorrfromWRONG2018GeoFitfactors_fullstats_zerointerc_105m4mu145_chasebadval01.pdf";
+// TString outfile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/plots/applypTcorrplots/CorrFromMC/MC2018_m4mu_m4mucorrfromGeoFitfactors_fullstats.pdf";
+// TString outfile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/plots/applypTcorrplots/CorrFromMC/MC2018ggH_m4mu_DSCBfit_beforeaftercorr_fullstats.pdf";
 /* TString infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/rootfiles/ggH_skimmed/MC2018ggH_m4muvals_fullstats_usingXunwuHmumucorrfactorsfrommacro_withoutFSR.root";
 TString outfile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/Plots/applypTcorrplots/CorrFromMC/MC2018_m4mu_ggH_DSCBfit_corrfromMCDY2018Xunwusmacro_withoutFSR.pdf"; */
 // This is the color of the fits. 

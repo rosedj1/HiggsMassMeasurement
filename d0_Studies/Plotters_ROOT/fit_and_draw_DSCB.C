@@ -59,7 +59,7 @@ RooFitResult* fit_and_draw_DSCB(
                                  );
 
     const char* fs = "ggH";
-    const char* year = "2018";
+    const char* year = "2016";
     Float_t size_text = 0.02;
     // New code.
     // TPad* ptop = new TPad("ptop", "pad main", 0.0, 0.25, 1.0, 1.0);

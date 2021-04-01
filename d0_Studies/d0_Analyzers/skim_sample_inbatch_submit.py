@@ -13,7 +13,7 @@ d0_Studies/d0_Analyzers/skim_sample_inbatch_template.py
 Syntax: python this_script.py
 Author: Jake Rosenzweig
 Created: 2021-03-19
-Updated: 2021-03-29
+Updated: 2021-03-31
 """
 import os
 import shutil
@@ -23,18 +23,18 @@ from Utils_ROOT.ROOT_fns import get_max_evts
 from Utils_Python.SlurmManager import SLURMSubmitter
 from Utils_Python.Utils_Files import replace_value, make_dirs, check_overwrite
 
-year = "2016"
+year = "2018"
 prod_mode = "DY2mu"
 # outfile_prefix = "MC2016DY_skim_fullstats_0p01_d0_1000p0_nogenmatching"
-outfile_prefix = "MC2016DY_skim_fullstats_nogenmatching"
-infile_path = "/cmsuf/data/store/user/t2/users/ferrico/SingleBS_studies/After/DY_2016_0.root"
-# infile_path = "/cmsuf/data/store/user/t2/users/ferrico/SingleBS_studies/After/DY_2018_2.root"
+outfile_prefix = "MC2018DY_skim_fullstats_nogenmatching"
+# infile_path = "/cmsuf/data/store/user/t2/users/ferrico/SingleBS_studies/After/DY_2016_0.root"
+infile_path = "/cmsuf/data/store/user/t2/users/ferrico/SingleBS_studies/After/DY_2018_2.root"
 # infile_path = "/cmsuf/data/store/user/t2/users/ferrico/Full_RunII/Production_10_2_18/DY_JPsi_Upsilon/DY_2016.root"
 fullpath_main_script = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/skim_sample_inbatch_template.py"
 
-outtxt_dir    = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/output/"
-outcopies_dir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/copies/"
-outpkl_dir    = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/"
+outtxt_dir    = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2018DY/output/"
+outcopies_dir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2018DY/copies/"
+outpkl_dir    = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2018/DY/"
 
 # Event selection.
 inv_m_lim = [60.0, 120.0]
@@ -48,7 +48,7 @@ specified_evt_beg = None # 122000000
 specified_evt_end = None
 
 verbose = 1
-overwrite = 1
+overwrite = 0
 evts_per_batch = 2E6  # The smaller, the faster it will be processed on SLURM.
 # SLURM directives.
 partition = "hpg2-compute"
