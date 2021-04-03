@@ -58,7 +58,7 @@ RooFitResult* fit_and_draw_DSCB(
     // }
 
     Float_t gbl_x_min = 105.0;
-    Float_t gbl_x_max = 145.0;
+    Float_t gbl_x_max = 140.0;
     Float_t size_text  = 0.017;  // 0.02
     Double_t tex_horiz = 0.20;
     Double_t tex_vert  = 0.82;
@@ -212,12 +212,12 @@ RooFitResult* fit_and_draw_DSCB(
     tex.SetTextColor(color_line);
     tex.SetTextSize(size_text);
     tex.DrawLatex(tex_horiz, tex_vert, fit_param_title);
-    tex.DrawLatex(tex_horiz, tex_vert - 1.0*y_drop, Form("%s = %.3f #pm %.3f", name_aL.Data(), AlphaL.getVal(), AlphaL.getError()));
-    tex.DrawLatex(tex_horiz, tex_vert - 2.0*y_drop, Form("%s = %.3f #pm %.3f", name_aR.Data(), AlphaR.getVal(), AlphaR.getError()));
-    tex.DrawLatex(tex_horiz, tex_vert - 3.0*y_drop, Form("%s = %.3f #pm %.3f", name_mu.Data(), Mean.getVal(), Mean.getError()));
-    tex.DrawLatex(tex_horiz, tex_vert - 4.0*y_drop, Form("%s = %.3f #pm %.3f", name_sig.Data(), Sigma.getVal(), Sigma.getError()));
-    tex.DrawLatex(tex_horiz, tex_vert - 5.0*y_drop, Form("%s = %.3f #pm %.3f", name_expL.Data(), ExpL.getVal(), ExpL.getError()));
-    tex.DrawLatex(tex_horiz, tex_vert - 6.0*y_drop, Form("%s = %.3f #pm %.3f", name_expR.Data(), ExpR.getVal(), ExpR.getError()));
+    tex.DrawLatex(tex_horiz, tex_vert - 1.0*y_drop, Form("%s = %.4f #pm %.4f", name_aL.Data(), AlphaL.getVal(), AlphaL.getError()));
+    tex.DrawLatex(tex_horiz, tex_vert - 2.0*y_drop, Form("%s = %.4f #pm %.4f", name_aR.Data(), AlphaR.getVal(), AlphaR.getError()));
+    tex.DrawLatex(tex_horiz, tex_vert - 3.0*y_drop, Form("%s = %.4f #pm %.4f", name_mu.Data(), Mean.getVal(), Mean.getError()));
+    tex.DrawLatex(tex_horiz, tex_vert - 4.0*y_drop, Form("%s = %.4f #pm %.4f", name_sig.Data(), Sigma.getVal(), Sigma.getError()));
+    tex.DrawLatex(tex_horiz, tex_vert - 5.0*y_drop, Form("%s = %.4f #pm %.4f", name_expL.Data(), ExpL.getVal(), ExpL.getError()));
+    tex.DrawLatex(tex_horiz, tex_vert - 6.0*y_drop, Form("%s = %.4f #pm %.4f", name_expR.Data(), ExpR.getVal(), ExpR.getError()));
 
 
     

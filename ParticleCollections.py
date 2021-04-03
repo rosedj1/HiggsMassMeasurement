@@ -67,20 +67,13 @@ def build_muons_from_process(prod_mode, evt, evt_num,
     elif prod_mode in ["H4mu", "H4e"]:
         # Check if this event passes Higgs selections.
         # Build the 4 MyMuons from the event.
-        # DELETE CODE BELOW.
-        mu_tup = build_muons_from_HZZ4mu_event(evt, evt_num, eta_bin=[0,2.4], pT_bin=[5,200], d0_max=d0_bin[1], use_FSR=True)
-        # DELETE ABOVE BELOW.
-
-
-        # UNCOMMENT CODE BELOW.
-        # mu_tup = build_muons_from_HZZ4mu_event(evt, evt_num,
-        #                                 eta_bin=eta_bin,
-        #                                 pT_bin=pT_bin,
-        #                                 d0_bin=d0_bin,
-        #                                 inv_m_bin=inv_m_bin,
-        #                                 dR_max=dR_max,
-        #                                 verbose=verbose)
-        # UNCOMMENT CODE ABOVE.
+        mu_tup = build_muons_from_HZZ4mu_event(evt, evt_num,
+                                        eta_bin=eta_bin,
+                                        pT_bin=pT_bin,
+                                        d0_bin=d0_bin,
+                                        inv_m_bin=inv_m_bin,
+                                        dR_max=dR_max,
+                                        verbose=verbose)
 
     elif prod_mode in ["H2mu", "H2e"]:
         # Check if this event passes H->2mu selections.
@@ -320,16 +313,10 @@ class MyMuonCollection:
                     # corr_mu_ls.append(lorentzvec_mu_corr)
                 # Now combine any FSR photon to its muon with corrected pT.
                     
-                    #--- COMMENT OUT BELOW TEMPORARILY ---#
                     # Clever way to rebuild the FSR photon:
-                    # lvec_photon = mu.get_LorentzVector(kind="withFSR") - mu.get_LorentzVector(kind="reco")
-                    # lvec_mu_corrpT_FSR = lvec_photon + ROOT.Math.PtEtaPhiMVector(mu.pT_corr, mu.eta, mu.phi, mu.mass)
-                    # lorentzvec_corr_mu_withFSR_ls.append(lvec_mu_corrpT_FSR)
-                    #--- COMMENT OUT ABOVE TEMPORARILY ---#
-
-                    #--- DELETE BELOW ---#
-                    lorentzvec_corr_mu_withFSR_ls.append(lorentzvec_mu_corr)
-                    #--- DELETE ABOVE ---#
+                    lvec_photon = mu.get_LorentzVector(kind="withFSR") - mu.get_LorentzVector(kind="reco")
+                    lvec_mu_corrpT_FSR = lvec_photon + ROOT.Math.PtEtaPhiMVector(mu.pT_corr, mu.eta, mu.phi, mu.mass)
+                    lorentzvec_corr_mu_withFSR_ls.append(lvec_mu_corrpT_FSR)
                 #--- End loop over muons.
 
                 # check_n_muons(prod_mode, corr_mu_ls, per_event=True)
@@ -348,6 +335,21 @@ class MyMuonCollection:
             # Save the inv_mass(muons) info.
             lorentzvec_mu_withFSR_ls = [mu.get_LorentzVector("withFSR") for mu in mu_tup]
             inv_m = calc_Hmass(lorentzvec_mu_withFSR_ls)
+
+            #--- For testing purpose:
+            # diff_max = 5E-5
+            # actual_diff = abs(inv_m - t.mass4l)
+            # if actual_diff > diff_max:
+            #     msg = (
+            #         f"[ERROR] |calculated_inv_m - t.mass4l| = {actual_diff} > {1E-10} (max diff allowed)\n"
+            #         f"[ERROR] calculated_inv_m = {inv_m}\n"
+            #         f"[ERROR] event number     = {evt_num}\n"
+            #         f"[ERROR] t.mass4l         = {t.mass4l}\n"
+            #         f"[ERROR] nFSRPhotons      = {t.nFSRPhotons}\n"
+            #         )
+            #     raise ValueError(msg)
+            #---
+
             for mu in mu_tup:
                 # An attempt to get rid of self.m4mu_ls and self.m4mu_corr_ls.
                 mu.inv_m_event = inv_m
