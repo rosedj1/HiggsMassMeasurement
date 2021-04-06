@@ -56,7 +56,9 @@ def calc_dR(deta, dphi):
 
 def perc_diff(num, ref):
     """
-    Return the signed percent difference between two numbers, relative to one of them.
+    Return the signed percent difference between num and ref:
+
+    Returns: (num - ref) / ref * 100.0
     
     Parameters
     ----------

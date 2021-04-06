@@ -9,7 +9,7 @@ Idea: class Event
 import os
 import shutil
 from glob import glob
-from Utils_Python.Utils_Files import open_pkl, save_to_pkl, check_overwrite, replace_value, make_dirs
+from Utils_Python.Utils_Files import open_pkl, check_overwrite, replace_value, make_dirs
 from Utils_Python.SlurmManager import SLURMSubmitter
 
 verbose = 1

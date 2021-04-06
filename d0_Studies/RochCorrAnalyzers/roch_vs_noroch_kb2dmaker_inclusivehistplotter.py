@@ -178,5 +178,5 @@ if __name__ == "__main__":
         h.Write()
     outf.Close()
 
-    save_to_pkl(muon_coll, outpath_pkl)
+    save_to_pkl(muon_coll, outpath_pkl, overwrite=overwrite)
     print("Done.")
