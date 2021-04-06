@@ -144,7 +144,7 @@ def run_script(inpath_pkl, eta_range, binned_fit, switch_to_binned_fit, iters,
         suff = attr.rstrip("_frame")
         pdf_path = outpath_pdf.replace(".pdf", f"_{suff}.pdf")
         make_pdf_kb2d_frames(new_dct, attr, pdf_path)
-    save_to_pkl(new_dct, outpath_pkl)
+    save_to_pkl(new_dct, outpath_pkl, overwrite=overwrite)
 
 if __name__ == "__main__":
     outpath_pkl, outpath_txt, outpath_pdf = prep_area(eta_range, filename, iters, outdir_pkl, outdir_txt, outdir_pdf, overwrite)

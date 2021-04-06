@@ -175,5 +175,5 @@ if __name__ == "__main__":
 
     pkl_name = os.path.split(outfile_pdf)[1].replace(".pdf", ".pkl")
     # f"/blue/avery/rosedj1/ForPeepsSake/Filippo/{pkl_name}")
-    save_to_pkl(scanner, os.path.join(outpkl_dir, pkl_name))
+    save_to_pkl(scanner, os.path.join(outpkl_dir, pkl_name), overwrite=overwrite)
     print("Done.")

@@ -9,7 +9,7 @@ from pprint import pprint
 from Utils_Python.Selections import (build_muons_from_HZZ4mu_event,
                                      build_muons_from_Hmumu_event,
                                      build_muons_from_DY_event)
-from Utils_Python.Utils_Physics import calc_Hmass
+from Utils_Python.Utils_Physics import calc_Hmass, perc_diff
 from Utils_Python.Utils_Files import check_overwrite, save_to_pkl, make_dirs
 from Utils_Python.printing import print_header_message
 from Utils_ROOT.ROOT_classes import make_TH1F
@@ -303,18 +303,22 @@ class MyMuonCollection:
                     # Correct muon pT WITHOUT accounting for FSR,
                     # then add in FSR later!
                     mu.pT_corr = correct_muon_pT(
-                        mu.eta, mu.pT_withFSR, mu.charge, mu.d0, 
+                        mu.eta, mu.pT, mu.charge, mu.d0, 
+                        # mu.eta, mu.pT_withFSR, mu.charge, mu.d0, 
                         pT_corr_factor_dict, detection="auto",
                         force_zero_intercept=force_zero_intercept,
                         use_GeoFit_algo=use_GeoFit_algo,
                         print_all_muon_info=False,
                         verbose=verbose)
-                    lorentzvec_mu_corr = ROOT.Math.PtEtaPhiMVector(mu.pT_corr, mu.eta, mu.phi, mu.mass)
+                    # lorentzvec_mu_corr = ROOT.Math.PtEtaPhiMVector(mu.pT_corr, mu.eta, mu.phi, mu.mass)
                     # corr_mu_ls.append(lorentzvec_mu_corr)
                 # Now combine any FSR photon to its muon with corrected pT.
                     
-                    # Clever way to rebuild the FSR photon:
+                    #--- Clever way to rebuild the FSR photon:
+                    # Idea: mu_reco + FSR_photon = mu_withFSR
+                    # ==> FSR_photon = mu_withFSR - mu_reco
                     lvec_photon = mu.get_LorentzVector(kind="withFSR") - mu.get_LorentzVector(kind="reco")
+                    # Then: FSR_photon + mu_recopTcorr = mu_pTcorrwithFSR
                     lvec_mu_corrpT_FSR = lvec_photon + ROOT.Math.PtEtaPhiMVector(mu.pT_corr, mu.eta, mu.phi, mu.mass)
                     lorentzvec_corr_mu_withFSR_ls.append(lvec_mu_corrpT_FSR)
                 #--- End loop over muons.
@@ -336,20 +340,6 @@ class MyMuonCollection:
             lorentzvec_mu_withFSR_ls = [mu.get_LorentzVector("withFSR") for mu in mu_tup]
             inv_m = calc_Hmass(lorentzvec_mu_withFSR_ls)
 
-            #--- For testing purpose:
-            # diff_max = 5E-5
-            # actual_diff = abs(inv_m - t.mass4l)
-            # if actual_diff > diff_max:
-            #     msg = (
-            #         f"[ERROR] |calculated_inv_m - t.mass4l| = {actual_diff} > {1E-10} (max diff allowed)\n"
-            #         f"[ERROR] calculated_inv_m = {inv_m}\n"
-            #         f"[ERROR] event number     = {evt_num}\n"
-            #         f"[ERROR] t.mass4l         = {t.mass4l}\n"
-            #         f"[ERROR] nFSRPhotons      = {t.nFSRPhotons}\n"
-            #         )
-            #     raise ValueError(msg)
-            #---
-
             for mu in mu_tup:
                 # An attempt to get rid of self.m4mu_ls and self.m4mu_corr_ls.
                 mu.inv_m_event = inv_m
@@ -363,26 +353,26 @@ class MyMuonCollection:
 
             # Some checks to make sure FSR was computed correctly.
             if verbose:
-                perc_diff = (t.mass4l - inv_m) / inv_m * 100.0
-                if (perc_diff > 2):
+                percent_diff = perc_diff(inv_m, t.mass4l)
+                if (percent_diff > 2):
                     print(
-                        f"[WARNING] (t.mass4l - inv_m) / inv_m * 100.0 > 2% spotted!\n"
+                        f"[WARNING] (calc_inv_m - t.mass4l) / t.mass4l * 100.0 > 2% spotted!\n"
                         f"  Event #{evt_num}\n"
-                        f"  nFSRPhotons = {t.nFSRPhotons}\n"
-                        f"  t.mass4l    = {t.mass4l}\n"
-                        f"  inv_m        = {inv_m}\n"
-                        f"  perc_diff   = {perc_diff}\n"
+                        f"  nFSRPhotons   = {t.nFSRPhotons}\n"
+                        f"  t.mass4l      = {t.mass4l}\n"
+                        f"  calc_inv_m    = {inv_m}\n"
+                        f"  percent_diff  = {percent_diff}\n"
                         )
                 if do_mu_pT_corr:
-                    perc_diff = (t.mass4l - inv_m_corr) / inv_m_corr * 100.0
-                    if (perc_diff > 2):
+                    percent_diff = perc_diff(inv_m_corr, t.mass4l)
+                    if (percent_diff > 2):
                         print(
-                            f"[WARNING] (t.mass4l - inv_m_corr) / inv_m_corr * 100.0 > 2% spotted!\n"
+                            f"[WARNING] (inv_m - t.mass4l) / t.mass4l * 100.0 > 2% spotted!\n"
                             f"  Event #{evt_num}\n"
-                            f"  nFSRPhotons = {t.nFSRPhotons}\n"
-                            f"  t.mass4l    = {t.mass4l}\n"
-                            f"  inv_m_corr   = {inv_m_corr}\n"
-                            f"  perc_diff   = {perc_diff}\n"
+                            f"  nFSRPhotons   = {t.nFSRPhotons}\n"
+                            f"  t.mass4l      = {t.mass4l}\n"
+                            f"  inv_m_corr    = {inv_m_corr}\n"
+                            f"  percent_diff  = {percent_diff}\n"
                             )
             n_good_evts += 1
             # if n_good_evts >= n_requested_evts:

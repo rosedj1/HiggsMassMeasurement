@@ -46,7 +46,7 @@ Notes:
 
 Author:  Jake Rosenzweig
 Created: 2020-08-24
-Updated: 2021-04-02
+Updated: 2021-04-05
 """
 from ParticleCollections import MyMuonCollection
 from Utils_Python.Utils_Files import check_overwrite
@@ -58,8 +58,8 @@ verbose = 1
 max_n_evts = -1
 print_out_every = 100000
 
-use_GeoFit_algo = True  # Will use Hmumu group's GeoFit factors and method.
-force_zero_intercept = True
+use_GeoFit_algo = 1  # Will use Hmumu group's GeoFit factors and method.
+force_zero_intercept = 1
 
 eta_lim = [0.0, 2.4]
 pT_lim = [5, 1000]
@@ -70,8 +70,9 @@ dR_max = None #0.002
 
 infile_path = "/cmsuf/data/store/user/t2/users/ferrico/Full_RunII/Production_10_2_18/Higgs_VX_BS/125/GluGluHToZZTo4L_M125_2018.root"
 
-# inpkl_path_pTcorrfactors = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pTCorrFactors/GeoFit/GeoFitTcorrfact_derivedfromMC2016_3etabins_0p0eta2p4_newestformat.pkl"
 inpkl_path_pTcorrfactors = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pTCorrFactors/GeoFit/GeoFitTcorrfact_derivedfromMC2018_3etabins_0p0eta2p4_newestformat.pkl"
+# inpkl_path_pTcorrfactors = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pTCorrFactors/AdHoc/AdHocpTcorrfact_derivedfromMC2016DY_13etabins12pTbins_0p0eta2p4_5p0pT200p0_newerformat_empty200pT1000.pkl"
+# inpkl_path_pTcorrfactors = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/pTCorrFactors/AdHoc/AdHocpTcorrfact_derivedfromMC2017DYJpsi_13etabins12pTbins_0p0eta2p4_5p0pT1000p0_newerformat.pkl"
 # inpkl_path_pTcorrfactors = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2018DY/pickles/final_muon_coll/MC2018DY_finalmuoncoll_allitergaussfitsonKB2DsandKB3Ds_new_pTcorrfactors.pkl"
 # inpkl_path_pTcorrfactors = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/CorrFactors/AdHoc/AdHocpTcorrfact_derivedfromMC2016DY_12etabins12pTbins_0p0eta2p4_5p0pT1000p0_newformat.pkl"
 # inpkl_path_pTcorrfactors = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/pickles/MC2016_DY_dpTOverpT_1E6events/MC2016_DY_dpTOverpT_1E6events.pkl"
@@ -88,11 +89,14 @@ outpath_rootfile = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement
 if __name__ == "__main__":
     assert all(year in f for f in (infile_path, inpkl_path_pTcorrfactors, outpath_rootfile))
     if use_GeoFit_algo:
-        assert "GeoFit" in inpkl_path_pTcorrfactors
+        assert all("GeoFit" in f for f in [inpkl_path_pTcorrfactors, outpath_rootfile])
         assert "AdHoc" not in outpath_rootfile
     else:
+        assert all("AdHoc" in f for f in [inpkl_path_pTcorrfactors, outpath_rootfile])
         # assert "AdHoc" in inpkl_path_pTcorrfactors
         assert "GeoFit" not in outpath_rootfile
+    if force_zero_intercept:
+        assert "zerointerc" in outpath_rootfile
     with open(inpkl_path_pTcorrfactors, "rb") as p:
         pT_corr_factor_dict = pickle.load(p)
     check_overwrite(outpath_rootfile, overwrite)

@@ -52,7 +52,7 @@ def main():
                           pT_corr_factor_dict=None,
                           use_GeoFit_algo=False,
                           verbose=verbose)
-    save_to_pkl(mu_coll, outpath_pkl)
+    save_to_pkl(mu_coll, outpath_pkl, overwrite=overwrite)
 
 if __name__ == "__main__":
     main()

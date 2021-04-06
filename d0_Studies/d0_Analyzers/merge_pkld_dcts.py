@@ -46,4 +46,4 @@ if __name__ == "__main__":
         print(f"...Opening: {os.path.basename(f)}")
         dct = open_pkl(f)
         comb.update(dct)
-    save_to_pkl(comb, fullpath)
+    save_to_pkl(comb, fullpath, overwrite=overwrite)
