@@ -103,8 +103,15 @@ def make_TGraphErrors(x, y, x_err=None, y_err=None,
     """A function to quickly make a TGraphErrors. Return the TGraphErrors.
     
     NOTE: Don't pass in x_err yet. Not ready.
+    
+    Parameters
+    ----------
+    x : list or array-like
+        The x values to be plotted.
+    y : list or array-like
+        The y values to be plotted.
     """
-    assert x_err is None
+    assert x_err is None, "FIXME: cannot implement `x_err` yet."
     # Make sure the lengths are all the same
     n_pts = len(x)
     assert all([len(arr) == n_pts for arr in [y, x_err, y_err] if arr is not None])
@@ -129,7 +136,7 @@ def make_TGraphErrors(x, y, x_err=None, y_err=None,
     gr.SetMarkerSize(marker_size)
     gr.SetTitle(title)
     def add_units(label, units):
-        return label + r" (%s)" % units if len(units) > 0 else label
+        return label + r" (%s)" % units if units is not None else label
     x_label = add_units(x_label, x_units)
     y_label = add_units(y_label, y_units)
     gr.GetXaxis().SetTitle(x_label)

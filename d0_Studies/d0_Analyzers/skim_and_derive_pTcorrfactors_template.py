@@ -75,6 +75,7 @@ binned_fit = REPLACE_binned_fit
 use_data_in_xlim = REPLACE_use_data_in_xlim  # Only fit over data within x-window.
 fit_whole_range_first_iter = REPLACE_fit_whole_range_first_iter  # False gives more consistent iterated fits.
 min_muons_per_qd0_bin = REPLACE_min_muons_per_qd0_bin
+fit_with_zero_interc = REPLACE_fit_with_zero_interc
 
 max_n_evts = REPLACE_max_n_evts
 print_out_every = REPLACE_print_out_every
@@ -148,7 +149,7 @@ def main():
                                      alarm_level=alarm_level,
                                      verbose=verbose, use_data_in_xlim=use_data_in_xlim)
         if make_dpTOverpT_vs_qd0_graphs:
-            mu_coll.make_KinBin2D_graphs()
+            mu_coll.make_KinBin2D_graphs(fit_with_zero_interc=fit_with_zero_interc)
             mu_coll.make_all_multigraphs(eta_ls)  # Appends to self.multigraph_ls
             # Get dpT/pT vs. qd0 graphs.
             # mu_coll.collect_KinBin2D_plots()
@@ -163,7 +164,7 @@ def main():
         raise RuntimeError("This section needs to be updated.")
         # mu_coll.make_inclusive_kinematic_plots()
         mu_coll.fill_KinBin_hists()
-        mu_coll.make_KinBin2D_graphs()
+        mu_coll.make_KinBin2D_graphs(fit_with_zero_interc=fit_with_zero_interc)
         mu_coll.collect_all_plots()
         # Print plots into single PDF.
         print(f"Drawing all plots to:\n{outpath_pdf}")

@@ -43,6 +43,7 @@ use_data_in_xlim = True
 switch_to_binned_fit = 999999999
 verbose = True
 alarm_level = "warning"
+fit_with_zero_interc = FIT_WITH_ZERO_INTERC
 
 regions = 12  # Number of q*d0 bins per KB2D.
 min_muons_per_qd0_bin = 100
@@ -96,10 +97,10 @@ def main():
     printer.make_plots_pretty()
     do_itergaussfits_on_kb3ds(kb2d)
     # Make dpT/pT and dpT/pT * 1/<pT> vs. qd0 plots.
-    kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_1divpT=False)
-    kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_1divpT=True)
-    kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_avgOf1divpT=True)
-    kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_muOf1divpT=True)
+    kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_1divpT=False, fit_with_zero_interc=fit_with_zero_interc)
+    kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_1divpT=True, fit_with_zero_interc=fit_with_zero_interc)
+    kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_avgOf1divpT=True, fit_with_zero_interc=fit_with_zero_interc)
+    kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_muOf1divpT=True, fit_with_zero_interc=fit_with_zero_interc)
     # Also make dpT/pT * <1/pT> vs. qd0 plots (notice where < > is!).
     if delete_kb3d_muons:
         for kb3d in kb2d.KinBin3D_dict.values():

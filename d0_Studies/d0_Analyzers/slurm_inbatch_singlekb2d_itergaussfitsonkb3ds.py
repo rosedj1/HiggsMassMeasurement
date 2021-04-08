@@ -36,10 +36,10 @@ Requires an input pickled dict of KinBin2Ds. You can make the '.pkl' with:
 
 Author: Jake Rosenzweig
 Created: <2021-03-15
-Updated: 2021-03-29
+Updated: 2021-04-07
 """
 from Utils_Python.Utils_Files import replace_value, make_dirs
-from d0_Studies.kinematic_bins import eta_bins_geofitvsVXBS, pT_bins_geofitvsVXBS #equal_entry_bin_edges_eta_mod1_wholenum, bin_edges_pT_sevenfifths_to1000GeV_wholenum
+from d0_Studies.kinematic_bins import eta_bins_geofitvsVXBS, pT_bins_geofitvsVXBS, equal_entry_bin_edges_eta_mod1_wholenum, bin_edges_pT_sevenfifths_to1000GeV_wholenum
 from d0_Studies.d0_Analyzers.slurm_inbatch_derive_pTcorrfactors import make_name_from_ls
 from Utils_Python.SlurmManager import SLURMSubmitter
 # from d0_Studies.d0_Utils.d0_cls import OrganizerKB2D
@@ -58,11 +58,13 @@ fit_whole_range_first_iter = False  # False gives more consistent fits (with no 
 use_data_in_xlim = 1
 binned_fit = True
 switch_to_binned_fit = 999999999
+fit_with_zero_interc = True
 
 job_name_base = "MC2016DY_individKB2D_withitergaussfitsonKB3Ds_nogenmatching_0p0_d0_0p01"  # Also prefix for outfile.
-eta_ls = eta_bins_geofitvsVXBS #equal_entry_bin_edges_eta_mod1_wholenum
-# eta_ls = equal_entry_bin_edges_eta_mod1_wholenum[7:9]
+# eta_ls = eta_bins_geofitvsVXBS #equal_entry_bin_edges_eta_mod1_wholenum
+eta_ls = equal_entry_bin_edges_eta_mod1_wholenum[0:2]
 full_pT_ls = pT_bins_geofitvsVXBS  #[20.0, 30.0, 40.0, 50.0] #bin_edges_pT_sevenfifths_to1000GeV_wholenum
+full_pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum
 
 template_script_main = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/submit_singlekb2d_itergaussfitsonkb3ds_template.py"
 # template_script_main = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/derive_pTcorrfactors_from_ggH_sample_template.py"
@@ -134,6 +136,7 @@ def replace_vals_in_files(eta_range, pT_range, inpkl_path, outpkl_path,
         replace_value("REPLACE_ETA_NAME", eta_name, template)
         replace_value("REPLACE_PT_NAME", pT_name, template)
         replace_value("BINNED_FIT", binned_fit, template)
+        replace_value("FIT_WITH_ZERO_INTERC", fit_with_zero_interc, template)
 
 def print_info(fullpath_copy_main_script, fullpath_copy_slurm_script, 
                 outdir_copies, outdir_pkl, outdir_txt, outdir_pdf):

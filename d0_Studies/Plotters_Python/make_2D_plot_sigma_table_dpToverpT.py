@@ -12,35 +12,44 @@
 #  We must be clever to grab these associated values and calculate the % diff. 
 #  The main purpose of this code is to make the 2D plot without having to 
 #  reproduce all the kinematic distributions and perform the iter. Gaus. fits.
-#  FIXME: Some of the variables are deprecated, but make sure: scale_factor, etc.
+#  FIXME: Some of the variables are deprecated, but verify before eliminating.
 #  - Be sure to check all the variables in --- User Parameters ---.
 #  - If you get blank cells, try modifying your color_lim range. 
 # SYNTAX: python this_script.py
 # AUTHOR: Jake Rosenzweig
-# EDITED: 2020-07-24
+# CREATED: <=2020-07-24
+# UPDATED: 2021-04-07
 """
 import pickle
 import numpy as np
 import ROOT as r
 
-from Utils_Python.Utils_Files import check_overwrite
+from Utils_Python.Utils_Files import check_overwrite, open_pkl
 #--- User Parameters ---#
 year = "2017"
-# inpath_sigmadict = f"/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/plots/qd0/MC{year}JpsiDY_2D_plot_qd0dist_gausiterfitsigmas_4unbinnedfits_0p0eta2p4_5p0pT1000p0GeV.pkl"
-inpath_sigmadict = f"/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/KinBin_Info/20200709_MC{year}_combinesamples_applycorr_fullstats_2p00sigmas__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
-outfile_path = f"/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/plots/2D_tables_etavspT/MC{year}JpsiDY_2Dplot_dpToverpTimprovement_gausiterfitsigmas_6unbinnedfits_0p0eta2p4_5p0pT1000p0GeV_final.pdf"
-overwrite = True
+# inpath_sigmadict = f"/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/plots/qd0/MC{year}JpsiDY_2D_plot_qd0dist_gausiterfitsigmas_4unbinnedfits_0p0eta2p4_5p0pT1000p0GeV.pkl"
+# inpath_sigmadict = f"/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/KinBin_Info/20200709_MC{year}_combinesamples_applycorr_fullstats_2p00sigmas__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
+inpath_sigmadict = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/pkl_and_csv/MC{year}JpsiDY_gausiterfitsigmas_final_delta_pToverRecpT_5unbinnedfits_0p0eta2p4_5p0pT1000p0GeV.pkl"
+# FOR QD0: outfile_path = f"/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/plots/qd0/MC{year}JpsiDY_2Dplot_qd0dist_gausiterfitsigmas_4unbinnedfits_0p0eta2p4_5p0pT1000p0GeV_final.pdf"
+outfile_path = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/plots_other/2D_tables_etavspT/MC{year}JpsiDY_2Dplot_dpToverpTimprovement_gausiterfitsigmas_6unbinnedfits_0p0eta2p4_5p0pT1000p0GeV_final.pdf"
+# outfile_path = f"/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/plots/2D_tables_etavspT/MC{year}JpsiDY_2Dplot_dpToverpTimprovement_gausiterfitsigmas_6unbinnedfits_0p0eta2p4_5p0pT1000p0GeV_final.pdf"
+overwrite = 0
 
-kinem = "qd0"  # dpToverpT, used to determine how to access different dictionaries.
+units_resolu = "MeV"
+units_improv = "MeV"
+
+kinem = "dpToverpT" #"qd0", used to determine how to access different dictionaries.
 # `10000.` should be used for qd0BS (cm -> um). 
 # `100.`` should be used for delta_pT (convert to percent)
 # WARNING: the dictionary which stores the values may already have scale factor applied. 
 scale_factor = 1.
 title_2D_plot_improvement = r"Improvement in #sigma_{Gaus}(#Deltap_{T}/p_{T} dist.) [%] from Unbinned Iter. Fit"
-title_2D_plot_before_corr = r"#sigma_{Gaus}(#Deltap_{T}/p_{T} dist.) [GeV] from Unbinned Iter. Fit #it{before corr.}"
+title_2D_plot_before_corr = r"#sigma_{Gauss.}(#Deltap_{T}/p_{T} dist.) [GeV] from Unbinned Iter. Fit #it{before corr.}"
 # "Unbinned Iter. Fit #sigma_{Gaus}(qd_{0} dist.) (#mum)"
 #"Unbinned Iter. Fit #sigma_{Gaus}(#Deltap_{T}/p_{T} dist.) (%)"
-title_extra = ", using ad hoc p_{T} corr. (MC %s)" % year
+title_extra = ", using AdHoc p_{T} corr. (MC %s)" % year
+
+title_2D_plot_isthisevenused = "Unbinned Iter. Fit #sigma_{Gaus}(qd_{0} dist.) (#mum)"
 
 # Fixing up the titles a little more.
 title_2D_plot_improvement += title_extra
@@ -52,18 +61,14 @@ color_lim_improv = [0, 12] #[8, 30] #[0, 12]  # Can also be: None
 
 # Number format: e.g. "6.2f" could be 12.34
 # <padding>.<decimals><type>
-formatting_beforeafter = "6.3f"
-formatting_improv = "6.2f"
+formatting_beforeafter = ".3f"
+formatting_improv = "."
+# formatting_beforeafter = "6.3f"
+# formatting_improv = "6.2f"
 
 eta_binedge_ls = [0.00, 0.20, 0.40, 0.60, 0.80, 1.00, 1.25, 1.50, 1.75, 2.00, 2.10, 2.20, 2.30, 2.40]
 pT_binedge_ls = [5.0, 7.0, 10.0, 14.0, 20.0, 27.0, 38.0, 50.0, 75.0, 100.0, 150.0, 200.0, 1000.0]
 #--- Local Functions ---#
-def get_dict_of_sigmas(inpath_dict):
-    """Return the dictionary of sigma values from pickle file."""
-    with open(inpath_dict, "rb") as pkl:
-        dct = pickle.load(pkl)
-    return dct
-
 def get_associated_keys(dict_sigmas, eta_min, eta_max, pT_min, pT_max):
     """
     Given an eta range and pT range, retrieve the 2 associated keys
@@ -83,7 +88,9 @@ def calc_improvement(sigma, sigma_corr):
     """Calculate the absolute relative difference."""
     return abs(sigma_corr - sigma) / sigma
 
-def fill_hist_with_dict_dpToverpTvals(eta_binedge_ls, pT_binedge_ls, h_2d_improv, h_2d_before_corr, h_2d_after_corr, dict_sigmas):
+def fill_hist_with_dict_dpToverpTvals(eta_binedge_ls, pT_binedge_ls,
+                                      h_2d_improv, h_2d_before_corr, h_2d_after_corr,
+                                      dict_sigmas, unit_scale=1):
     """
     Find the 2 associated keys (corr and uncorr), 
     calculate the % improvement, and put the value 
@@ -94,6 +101,11 @@ def fill_hist_with_dict_dpToverpTvals(eta_binedge_ls, pT_binedge_ls, h_2d_improv
     
     Example (Key : Val) pair:
         ("h_2.3eta2.4_100.0pT150.0_combined_dpToverpTcorr" : 4-tuple)
+
+    Parameters
+    ----------
+    unit_scale : float >= 0
+        Use 1000.0 to convert GeV to MeV, for example.
     """
     for eta_min,eta_max in zip(eta_binedge_ls[:-1], eta_binedge_ls[1:]):
         for pT_min,pT_max in zip(pT_binedge_ls[:-1], pT_binedge_ls[1:]):
@@ -106,20 +118,43 @@ def fill_hist_with_dict_dpToverpTvals(eta_binedge_ls, pT_binedge_ls, h_2d_improv
             midpt_pT = (pT_min + pT_max) / 2.0
             midpt_eta = (eta_min + eta_max) / 2.0
             print(f"...Filling 2D hist: midpt_pT, midpt_eta, sigma=({midpt_pT}, {midpt_eta}, {sigma})")
-            h_2d_before_corr.Fill(midpt_pT, midpt_eta, sigma)
+            h_2d_before_corr.Fill(midpt_pT, midpt_eta, sigma * unit_scale)
             print(f"...Filling 2D hist: midpt_pT, midpt_eta, sigma_corr=({midpt_pT}, {midpt_eta}, {sigma_corr})")
-            h_2d_after_corr.Fill(midpt_pT, midpt_eta, sigma_corr)
+            h_2d_after_corr.Fill(midpt_pT, midpt_eta, sigma_corr * unit_scale)
             print(f"...Filling 2D hist: midpt_pT, midpt_eta, improvement(%)=({midpt_pT}, {midpt_eta}, {improv})")
             h_2d_improv.Fill(midpt_pT, midpt_eta, improv)
 
-def fill_hist_with_dict_qd0vals(h_2d_improv, h_2d_before_corr, h_2d_after_corr, dict_sigmas, scale_factor=scale_factor)):
+def get_ranges(key):
+    """
+    Parse a str key and convert it to the corresponding eta_range and pT_range.
+    Example of key:
+        2p2eta2p3_5p0pT7p0_sigmawitherr_delta_pToverRecpT
+    After conversion:
+        eta_range = [2.2, 2.3]
+        pT_range = [5.0, 7.0]        
+    """
+    eta_str, pT_str = key.split("_")[0:2]
+    eta_range_str = eta_str.split("eta")
+    pT_range_str = pT_str.split("pT")
+    eta_range = [float(num.replace("p",".")) for num in eta_range_str]
+    pT_range = [float(num.replace("p",".")) for num in pT_range_str]
+    return eta_range, pT_range
+
+# def fill_hist_with_dict_qd0vals(h_2d_improv, h_2d_before_corr, h_2d_after_corr, dict_sigmas, scale_factor=100.0):
+def fill_hist_with_dict_sigmaimprove_vals(h_2d_improv, h_2d_before_corr, h_2d_after_corr, dict_sigmas, scale_factor=100.0):
     """
     Put the value of each key into a specific cell of the 2D hist.
     
     Example (Key : Val) pair:
         ("2p2eta2p3_5p0pT7p0_sigmawitherr_delta_pToverRecpT" : [bestfit_sigma, bestfit_sigma_err])
+
+    Parameters
+    ----------
+    scale_factor : float
+        Scalar that multiplies the stored sigma improvements found in
+        `dict_sigmas`.
     """
-    for key,sigma_ls in dict_sigmas.items():
+    for key, sigma_ls in dict_sigmas.items():
         if "binedges" in key:
             continue
         bestfit_sigma = sigma_ls[0]
@@ -175,7 +210,7 @@ def make_pdf(h_before_corr, h_after_corr, h_improve, outfile_path):
 
 if __name__ == "__main__":
     check_overwrite(outfile_path, overwrite=overwrite)
-    dict_sigmas = get_dict_of_sigmas(inpath_sigmadict)
+    dict_sigmas = open_pkl(inpath_sigmadict)
     h_2d_before_corr = make_2D_hist("before_corr", title_2D_plot_before_corr,
                                     eta_binedge_ls, pT_binedge_ls, color_lim_beforeafter_corr, formatting_beforeafter)
     h_2d_after_corr = make_2D_hist("after_corr", title_2D_plot_after_corr, 
@@ -184,9 +219,10 @@ if __name__ == "__main__":
                                     eta_binedge_ls, pT_binedge_ls, color_lim_improv, formatting_improv)
 
     if "qd0" in kinem:
-        fill_hist_with_dict_qd0vals(h_2d_improv, h_2d_before_corr, h_2d_after_corr, dict_sigmas, scale_factor=scale_factor)
+        fill_hist_with_dict_qd0vals(h_2d_improv, h_2d_before_corr, h_2d_after_corr, dict_sigmas, scale_factor=scale_factor, units=units_resolu)
     elif "dpToverpT" in kinem:
-        fill_hist_with_dict_vals(eta_binedge_ls, pT_binedge_ls, h_2d_improv, h_2d_before_corr, h_2d_after_corr, dict_sigmas)
+        fill_hist_with_dict_qd0vals(h_2d_improv, h_2d_before_corr, h_2d_after_corr, dict_sigmas, scale_factor=scale_factor, units=units_resolu)
+        fill_hist_with_dict_sigmaimprove_vals(eta_binedge_ls, pT_binedge_ls, h_2d_improv, h_2d_before_corr, h_2d_after_corr, dict_sigmas)
     else:
         print(f"Not filling plots. You should probably look into this.")
 
