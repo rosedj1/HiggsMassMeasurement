@@ -219,7 +219,8 @@ class KinBin2D:
             self.h_dpTOverpT.Fill(mu.dpTOverpT)
 
     def make_dpTOverpT_graph(self, color=4, do_fit=True,
-                             scale_by_1divpT=False, scale_by_avgOf1divpT=False, scale_by_muOf1divpT=False):
+                             scale_by_1divpT=False, scale_by_avgOf1divpT=False, scale_by_muOf1divpT=False,
+                             fit_with_zero_interc=False):
         """
         TODO: Update docstring.
 
@@ -236,6 +237,9 @@ class KinBin2D:
         ----------
         color : int
             The color of the markers and the fit line.
+
+        fit_with_zero_interc : bool
+            If True, then the fit line is forced through y = 0.
         """
         # Make sure that at most only one of the scaling methods is used.
         assert sum((scale_by_1divpT, scale_by_avgOf1divpT, scale_by_muOf1divpT)) <= 1
@@ -308,30 +312,50 @@ class KinBin2D:
             self.gr_dpTOverpTscaled_vs_qd0 = gr
             # gr.GetYaxis().SetRangeUser(-0.003, 0.003)
             if do_fit:
-                self.fit_line_scaled = self.fit_graph_with_line(gr, scale_by_1divpT=scale_by_1divpT)
+                self.fit_line_scaled = self.fit_graph_with_line(gr, scale_by_1divpT=scale_by_1divpT, fit_with_zero_interc=fit_with_zero_interc)
         elif scale_by_avgOf1divpT:
             self.gr_dpTOverpTtimesavgOf1divpT = gr
             # gr.GetYaxis().SetRangeUser(-0.003, 0.003)
             if do_fit:
-                self.fit_line_scaled_avgOf1divpT = self.fit_graph_with_line(gr, scale_by_avgOf1divpT=scale_by_avgOf1divpT)
+                self.fit_line_scaled_avgOf1divpT = self.fit_graph_with_line(gr, scale_by_avgOf1divpT=scale_by_avgOf1divpT, fit_with_zero_interc=fit_with_zero_interc)
         elif scale_by_muOf1divpT:
             self.gr_dpTOverpTtimesmuOf1divpT = gr
             # gr.GetYaxis().SetRangeUser(-0.003, 0.003)
             if do_fit:
-                self.fit_line_scaled_muOf1divpT = self.fit_graph_with_line(gr, scale_by_muOf1divpT=scale_by_muOf1divpT)
+                self.fit_line_scaled_muOf1divpT = self.fit_graph_with_line(gr, scale_by_muOf1divpT=scale_by_muOf1divpT, fit_with_zero_interc=fit_with_zero_interc)
         else:
             self.gr_dpTOverpT_vs_qd0 = gr
             # gr.GetYaxis().SetRangeUser(-0.04, 0.04)
             if do_fit:
-                self.fit_line = self.fit_graph_with_line(gr)
+                self.fit_line = self.fit_graph_with_line(gr, fit_with_zero_interc=fit_with_zero_interc)
 
     def fit_graph_with_line(self, gr, scale_by_1divpT=False,
                                       scale_by_avgOf1divpT=False,
-                                      scale_by_muOf1divpT=False):
+                                      scale_by_muOf1divpT=False, 
+                                      fit_with_zero_interc=False):
         """Return a linear fit function and after fitting it to graph `gr`.
         
         FIXME:
         - There may be an internal name conflict in ROOT 
+
+        Parameters
+        ----------
+        gr : ROOT.TGraph
+            The graph onto which a line will be fit.
+        scale_by_1divpT : bool
+            If True, then the fit stats dict will be updated with key =
+            'dpTOverpTscaled_vs_qd0'.
+            Used for keeping fit stats on: dpT/pT * 1/<pT>
+        scale_by_avgOf1divpT : bool
+            If True, then the fit stats dict will be updated with key =
+            'dpTOverpTtimesavgOf1divpT_vs_qd0'.
+            Used for keeping fit stats on: dpT/pT * <1/pT>
+        scale_by_muOf1divpT : bool
+            If True, then the fit stats dict will be updated with key =
+            'dpTOverpTtimesmuOf1divpT_vs_qd0'.
+            Used for keeping fit stats on: dpT/pT * mu_Gauss(1/pT)
+        fit_with_zero_interc : bool
+            If True, then the fit line is forced through y = 0.
         """
         # Make sure only 1 bool was chosen, max.
         assert sum((scale_by_1divpT, scale_by_avgOf1divpT, scale_by_muOf1divpT)) <= 1
@@ -350,6 +374,8 @@ class KinBin2D:
         # Make the fit function.
         key = self.get_bin_key(title_friendly=False)
         fit_func = r.TF1(f"f1_{key}", '[0]+[1]*x', x_min, x_max)
+        if fit_with_zero_interc:
+            fit_func.FixParameter(0, 0.0)
         fit_func.SetLineColor(2)
         fit_func.SetLineWidth(1)
         fit_func.SetLineStyle(1)

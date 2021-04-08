@@ -658,7 +658,7 @@ class MyMuonCollection:
         for kinbin in self.KinBin2D_dict.values():
             kinbin.fill_hists()
 
-    def make_KinBin2D_graphs(self):
+    def make_KinBin2D_graphs(self, fit_with_zero_interc=False):
         """
         For each KinBin2D, use its stored muons to make all dpT/pT vs. qd0
         graphs:
@@ -670,10 +670,10 @@ class MyMuonCollection:
         """
         print("...Making TGraphs for all KinBin2Ds...")
         for kb2d in self.KinBin2D_dict.values():
-            kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_1divpT=False)
-            kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_1divpT=True)
-            kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_avgOf1divpT=True)
-            kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_muOf1divpT=True)
+            kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_1divpT=False, fit_with_zero_interc=fit_with_zero_interc)
+            kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_1divpT=True, fit_with_zero_interc=fit_with_zero_interc)
+            kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_avgOf1divpT=True, fit_with_zero_interc=fit_with_zero_interc)
+            kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_muOf1divpT=True, fit_with_zero_interc=fit_with_zero_interc)
             self.kinbin2d_graph_ls.extend([kb2d.gr_dpTOverpT_vs_qd0])
             self.kinbin2d_graph_ls.extend([kb2d.gr_dpTOverpTscaled_vs_qd0])
             self.kinbin2d_graph_ls.extend([kb2d.gr_dpTOverpTtimesavgOf1divpT])

@@ -67,6 +67,7 @@ binned_fit = False
 use_data_in_xlim = True  # Only fit over data within x-window.
 fit_whole_range_first_iter = False  # False gives more consistent iterated fits.
 min_muons_per_qd0_bin = 100
+fit_with_zero_interc = False
 
 regions = 12       # Number of equal-entry regions along qd0 axis.
 iters = 5
@@ -131,7 +132,7 @@ def main():
                                      alarm_level=alarm_level,
                                      verbose=verbose, use_data_in_xlim=use_data_in_xlim)
         if make_dpTOverpT_vs_qd0_graphs:
-            mu_coll.make_KinBin2D_graphs()
+            mu_coll.make_KinBin2D_graphs(fit_with_zero_interc=fit_with_zero_interc)
             mu_coll.make_all_multigraphs(eta_ls)  # Appends to self.multigraph_ls
             # Get dpT/pT vs. qd0 graphs.
         # Get dpT/pT IterGaussFit plots and qd0 dists.
@@ -145,7 +146,7 @@ def main():
         raise RuntimeError("This section needs to be updated.")
         # mu_coll.make_inclusive_kinematic_plots()
         mu_coll.fill_KinBin_hists()
-        mu_coll.make_KinBin2D_graphs()
+        mu_coll.make_KinBin2D_graphs(fit_with_zero_interc=fit_with_zero_interc)
         mu_coll.collect_all_plots()
         # Print plots into single PDF.
         print(f"Drawing all plots to:\n{outpath_pdf}")
