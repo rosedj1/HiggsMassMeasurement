@@ -19,8 +19,8 @@ import numpy as np
 import ROOT as rt
 # Package imports.
 from Utils_Python.Utils_Files import check_overwrite, open_pkl, make_dirs
-from Utils_Python.Utils_StatsAndFits import get_status_redchi2_fit
-from Utils_ROOT.ROOT_classes import make_TH2F
+from Utils_Python.Utils_StatsAndFits import get_status_redchi2_fit, get_standarderrorofmean
+from Utils_ROOT.ROOT_classes import make_TH2F, fill_TH2F, set_TH2F_errs
 #--- User Parameters ---#
 # inpath_pkl = f"/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/plots/qd0/MC{year}JpsiDY_2D_plot_qd0dist_gausiterfitsigmas_4unbinnedfits_0p0eta2p4_5p0pT1000p0GeV.pkl"
 filename = "test17.pdf"
@@ -49,23 +49,6 @@ auto_detect_binedges = True
 # <padding>.<decimals><type>
 cell_text_format = ".3g"
 #--- Local Functions ---#
-def fill_TH2F(h2, x_vals, y_vals, z_vals):
-    """Fill a 2-D hist with (x,y) entries (coordinates).
-    
-    FIXME: use_weight_x and use_weight_y are deprecated.
-    Parameters
-    ----------
-    h2 : ROOT.TH2F
-        The 2-D hist to be filled with len(x_coord_ls) entries.
-    x_coord_ls : list or array-like
-        The x-values of each entry. The first element pairs with the first in y_coord_ls.
-    y_coord_ls : list or array-like
-        The y-values of each entry. The first element pairs with the first in x_coord_ls.
-    """
-    assert len(x_vals) == len(y_vals)
-    for x, y, z in zip(x_vals, y_vals, z_vals):
-        h2.Fill(x, y, z)
-
 def get_binedges_from_kb2d_dct(kb2d_dct):
     """Return a 2-tuple of lists: (eta_bin_edges, pT_bin_edges) which are
     automatically determined from kb2d_dct.
@@ -80,12 +63,6 @@ def get_binedges_from_kb2d_dct(kb2d_dct):
     pT_binedge_ls = sorted(set(pT_edges_all))
     eta_binedge_ls = sorted(set(eta_edges_all))
     return (eta_binedge_ls, pT_binedge_ls)
-
-def get_standarderrorofmean(arr):
-    """Return the standard error of the mean."""
-    if not isinstance(arr, np.ndarray):
-        arr = np.array(arr)
-    return np.std(arr) / np.sqrt(len(arr))
 
 def get_mean_and_SEOM(arr):
     """Return a 2-tuple: (mean, standard error of mean)."""
@@ -140,27 +117,26 @@ def make_hist_and_errhist(internal_name, title=None,
             n_binsx=5, x_label="", x_units=None, x_min=0, x_max=10, z_min=None,
             n_binsy=5, y_label="", y_units=None, y_min=0, y_max=10, z_max=None,
             z_label_size=None,
-            n_contour=100):
-    """Return a 2-tuple: (TH2F filled with (x,y,z), TH2F filled with (x,y,z_err)).
-    
-    NOTE: Make sure """
+            n_contour=100, extra_name="err"):
+    """Return a 2-tuple: (TH2F filled with (x,y,z), TH2F filled with
+    (x,y,z_err)).
+
+    TODO: Update docstring.
+
+    Parameters
+    ----------
+    extra_name : str
+        A suffix to append to the internal name.
+        This result becomes the internal name of the returned `h_err`.
+    """
     h = make_TH2F(internal_name=internal_name, title=title, 
-                n_binsx=pT_binedge_ls, x_label=x_label, x_units=x_units,
-                n_binsy=eta_binedge_ls, y_label=y_label, y_units=y_units, y_min=y_min, y_max=y_max,
+                n_binsx=n_binsx, x_label=x_label, x_units=x_units,
+                n_binsy=n_binsy, y_label=y_label, y_units=y_units, y_min=y_min, y_max=y_max,
+                z_min=z_min, z_max=z_max,
                 n_contour=n_contour)
     h_err = h.Clone()
-    h_err.SetName(h.GetName().replace("mean", "sterrofmean"))
+    h_err.SetName(h.GetName() + extra_name)
     return (h, h_err)
-
-def set_bin_vals_and_errs(h2, h2_err):
-    """Set the values stored in h2_err as the errors in h2."""
-    assert h2.GetNbinsX() == h2_err.GetNbinsX()
-    assert h2.GetNbinsY() == h2_err.GetNbinsY()
-    for binx in range(1, h2.GetNbinsX() + 1):
-        for biny in range(1, h2.GetNbinsY() + 1):
-            # Similar cells (e.g. (2,3)) in both hists correspond to each other.
-            err = h2_err.GetBinContent(binx, biny)
-            h2.SetBinError(binx, biny, err)
 
 if __name__ == "__main__":
     check_overwrite(outpath_pdf, overwrite=overwrite)
@@ -398,7 +374,7 @@ if __name__ == "__main__":
         c.SetLogx(True)
         # Consolidate for loops into a single one.
         for h, h_err in zip(hist_tup, hist_err_tup):
-            set_bin_vals_and_errs(h, h_err)
+            set_TH2F_errs(h, h_err)
             h.SetContour(n_contour)
             h.SetMarkerSize(text_size)
             # h.SetBarOffset(0.2)
@@ -406,7 +382,7 @@ if __name__ == "__main__":
             h.Draw("colz text e1")
             c.Print(outpath_pdf)
         for h, h_err in zip(hist_iterfit_tup, hist_err_iterfit_tup):
-            set_bin_vals_and_errs(h, h_err)
+            set_TH2F_errs(h, h_err)
             h.SetContour(n_contour)
             h.SetMarkerSize(text_size)
             # h.SetBarOffset(0.2)

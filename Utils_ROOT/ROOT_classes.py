@@ -2,6 +2,9 @@ import numpy as np
 import ROOT
 from array import array
 
+#-----------#
+#--- TH1 ---#
+#-----------#
 def make_TH1F(internal_name, title=None, n_bins=100, xlabel=None, x_min=0, x_max=10, units=None):
     """A function to quickly make TH1F. Return the TH1F.
     
@@ -30,12 +33,17 @@ def make_TH1F(internal_name, title=None, n_bins=100, xlabel=None, x_min=0, x_max
     h.SetYTitle(ylabel)
     return h
 
+#-----------#
+#--- TH2 ---#
+#-----------#
 def make_TH2F(internal_name, title=None, 
               n_binsx=5, x_label="", x_units=None, x_min=0, x_max=10,
               n_binsy=5, y_label="", y_units=None, y_min=0, y_max=10,
               z_min=None, z_max=None, z_label_size=None,
               n_contour=100):
     """A function to quickly make TH2F. Return the TH2F.
+    
+    TODO: Update docstring.
     
     NOTE: 
     - Don't worry about parentheses around units.
@@ -53,6 +61,12 @@ def make_TH2F(internal_name, title=None,
         Number of bins along the x-axis.
         If a list is provided, then the elements are the bin edges (which can
         be non-uniform!).
+    x_min : float
+        If n_binsx is type int, then the first bin will start at this x-val.
+        If n_binsx is array-like, then this parameter is ignored.
+    x_max : float
+        If n_binsx is type int, then the last bin will end at this x-val.
+        If n_binsx is array-like, then this parameter is ignored.
     n_binsy : int or list
         Number of bins along the y-axis.
         If a list is provided, then the elements are the bin edges (which can
@@ -92,8 +106,48 @@ def make_TH2F(internal_name, title=None,
         h2.GetZaxis().SetRangeUser(z_min, z_max)
     if z_label_size is not None:
         h2.GetZaxis().SetLabelSize(z_label_size)
+    h2.SetContour(n_contour)
     return h2
 
+def fill_TH2F(h2, x_vals, y_vals, z_vals, zerr_vals=None):
+    """Fill a 2-D hist with (x,y) entries (coordinates).
+    
+    FIXME:
+    [ ] Think this function through to decide if necessary.
+    - Seems like a dict {(x,y) : val} would be a more intuitive way to fill.
+    
+    Parameters
+    ----------
+    h2 : ROOT.TH2F
+        The 2-D hist to be filled with len(x_coord_ls) entries.
+    x_vals : list or array-like
+        The x-coordinate of each entry.
+        The first element pairs with the first in y_vals.
+    y_vals : list or array-like
+        The y-coordinate of each entry.
+        The first element pairs with the first in x_vals.
+    z_vals : list or array-like
+        The number to be displayed in cell (x,y).
+    """
+    assert len(x_vals) == len(y_vals)
+    if zerr_vals is not None:
+        # Make a TH2 of errors.
+        h2_err = h2.Clone()
+    for x, y, z in zip(x_vals, y_vals, z_vals):
+        h2.Fill(x, y, z)
+
+def set_TH2F_errs(h2, h2_err):
+    """Set the values stored in h2_err as the errors in h2."""
+    assert h2.GetNbinsX() == h2_err.GetNbinsX()
+    assert h2.GetNbinsY() == h2_err.GetNbinsY()
+    for binx in range(1, h2.GetNbinsX() + 1):
+        for biny in range(1, h2.GetNbinsY() + 1):
+            # Similar cells (e.g. (2,3)) in both hists correspond to each other.
+            err = h2_err.GetBinContent(binx, biny)
+            h2.SetBinError(binx, biny, err)
+#--------------#
+#--- TGraph ---#
+#--------------#
 def make_TGraphErrors(x, y, x_err=None, y_err=None,
                       use_binwidth_xerrs=False, title="",
                       x_label="", x_min=0, x_max=10, x_units=None,
@@ -145,6 +199,32 @@ def make_TGraphErrors(x, y, x_err=None, y_err=None,
     gr.GetYaxis().SetRangeUser(y_min, y_max)
     return gr
 
+def get_coord_ls_from_TGraph(gr, axis):
+    """Return a list of x- or y-coordinates of gr.
+    
+    Parameters
+    ----------
+    gr : TGraph
+    axis : str
+        "x" or "y"
+    """
+    n_pts = gr.GetN()
+    if axis.lower() in "x":
+        pt_ls = [gr.GetPointX(pt) for pt in range(n_pts)]
+    elif axis.lower() in "y":
+        pt_ls = [gr.GetPointY(pt) for pt in range(n_pts)]
+    else:
+        raise ValueError(f"Axis type ({type(axis)}) should be in ['x', 'y'].")
+    return pt_ls
+
+def get_xcoord_ls_from_TGraph(gr):
+    """Return a list of x-coordinates of gr (TGraph)."""
+    n_pts = gr.GetN()
+    return [gr.GetPointX(pt) for pt in range(n_pts)]
+
+#---------------#
+#--- TLegend ---#
+#---------------#
 def make_TLegend(x_dim=(0.7, 0.9), y_dim=(0.7, 0.9), screenshot_dim=None, buffer_dim=None):
     """Return a TLegend, given its x and y coord.
     
@@ -247,6 +327,9 @@ def make_TMultiGraph_and_Legend(gr_ls=[], leg_txt_ls=[], y_min=None, y_max=None,
         mg.SetMaximum(y_max)
     return (mg, leg)
 
+#-------------#
+#--- TTree ---#
+#-------------#
 def add_branch_to_TTree(tree, br):
     """Add a branch (`br`) to `tree` and return the pointer to `br`.
     
@@ -309,26 +392,3 @@ def get_normcoord_from_screenshot(canv_width, canv_height,
     y_min = bot_offset / float(canv_height)
     y_max = 1 - (top_offset / float(canv_height))
     return (x_min, x_max, y_min, y_max)
-
-def get_coord_ls_from_TGraph(gr, axis):
-    """Return a list of x- or y-coordinates of gr.
-    
-    Parameters
-    ----------
-    gr : TGraph
-    axis : str
-        "x" or "y"
-    """
-    n_pts = gr.GetN()
-    if axis.lower() in "x":
-        pt_ls = [gr.GetPointX(pt) for pt in range(n_pts)]
-    elif axis.lower() in "y":
-        pt_ls = [gr.GetPointY(pt) for pt in range(n_pts)]
-    else:
-        raise ValueError(f"Axis type ({type(axis)}) should be in ['x', 'y'].")
-    return pt_ls
-
-def get_xcoord_ls_from_TGraph(gr):
-    """Return a list of x-coordinates of gr (TGraph)."""
-    n_pts = gr.GetN()
-    return [gr.GetPointX(pt) for pt in range(n_pts)]

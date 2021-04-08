@@ -889,10 +889,11 @@ def prop_err_x_div_y(x, y, dx, dy):
 
     *** This function been verified by an online calculator.
     """
-    x = np.array(x, dtype=float)
-    y = np.array(y, dtype=float)
-    dx = np.array(dx, dtype=float)
-    dy = np.array(dy, dtype=float)
+    x = np.array([x])#, dtype=float)
+    y = np.array([y])#, dtype=float)
+    dx = np.array([x])#, dtype=float)
+    dy = np.array([y])#, dtype=float)
+    assert all(arr.size > 0 for arr in [x, y, dx, dy])
     
     undef = np.ones_like(x) * np.inf
     # Where denom is not 0, do the division. Elsewhere put inf.
@@ -926,11 +927,22 @@ def prop_err_on_dsigoversig(sig1, sig2, sig_err1, sig_err2):
 
     NOTE: This formula should be able to be derived from prop_err_x_div_y()
           above, but I haven't figured it out yet.
+
+    Parameters
+    ----------
+    sig1 : float or array-like
+        The initial value, used as a reference for sig2.
+    sig2 : float or array-like
+        The final value, which is compared to sig1.
+    sig_err1 : float or array-like
+        The error on sig1.
+    sig_err2 : float or array-like
+        The error on sig2.
     """
-    sig1 = np.array(sig1, dtype=float)
-    sig2 = np.array(sig2, dtype=float)
-    sig_err1 = np.array(sig_err1, dtype=float)
-    sig_err2 = np.array(sig_err2, dtype=float)
+    sig1 = np.array([sig1], dtype=float) if not isinstance(sig1, np.ndarray) else np.array(sig1, dtype=float)
+    sig2 = np.array([sig2], dtype=float) if not isinstance(sig2, np.ndarray) else np.array(sig2, dtype=float)
+    sig_err1 = np.array([sig_err1], dtype=float) if not isinstance(sig_err1, np.ndarray) else np.array(sig_err1, dtype=float)
+    sig_err2 = np.array([sig_err2], dtype=float) if not isinstance(sig_err2, np.ndarray) else np.array(sig_err2, dtype=float)
     
     relsig1 = sig_err1 / sig1
     relsig2 = sig_err2 / sig2
@@ -939,7 +951,12 @@ def prop_err_on_dsigoversig(sig1, sig2, sig_err1, sig_err2):
 #-------------------------#
 #----- Stats Helpers -----#
 #-------------------------#
-
+def get_standarderrorofmean(arr):
+    """Return the standard error of the mean."""
+    if not isinstance(arr, np.ndarray):
+        arr = np.array(arr)
+    return np.std(arr) / np.sqrt(len(arr))
+    
 def check_fit_convergence(stat_ls, max_perc_diff=5, compare_to_last=3, alarm_level="warning"):
     """Raise a warning or error if a list of subsequent fit values did not converge.
     
