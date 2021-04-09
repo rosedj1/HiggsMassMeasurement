@@ -363,15 +363,15 @@ def get_ndcs_gen(rec_ndcs_ls, lep_genindex):
     return [lep_genindex[ndx] for ndx in rec_ndcs_ls]
 
 # @profile
-def build_muons_from_DY_event(evt, evt_num, eta_bin=[0, 2.4], pT_bin=[5, 200],
-                              d0_bin=[0, 1], dR_max=0.002, verbose=False):
+def build_muons_from_DY_event(t, evt_num, eta_bin=[0, 2.4], pT_bin=[5, 200],
+                              d0_bin=[0, 1], inv_m_bin=[60.0, 120.0], dR_max=0.002, verbose=False):
     """Return a 2-tuple of MyMuon objects which pass muon selections in qq->Z->2mu sample.
 
     NOTE: This function works for post-UFHZZ4L analyzer, not lite skim.
     
     Parameters
     ----------
-    evt : ROOT.TTree event
+    t : ROOT.TTree event
         The event from the TTree.
     evt_num : int
         Event number of the TTree.
@@ -397,8 +397,8 @@ def build_muons_from_DY_event(evt, evt_num, eta_bin=[0, 2.4], pT_bin=[5, 200],
     bad_muons = (None, None)
     # t.GetEntry(evt_num)
     # Get the indices of all reco muons that pass criteria (could be >2).
-    tightid_ls = list(evt.lep_tightId)
-    reliso_ls = list(evt.lep_RelIso)
+    tightid_ls = list(t.lep_tightId)
+    reliso_ls = list(t.lep_RelIso)
     if len(tightid_ls) == 0 or len(reliso_ls) == 0:
         return bad_muons
     good_tightid_ndcs = [ndx for ndx, ID in enumerate(tightid_ls) if ID == 1]
@@ -409,46 +409,40 @@ def build_muons_from_DY_event(evt, evt_num, eta_bin=[0, 2.4], pT_bin=[5, 200],
     if not good_tightid_ndcs == rec_ndcs_ls:
         # Not all reco muons passed tightID and RelIso.
         return bad_muons
-    # rec_ndcs_ls = np.array(good_reliso_ndcs)  #list(evt.lep_id)
+    # rec_ndcs_ls = np.array(good_reliso_ndcs)  #list(t.lep_id)
     assert -1 not in rec_ndcs_ls
-    gen_ndcs_arr = np.array(evt.lep_genindex, dtype=int)[rec_ndcs_ls]
+    gen_ndcs_arr = np.array(t.lep_genindex, dtype=int)[rec_ndcs_ls]
     if -1 in gen_ndcs_arr:
         return bad_muons
-    gen_ndcs_ls = list(gen_ndcs_arr)  #get_ndcs_gen(rec_ndcs_ls, list(evt.lep_genindex))
-    # if any(x != 1 for x in list(evt.lep_tightId)):
+    gen_ndcs_ls = list(gen_ndcs_arr)  #get_ndcs_gen(rec_ndcs_ls, list(t.lep_genindex))
+    # if any(x != 1 for x in list(t.lep_tightId)):
     #     return False
-    # if any(x > 0.35 for x in list(evt.lep_RelIso)):
+    # if any(x > 0.35 for x in list(t.lep_RelIso)):
     #     return False
-    # rec_id_arr = np.array(evt.lep_id)[rec_ndx_arr]
-    # gen_id_arr = np.array(evt.GENlep_id)[gen_ndx_arr]
+    # rec_id_arr = np.array(t.lep_id)[rec_ndx_arr]
+    # gen_id_arr = np.array(t.GENlep_id)[gen_ndx_arr]
 
     # See if muons 
-    if not passed_muon_ID_checks(evt, rec_ndcs_ls, gen_ndcs_ls):
+    if not passed_muon_ID_checks(t, rec_ndcs_ls, gen_ndcs_ls):
         return bad_muons
 
-    # lep_genindex_ls = list(evt.lep_genindex)
+    # lep_genindex_ls = list(t.lep_genindex)
     # rec_ndcs_ls = list(range(len(lep_genindex_ls)))#[0, 1]
     # gen_ndcs_ls = get_ndcs_gen(rec_ndcs_ls, lep_genindex_ls)
 
-    # def get_reco_ndcs(evt):
-    #     """Return a list of the reco ndcs which """
-    print(f"Evt num = {evt_num}")
-    print(f"rec_ndcs_ls = {rec_ndcs_ls}")
-    print(f"gen_ndcs_ls = {gen_ndcs_ls}")
-    mu_ls = make_muon_ls(evt, rec_ndcs_ls, gen_ndcs_ls)
+    mu_ls = make_muon_ls(t, rec_ndcs_ls, gen_ndcs_ls)
     # See if good muons pass, eta, pT, d0, dR cuts.
-    if not apply_kinem_selections(mu_ls, eta_bin=eta_bin, pT_bin=pT_bin,
+    if not apply_kinem_selections(mu_ls, inv_mass_bin=inv_m_bin, eta_bin=eta_bin, pT_bin=pT_bin,
                                   d0_bin=d0_bin, dR_max=dR_max):
         return bad_muons
-    
     if verbose:
-        rec_ID_ls = list(evt.lep_id)
-        gen_ID_ls = list(evt.GENlep_id)
+        rec_ID_ls = list(t.lep_id)
+        gen_ID_ls = list(t.GENlep_id)
         print(
             f"Good event #{evt_num} passed selections:\n"
             f"gen_ID_ls:       {gen_ID_ls}\n"
             f"rec_ID_ls:       {rec_ID_ls}\n"
-            f"lep_genindex_ls: {list(evt.lep_genindex)}\n"
+            f"lep_genindex_ls: {list(t.lep_genindex)}\n"
             f"rec_ndcs_ls:     {rec_ndcs_ls}\n"
             f"gen_ndcs_ls:     {gen_ndcs_ls}\n"
             f"Reco and gen IDs match?: {all(mu.charge==mu.charge_gen for mu in mu_ls)}"

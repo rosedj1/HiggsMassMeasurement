@@ -352,7 +352,7 @@ class MyMuonCollection:
             self.muon_ls.extend(mu_tup)
 
             # Some checks to make sure FSR was computed correctly.
-            if verbose:
+            if verbose and "4" in prod_mode:
                 percent_diff = perc_diff(inv_m, t.mass4l)
                 if (percent_diff > 2):
                     print(
@@ -539,7 +539,9 @@ class MyMuonCollection:
                 self.KinBin2D_dict[key].add_muon(mu)
         else:
             # Put muons into KB2Ds using provided eta and pT bin edges.
-            for muon in self.muon_ls:
+            for ct, muon in enumerate(self.muon_ls):
+                if (ct % 1E6) == 0:
+                    print(f"  Placed muon #{ct}.")
                 self.place_single_muon_into_KinBin(muon, eta_ls, pT_ls, verbose=verbose)
             # End muon loop.
             if verbose:
@@ -547,10 +549,8 @@ class MyMuonCollection:
                 n_muons_in_KB2Ds = sum([len(kb2d.muon_ls) for kb2d in self.KinBin2D_dict.values()])
                 n_muons_skipped = n_mu - n_muons_in_KB2Ds
                 print(f"Skipped {n_muons_skipped}/{n_mu} muons ({n_muons_skipped/n_mu * 100.0:.3f})%\n")
-        print(
-            f"[INFO] All muons assigned to KinBin2Ds.\n"
-            f"****** Overwriting MyMuonCollection.muon_ls to save space. ******"
-            )
+        print("[INFO] All muons assigned to KinBin2Ds.\n")
+        print_header_message("Overwriting MyMuonCollection.muon_ls to save space.", pad_char="*")
         self.muon_ls = "overwritten"
 
     def make_bin_key(self, eta_min, eta_max, pT_min, pT_max, title_friendly=False):

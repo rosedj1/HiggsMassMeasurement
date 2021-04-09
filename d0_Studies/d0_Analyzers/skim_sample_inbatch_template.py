@@ -11,7 +11,7 @@ d0_Studies/d0_Analyzers/skim_sample_inbatch_submit.py
 
 Author:  Jake Rosenzweig
 Created: 2021-03-11
-Updated: 2021-03-29  # Miss ya, Mom.
+Updated: 2021-04-09
 """
 import os
 from ROOT import TFile

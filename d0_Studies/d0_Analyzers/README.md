@@ -33,6 +33,7 @@ The resulting skimmed `.pkl` file has 28M muons.
    - This will produce many pickled `MyMuonCollections`.
    - Processing time: from ~`00:10:00 (hh:mm:ss)`
       - (Requesting 2M events per batch.)
+      - Output `.pkl` files will be ~1 MB / 18K events.
 
 1. Merge the `.pkl` files with:
    
@@ -40,7 +41,7 @@ The resulting skimmed `.pkl` file has 28M muons.
    python merge_muon_collections.py
    ```
 
-   - Makes inclusive hists of muon kinematics.
+   - Stores inclusive hists of muon kinematics.
    - Sorts muons into KB2Ds based on given eta and pT bins.
    - Overwrites `MyMuonCollection.muon_ls`. Passes MyMuons to KB2Ds.
    - Processing times: from `00:02:42` to `00:21:04`
@@ -59,11 +60,11 @@ The resulting skimmed `.pkl` file has 28M muons.
 1. Do recursive Gaussian fits on the dpT/pT and 1/pT dists of each KB3D with:
 
    ```bash
-   python slurm_inbatch_singlekb2d_itergaussfits.py
+   python slurm_inbatch_singlekb2d_itergaussfitsonkb3ds.py
    ```
 
    - Which calls:
-      - `submit_singlekb2d_itergaussfits_template.py`
+      - `submit_singlekb2d_itergaussfitsonkb3ds_template.py`
       - `submit_to_slurm_template.sbatch`
    - For each KB2D, this step produces:
       - dpT/pT vs. q*d0 graph
@@ -168,3 +169,10 @@ Make all plots, including KB3D fits and inclusive kinematics plots from
 MyMuonCollection with:
 
 ```d0_Studies/d0_Analyzers/plot_all_KB3Diterfits.py```
+
+### 2D Tables
+
+Make 2D tables (eta vs. pT) of sigma(dpT/pT) and improvements on
+sigma(dpT/pT):
+
+   ```d0_Studies/Plotters_Python/make_2D_plot_sigma_table_dpToverpT.py```
