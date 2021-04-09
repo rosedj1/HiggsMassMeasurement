@@ -36,7 +36,7 @@ Requires an input pickled dict of KinBin2Ds. You can make the '.pkl' with:
 
 Author: Jake Rosenzweig
 Created: <2021-03-15
-Updated: 2021-04-07
+Updated: 2021-04-09
 """
 from Utils_Python.Utils_Files import replace_value, make_dirs
 from d0_Studies.kinematic_bins import eta_bins_geofitvsVXBS, pT_bins_geofitvsVXBS, equal_entry_bin_edges_eta_mod1_wholenum, bin_edges_pT_sevenfifths_to1000GeV_wholenum
@@ -56,11 +56,12 @@ iters = 5
 verbose = 0
 fit_whole_range_first_iter = False  # False gives more consistent fits (with no outlier data).
 use_data_in_xlim = 1
-binned_fit = True
+binned_fit = False
 switch_to_binned_fit = 999999999
 fit_with_zero_interc = True
 
-job_name_base = "MC2016DY_individKB2D_withitergaussfitsonKB3Ds_nogenmatching_0p0_d0_0p01"  # Also prefix for outfile.
+job_name_base = "MC2016DY_individKB2D_withitergaussfitsonKB3Ds_fitwithzerointerc"  # Also prefix for outfile.
+# job_name_base = "MC2016DY_individKB2D_withitergaussfitsonKB3Ds_nogenmatching_0p0_d0_0p01"  # Also prefix for outfile.
 # eta_ls = eta_bins_geofitvsVXBS #equal_entry_bin_edges_eta_mod1_wholenum
 eta_ls = equal_entry_bin_edges_eta_mod1_wholenum[0:2]
 full_pT_ls = pT_bins_geofitvsVXBS  #[20.0, 30.0, 40.0, 50.0] #bin_edges_pT_sevenfifths_to1000GeV_wholenum
@@ -74,10 +75,10 @@ template_script_slurm = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_
 inpkl_path_template = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_nogenmatching/kb2d_dictsnofitinfo/MC2016DY_fullstats_muoncoll_withkb3dbins_nogenmatching_0p0_d0_0p01__ETAPART_PTPART.pkl"
 
 # /cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/output/DeriveCorrections/2016DY/individualKB2Ditergaussfits/MC2016DY_kb2d_ETARANGE_PTRANGE_error.log
-outdir_copies = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/scriptcopies/{job_name_base}"
-outdir_pkl    = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/pickles/{job_name_base}"
-outdir_txt    = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/output/{job_name_base}"
-outdir_pdf    = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/plots/{job_name_base}"
+outdir_copies = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/copies/{job_name_base}"
+outdir_pkl    = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/pickles/{job_name_base}"
+outdir_txt    = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/output/{job_name_base}"
+outdir_pdf    = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/plots/{job_name_base}"
 
 # SLURM directives.
 partition = "hpg2-compute"
@@ -126,6 +127,8 @@ def replace_vals_in_files(eta_range, pT_range, inpkl_path, outpkl_path,
     # Replace phrases in slurm script.
     for template in template_tup:
         # In argument order.
+        replace_value("VERBOSE", verbose, template)
+        replace_value("OVERWRITE", overwrite, template)
         replace_value("REPLACE_ETA_LS", eta_range, template)
         replace_value("REPLACE_PT_RANGE", pT_range, template)
         replace_value("REPLACE_INPKL_PATH", inpkl_path, template)

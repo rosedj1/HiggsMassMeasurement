@@ -13,20 +13,40 @@ then start a dev session on HPG first:
 Syntax: python this_script.py
 Author: Jake Rosenzweig
 Created: 2021-03-14 # Happy pi day!
-Updated: 2021-03-29
+Updated: 2021-04-09
 """
+import argparse
+import os
 from Utils_Python.Utils_Files import open_pkl, make_dirs
 
+#--- User Parameters ---#
+# Will be superceded by passed-in arguments.
+infile = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/pickles/MC2016DY2mu_skim_fullstats_verify.pkl"
 year = "2016"
-infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_nogenmatching/MC2016DY_skim_fullstats_nogenmatching_0p01_d0_1000p0_withGeoFitcorr.pkl"
-# infile_path = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2018/DY/MC2018DY_fullstats_muoncoll_withkb3dbins.pkl"
-outdir      = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_nogenmatching/kb2d_dicts_beforeafterGeoFitcorr__0p01_d0_1000p0"
-file_prefix = "" #"MC2016DY_fullstats_muoncoll_withkb3dbins_nogenmatching_0p0_d0_0p01"
 overwrite = 0
 verbose = 1
 
-if __name__ == "__main__":
-    assert all(year in path for path in (infile_path, outdir))
+parser = argparse.ArgumentParser(description='Separate KB2Ds.')
+parser.add_argument('-v', '--verbose', dest='verbose', help="Print debug info.", action='store_true', default=verbose)
+parser.add_argument('-o', '--overwrite', dest='overwrite', help="Overwrite existing files.", action='store_true', default=overwrite)
+parser.add_argument('--year', dest='year', type=str, help='Year of sample.', default=year)
+parser.add_argument('--infile', dest='infile', type=str, help='Path to input file.', default=infile)
+args = parser.parse_args()
+
+def main(args):
+    infile = args.infile
+    outdir = os.path.join(os.path.dirname(infile), "kb2d_dicts")
+    assert all(year in path for path in (infile, outdir))
     make_dirs(outdir)
-    muon_coll = open_pkl(infile_path)
-    muon_coll.save_KB2Ds_separate_dcts(outdir=outdir, file_prefix=file_prefix, overwrite=overwrite, verbose=verbose)
+    print(f"...Opening pkl:\n  {infile}")
+    muon_coll = open_pkl(infile)
+    print(f"...Saving KinBin2Ds to individual pkls...")
+    muon_coll.save_KB2Ds_separate_dcts(outdir=outdir, file_prefix="", overwrite=args.overwrite, verbose=args.verbose)
+
+# infile = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_nogenmatching/MC2016DY_skim_fullstats_nogenmatching_0p01_d0_1000p0_withGeoFitcorr.pkl"
+# infile = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2018/DY/MC2018DY_fullstats_muoncoll_withkb3dbins.pkl"
+# outdir      = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_nogenmatching/kb2d_dicts_beforeafterGeoFitcorr__0p01_d0_1000p0"
+# file_prefix = "" #"MC2016DY_fullstats_muoncoll_withkb3dbins_nogenmatching_0p0_d0_0p01"
+
+if __name__ == "__main__":
+    main(args)

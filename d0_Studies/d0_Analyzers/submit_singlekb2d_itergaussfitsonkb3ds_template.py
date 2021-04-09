@@ -2,7 +2,7 @@
 
 TODO:
 [ ] Get rid of many User Parameters and put them into:
-HiggsMassMeasurement/d0_Studies/d0_Analyzers/slurm_inbatch_singlekb2d_itergaussfits.py
+HiggsMassMeasurement/d0_Studies/d0_Analyzers/slurm_inbatch_singlekb2d_itergaussfitsonkb3ds.py
 
 Purpose:
 This script opens a pickled KinBin2D with MyMuons in self.muon_ls.
@@ -14,7 +14,7 @@ The processed KB2D is then pickled into a new file.
 Syntax: python this_script.py
 Author: Jake Rosenzweig
 Created: 2021-03-14  # Happy pi day!
-Updated: 2021-03-15
+Updated: 2021-04-09
 """
 import os
 from Utils_ROOT.Printer import CanvasPrinter
@@ -23,7 +23,8 @@ from Utils_Python.printing import print_header_message
 from d0_Studies.d0_Analyzers.slurm_inbatch_derive_pTcorrfactors import make_name_from_ls
 from pprint import pprint
 
-overwrite = 0
+verbose = VERBOSE
+overwrite = OVERWRITE
 
 bins_dpTOverpT = 100
 x_lim_dpTOverpT = [-0.4, 0.4] #None
@@ -41,7 +42,6 @@ num_sigmas = 2.5
 use_data_in_xlim = True
 # auto_range = True
 switch_to_binned_fit = 999999999
-verbose = True
 alarm_level = "warning"
 fit_with_zero_interc = FIT_WITH_ZERO_INTERC
 
@@ -70,6 +70,7 @@ def do_itergaussfits_on_kb3ds(kb2d):
                             switch_to_binned_fit=switch_to_binned_fit,  
                             verbose=verbose, alarm_level=alarm_level, 
                             use_data_in_xlim=use_data_in_xlim)
+        
         print_header_message(f"KB3D done: eta={kb3d.eta_range} pT={kb3d.pT_range}")
 
 def prep_area(outpkl_path, overwrite=False):

@@ -4,12 +4,12 @@ Purpose:
     From the command line, open a root file in iPython, set the TFile object to
     `f`. If a TTree name was provided then open the TTree as `t`.
 
-Syntax: 
-    Suppose you have a root file at: /home/work/myfile.root
-    Inside the root file, there is a TTree called "mytree".
-
+Syntax:
     In your terminal, do:
     openrootfile /home/work/myfile.root mytree
+
+    This supposes you have a root file at: /home/work/myfile.root
+    Inside the root file, there is a TTree called "mytree".
 
     You will be taken into the iPython interpreter in which the root file has
     been attached as `f` and mytree is set as `t`.

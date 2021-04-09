@@ -11,7 +11,7 @@ def make_dirs(d, verbose=True):
     """
     if not os.path.exists(d):
         if (verbose):
-            print(f"[INFO] Directory not found.\nCreating {d}")    
+            print(f"[INFO] Directory not found. Creating it:\n{d}")    
         os.makedirs(os.path.abspath(d))
 
 def check_overwrite(outfile, overwrite=False):
