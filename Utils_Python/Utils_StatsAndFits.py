@@ -3,8 +3,8 @@ import numpy as np
 from scipy.optimize import curve_fit, OptimizeWarning
 
 # Local imports. 
-from d0_Utils.d0_fns import centers_of_binning_array, get_subset_mask
-from d0_Utils.d0_dicts import color_dict, label_LaTeX_dict
+from d0_Studies.d0_Utils.d0_fns import centers_of_binning_array, get_subset_mask
+from d0_Studies.d0_Utils.d0_dicts import color_dict, label_LaTeX_dict
 # from Utils_ROOT.ROOT_StatsAndFits import RooFit_gaus_fit  # FIXME: Giving circular import error.
 from Utils_Python.Utils_Plotting import make_stats_legend_for_gaus_fit
 from Utils_Python.Utils_Physics import perc_diff
@@ -889,10 +889,10 @@ def prop_err_x_div_y(x, y, dx, dy):
 
     *** This function been verified by an online calculator.
     """
-    x = np.array([x])#, dtype=float)
-    y = np.array([y])#, dtype=float)
-    dx = np.array([x])#, dtype=float)
-    dy = np.array([y])#, dtype=float)
+    x = np.array(x)#, dtype=float)
+    y = np.array(y)#, dtype=float)
+    dx = np.array(x)#, dtype=float)
+    dy = np.array(y)#, dtype=float)
     assert all(arr.size > 0 for arr in [x, y, dx, dy])
     
     undef = np.ones_like(x) * np.inf

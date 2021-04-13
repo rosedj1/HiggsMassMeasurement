@@ -2,11 +2,19 @@
 
 ## Main idea
 
+Derive AdHoc corrections from muons, then apply them per muon
+to see the improvement in sigma of dpT/pT distributions or m(4mu).
+
+### Derive Corrections
+
 1. Skim a rootfile (say Drell-Yan) to put muons into a MyMuonCollection.
 1. Sort the muons into bins of (eta, pT) - call these KinBin2Ds (KB2Ds).
 1. For each KB2D, sort the muons into *n* KB3Ds (eta, pT, q*d0).
 1. Analyze the dpT/pT and 1/pT distributions of muons in each KB3D.
 1. Graph mean(dpT/pT) vs. q*d0 for each KB2D to extract pT correction factors.
+
+### Apply Corrections
+
 1. Apply pT correction factors to say ggH sample.
 1. Make DSCB fits of ggH before/after pT corrections per muon
 to see improvement in sigma_DSCB.
@@ -22,6 +30,8 @@ it is useful to submit your jobs to SLURM.
 The workflow below shows processing times for working over a MC 2016 DY sample
 which had 122M unskimmed events.
 The resulting skimmed `.pkl` file has 28M muons.
+
+### Derive Corrections
 
 1. Skim a root file with:
 
@@ -57,7 +67,7 @@ The resulting skimmed `.pkl` file has 28M muons.
    
    - Processing time: `00:03:18`
 
-1. Do recursive Gaussian fits on the dpT/pT and 1/pT dists of each KB3D with:
+1. Do recursive Gaussian fits on the dpT/pT and q*d0 dists of each KB3D with:
 
    ```bash
    python slurm_inbatch_singlekb2d_itergaussfitsonkb3ds.py
@@ -71,8 +81,11 @@ The resulting skimmed `.pkl` file has 28M muons.
       - dpT/pT * (1/\<pT\>) vs. q*d0 graph
       - dpT/pT * (\<1/pT\>) vs. q*d0 graph
       - dpT/pT * mu_DSCB(\<1/pT\>) vs. q*d0 graph
-   - **TO DO:** Implement SlurmManager class to eliminate `.sbatch` script.
    - Processing time (depends on size of KB3Ds): ~`00:24:00` max
+   - Jobs start immediately on `hpg2-compute` using, **1 node**, no burst.
+   - **TO DO:**
+      - Implement SlurmManager class to eliminate `.sbatch` script.
+      - Confirm that fits were error-free.
 
 1. Merge KB2Ds (which contain analyzed KB3Ds) into a MyMuonCollection with:
 
@@ -86,10 +99,14 @@ The resulting skimmed `.pkl` file has 28M muons.
    - Processing time: `00:00:19`
       - If you keep each `muon_ls` then ~`00:04:26`.
 
+### Apply Corrections
+
 1. Apply the pT correction factors to muons stored in a MyMuonCollection with:
 
    ```bash
    python apply_pTcorrfactors_to_H4mu_sample.py
+   # or
+   python applypTcorrfactors_to_muoncoll.py
    ```
 
    - Processing time: 
@@ -98,18 +115,6 @@ The resulting skimmed `.pkl` file has 28M muons.
 
    ```bash
    root -l DSCB_fit_m4mu_beforeafterpTcorr.C
-   ```
-
-   - Processing time: 
-
----
-
-## Apply pT Corr Factors
-
-Apply pT corr factors to MyMuonCollection:
-
-   ```bash
-   python applypTcorrfactors_to_muoncoll.py
    ```
 
    - Processing time: 

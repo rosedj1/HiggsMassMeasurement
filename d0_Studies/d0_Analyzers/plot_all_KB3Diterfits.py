@@ -1,4 +1,9 @@
-"""Make a PDF of all iterated Gaussian fits from KB3Ds."""
+"""Make a PDF of all iterated Gaussian fits from KB3Ds.
+
+Author: Jake Rosenzweig
+Created: <2021-04-12
+Updated: 2021-04-12
+"""
 import os
 import ROOT
 from Utils_Python.Utils_Files import open_pkl, check_overwrite, make_dirs
@@ -12,9 +17,11 @@ scale_by_avgOf1divpT = 0
 scale_by_muOf1divpT = 0
 draw_leg = 1
 
-year = "2018"
-filename = "MC2018DY_finalmuoncoll_allitergaussfitsonKB2DsandKB3Ds.pdf"
-infile = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2018DY/pickles/final_muon_coll/MC2018DY_finalmuoncoll_allitergaussfitsonKB2DsandKB3Ds_new.pkl"
+year = "2016"
+# filename = "MC2018DY_finalmuoncoll_allitergaussfitsonKB2DsandKB3Ds.pdf"
+filename = "MC2016DY_finalmuoncoll_allitergaussfitsonKB2DsandKB3Ds.pdf"
+# infile = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2018DY/pickles/final_muon_coll/MC2018DY_finalmuoncoll_allitergaussfitsonKB2DsandKB3Ds_new.pkl"
+infile = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/individKB2DwithitergaussfitsonKB3Ds_fitwithzerointerc/pickles/individKB2DwithitergaussfitsonKB3Ds_fitwithzerointerc_2p1eta2p2_5p0pT7p0.pkl"
 outpdf_dir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2018DY/plots/"
 
 eta_ls = equal_entry_bin_edges_eta_mod1_wholenum

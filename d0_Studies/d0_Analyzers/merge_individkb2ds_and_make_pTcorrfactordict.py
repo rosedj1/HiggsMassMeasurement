@@ -1,21 +1,16 @@
 """KB2D Merger
 
-Submit Iterated Gaussian Fit to SLURM
+Finds pickled KB2Ds with fit stats, merges them together into a MyMuonCollection.
 
-Purpose: 
-
-TODO: Update docstring.
-
-This script opens a pickled KinBin2D with MyMuons
-sorted into all the KB3Ds.
-Iterated Gaussian fits (IGFs) are performed on the dpT/pT dist of each KB3D.
-The fit results are saved to the KB3D.
-The processed KB2D is then pickled into a new file.
+NOTE:
+- User has the option to save the pT correction factor dict
+as a standalone pickled dict.
+    asdf
 
 Syntax: python this_script.py
 Author: Jake Rosenzweig
 Created: 2021-03-14  # Happy pi day!
-Updated: 2021-03-30
+Updated: 2021-04-12
 """
 import os
 from pprint import pprint
@@ -31,17 +26,18 @@ from natsort import natsorted
 # Grab all pTs.
 year = "2016"
 prod_mode = "DY2mu"
-inpkl_path_template = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_nogenmatching/kb2d_dicts_beforeafterGeoFitcorr__0p01_d0_1000p0/unbinnedfit_widerwindow_fitwholerangefirstiter*.pkl"
+inpkl_path_template = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/individKB2DwithitergaussfitsonKB3Ds_fitwithzerointerc/pickles/individKB2DwithitergaussfitsonKB3Ds_fitwithzerointerc_*.pkl"
+# inpkl_path_template = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_nogenmatching/kb2d_dicts_beforeafterGeoFitcorr__0p01_d0_1000p0/unbinnedfit_widerwindow_fitwholerangefirstiter*.pkl"
 # inpkl_path_template = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_nogenmatching/kb2d_dicts_beforeafterGeoFitcorr__0p0_d0_0p01/unbinnedfit_*.pkl"
 # inpkl_path_template = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/pickles/MC2016DY_individKB2D_withitergaussfitsonKB3Ds_0p0_d0_0p01/MC2016DY_individKB2D_withitergaussfitsonKB3Ds_0p0_d0_0p01_*eta*_*pT*.pkl"
 overwrite = 0
-make_pTcorrdict = 0
+# Make a separate pkl with the pT correction factor dict.
+make_pTcorrdict = 1
 
-outfilename_base = "muoncoll_itergaussfitsonKB2Ds_0p01_d0_1000p0_unbinned_widerwindow_fitwholerangefirstiter"
+outfilename_base = "muoncoll_itergaussfitsonKB3Ds"
+# outfilename_base = "muoncoll_itergaussfitsonKB2Ds_0p01_d0_1000p0_unbinned_widerwindow_fitwholerangefirstiter"
 # outfilename_base = "MC2016DY_finalmuoncoll_allitergaussfitsonKB2DsandKB3Ds_0p0_d0_0p01"
-outpkl_dir_mucoll     = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/pickles/final_muon_coll"
-outpkl_dir_pTcorrfact = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/pickles/final_muon_coll"
-outpdf_dir            = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/pickles/final_muon_coll"
+outpkl_dir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/muoncollwithfitstats"
 
 def prep_area(d, overwrite=False):
     """Make directory `d` and check overwrite."""
@@ -50,9 +46,9 @@ def prep_area(d, overwrite=False):
     check_overwrite(d, overwrite)
 
 def main():
-    outpkl_path_mucoll      = os.path.join(outpkl_dir_mucoll,     f"{outfilename_base}.pkl")
-    outpkl_path_pTcorrfact  = os.path.join(outpkl_dir_pTcorrfact, f"{outfilename_base}_pTcorrfactors.pkl")
-    outpdf_path             = os.path.join(outpdf_dir,            f"{outfilename_base}.pdf")
+    outpkl_path_mucoll      = os.path.join(outpkl_dir, f"{outfilename_base}.pkl")
+    outpkl_path_pTcorrfact  = os.path.join(outpkl_dir, f"{outfilename_base}_pTcorrfactors.pkl")
+    outpdf_path             = os.path.join(outpkl_dir, f"{outfilename_base}.pdf")
     printer = CanvasPrinter(show_plots=0)
     printer.make_plots_pretty()
     for f in (outpkl_path_mucoll, outpkl_path_pTcorrfact, outpdf_path):
@@ -60,11 +56,12 @@ def main():
     mu_coll = MyMuonCollection(prod_mode)
     # inpkl_path_ls = glob(inpkl_path_template.replace("ETAPART", eta_name))
     inpkl_path_ls = glob(inpkl_path_template)
-    if len(inpkl_path_ls) == 0:
+    n_files = len(inpkl_path_ls)
+    if n_files == 0:
         raise ValueError('[ERROR] No files to glob!')
     # path_ls_etasorted = sorted(inpkl_path_ls)
     inpkl_path_ls_etapTsorted = natsorted(inpkl_path_ls)
-    print("Found files:")
+    print(f"Found {n_files} files:")
     pprint(inpkl_path_ls_etapTsorted)
     for pklfile in inpkl_path_ls_etapTsorted:
         kb2d = open_pkl(pklfile)

@@ -6,10 +6,10 @@
 #SBATCH --mail-user=rosedj1@ufl.edu
 #SBATCH --time=01:00:00
 #SBATCH --account=avery
-#SBATCH --qos=avery-b
+#----SBATCH --qos=avery-b
 #SBATCH --mem=24gb
-#SBATCH --partition=bigmem
-#SBATCH --nodes=4
+#SBATCH --partition=hpg2-compute
+#SBATCH --nodes=1
 
 pwd; hostname; date
 source ~/.bash_profile

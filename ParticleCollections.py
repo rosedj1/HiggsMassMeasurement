@@ -673,7 +673,7 @@ class MyMuonCollection:
             kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_1divpT=False, fit_with_zero_interc=fit_with_zero_interc)
             kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_1divpT=True, fit_with_zero_interc=fit_with_zero_interc)
             kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_avgOf1divpT=True, fit_with_zero_interc=fit_with_zero_interc)
-            kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_muOf1divpT=True, fit_with_zero_interc=fit_with_zero_interc)
+            # kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_muOf1divpT=True, fit_with_zero_interc=fit_with_zero_interc)
             self.kinbin2d_graph_ls.extend([kb2d.gr_dpTOverpT_vs_qd0])
             self.kinbin2d_graph_ls.extend([kb2d.gr_dpTOverpTscaled_vs_qd0])
             self.kinbin2d_graph_ls.extend([kb2d.gr_dpTOverpTtimesavgOf1divpT])
