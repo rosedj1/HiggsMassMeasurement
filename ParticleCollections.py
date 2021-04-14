@@ -15,8 +15,8 @@ from Utils_Python.printing import print_header_message
 from Utils_ROOT.ROOT_classes import make_TH1F
 from d0_Studies.d0_Utils.d0_cls import KinBin2D
 from d0_Studies.d0_Utils.d0_fns import (correct_muon_pT, parse_etapT_key,
-                                       get_binedges_from_keys, make_key_from_binedges)
-from d0_Utils.d0_fns import find_bin_edges_of_value
+                                       get_binedges_from_keys, make_key_from_binedges,
+                                       find_bin_edges_of_value)
 from d0_Studies.d0_Utils.d0_dicts import process_dct, color_dict_RooFit
 
 def check_n_muons(prod_mode, muon_ls, per_event=True):

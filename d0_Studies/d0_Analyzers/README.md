@@ -2,8 +2,13 @@
 
 ## Main idea
 
-Derive AdHoc corrections from muons, then apply them per muon
-to see the improvement in sigma of dpT/pT distributions or m(4mu).
+- Derive AdHoc corrections from muon kinematics.
+- Apply pT corrections per muon to see the improvement in sigma of dpT/pT
+distributions, m(4mu), and m(2mu).
+
+---
+
+## Overview
 
 ### Derive Corrections
 
@@ -15,13 +20,17 @@ to see the improvement in sigma of dpT/pT distributions or m(4mu).
 
 ### Apply Corrections
 
-1. Apply pT correction factors to say ggH sample.
+1. Apply pT correction factors to muons in root file or MyMuonCollection.
+
+### Check Results
+
 1. Make DSCB fits of ggH before/after pT corrections per muon
-to see improvement in sigma_DSCB.
+to measure improvement of sigma_DSCB.
+1. Measure improvement of muon dpT/pT in (eta, pT) bins.
 
 ---
 
-## Workflow (submitting jobs to SLURM)
+## Detailed Workflow
 
 When working with many muons (>20E6),
 it is useful to submit your jobs to SLURM.
@@ -98,10 +107,34 @@ The resulting skimmed `.pkl` file has 28M muons.
       - MyMuonCollection with analyzed KB2Ds and KB3Ds.
    - Processing time: `00:00:19`
       - If you keep each `muon_ls` then ~`00:04:26`.
+   - NOTE: These KB2Ds don't yet have before/after pT corrections.
 
 ### Apply Corrections
 
-1. Apply the pT correction factors to muons stored in a MyMuonCollection with:
+There are a few different scripts to apply pT corrections.
+
+1. Do unbinned IGFs on each KB2D's dpT/pT and dpTcorr/pT distribution:
+
+   ```bash
+   python singlekb2ditergaussfit_submit2slurm.py
+   ```
+
+   - Which calls:
+      - `singlekb2ditergaussfit_slurm_template.py`
+   - Processing time for 5 **unbinned** IGFs on 9E6 entries: `00:24:41`
+      - Most KB2Ds will have O(1E5) muons
+   
+   NOTE: This part analyzes KB2Ds that still have their `muon_ls`.
+   Thus, you may need to combine the produced KB2Ds from here
+   with the ones which were analyzed in the **Derive Corrections** section.
+
+1. Combine the new KB2Ds with those from the previous step:
+
+   ```bash
+   python merge_muoncoll_withgraphsandwithbeforeaftercorr.py
+   ```
+
+<!-- 1. Correct muons stored in a MyMuonCollection with:
 
    ```bash
    python apply_pTcorrfactors_to_H4mu_sample.py
@@ -109,7 +142,16 @@ The resulting skimmed `.pkl` file has 28M muons.
    python applypTcorrfactors_to_muoncoll.py
    ```
 
-   - Processing time: 
+   - Processing time:
+
+1. Then merge KB2DS
+
+   ```bash
+   python merge_individkb2ds_and_make_pTcorrfactordict.py
+   ```
+  -->
+
+### Check Results
 
 1. Do an unbinned DSCB fit of the m(4mu) dist and plot it with:
 
@@ -118,39 +160,33 @@ The resulting skimmed `.pkl` file has 28M muons.
    ```
 
    - Processing time: 
-   
-Separate KB2Ds into their own dicts:
-
-   ```bash
-   # First start a dev session to access more RAM.
-   srun --partition=bigmem --mem=128gb --ntasks=1 --cpus-per-task=8 --time=08:00:00 --pty bash -i
-   # Then run the script.
-   python save_kb2ds_separate_dicts.py
-   ```
-
-   Submit KB2Ds to SLURM.
-   Do unbinned IGFs on each KB2D's dpT/pT and dpTcorr/pT distribution:
-
-   ```bash
-   python singlekb2ditergaussfit_submit2slurm.py
-   ```
-
-   - Which calls:
-      - `singlekb2ditergaussfit_slurm_template.py`
-
-   - Processing time for 5 **unbinned** IGFs on 9E6 entries: `00:24:41`
-
-Then merge KB2DS.
-
-   ```bash
-   python merge_individkb2ds_and_make_pTcorrfactordict.py
-   ```
 
 Finally, print and plot the results:
 
    ```bash
    python make_finalplots_in_muoncoll.py
    ```
+
+---
+
+## Plotting
+
+Make all plots, including KB3D fits and inclusive kinematics plots from
+MyMuonCollection with:
+
+```bash
+d0_Studies/d0_Analyzers/plot_all_KB3Diterfits.py
+```
+
+### 2D Tables
+
+Make 2D tables (eta vs. pT) of sigma(dpT/pT) and improvements on
+sigma(dpT/pT):
+
+   ```bash
+   d0_Studies/Plotters_Python/make_2D_plot_sigma_table_dpToverpT.py
+   ```
+
 ---
 
 ## Running locally (instead of submitting to SLURM)
@@ -165,19 +201,3 @@ Finally, print and plot the results:
 d0_Studies/d0_Analyzers/
 d0_Studies/Plotters_ROOT/
 ```
-
----
-
-## Plotting
-
-Make all plots, including KB3D fits and inclusive kinematics plots from
-MyMuonCollection with:
-
-```d0_Studies/d0_Analyzers/plot_all_KB3Diterfits.py```
-
-### 2D Tables
-
-Make 2D tables (eta vs. pT) of sigma(dpT/pT) and improvements on
-sigma(dpT/pT):
-
-   ```d0_Studies/Plotters_Python/make_2D_plot_sigma_table_dpToverpT.py```

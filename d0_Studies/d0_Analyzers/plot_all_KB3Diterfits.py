@@ -2,7 +2,7 @@
 
 Author: Jake Rosenzweig
 Created: <2021-04-12
-Updated: 2021-04-12
+Updated: 2021-04-13
 """
 import os
 import ROOT
@@ -12,17 +12,18 @@ from d0_Studies.d0_Utils.d0_dicts import color_dict_RooFit
 from d0_Studies.kinematic_bins import equal_entry_bin_edges_eta_mod1_wholenum
 
 overwrite = 0
-scale_by_1divpT = 0
-scale_by_avgOf1divpT = 0
-scale_by_muOf1divpT = 0
+# scale_by_1divpT = 0
+# scale_by_avgOf1divpT = 0
+# scale_by_muOf1divpT = 0
 draw_leg = 1
 
 year = "2016"
 # filename = "MC2018DY_finalmuoncoll_allitergaussfitsonKB2DsandKB3Ds.pdf"
 filename = "MC2016DY_finalmuoncoll_allitergaussfitsonKB2DsandKB3Ds.pdf"
 # infile = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2018DY/pickles/final_muon_coll/MC2018DY_finalmuoncoll_allitergaussfitsonKB2DsandKB3Ds_new.pkl"
-infile = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/individKB2DwithitergaussfitsonKB3Ds_fitwithzerointerc/pickles/individKB2DwithitergaussfitsonKB3Ds_fitwithzerointerc_2p1eta2p2_5p0pT7p0.pkl"
-outpdf_dir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2018DY/plots/"
+# infile = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/individKB2DwithitergaussfitsonKB3Ds_fitwithzerointerc/pickles/individKB2DwithitergaussfitsonKB3Ds_fitwithzerointerc_2p1eta2p2_5p0pT7p0.pkl"
+infile = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/ApplyCorr/MC2016DY2mu/muoncoll_withKB2Dfits_beforeaftercorr.pkl"
+outpdf_dir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/ApplyCorr/MC2016DY2mu/"
 
 eta_ls = equal_entry_bin_edges_eta_mod1_wholenum
 

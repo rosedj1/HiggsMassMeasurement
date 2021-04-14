@@ -68,12 +68,12 @@ def get_pT_corr_factors(pT_corr_factor_dict, correction_type, eta_min, eta_max, 
     slope = pT_corr_factor_dict[correction_type][key]["slope"]
     return (slope, interc)
 
-def parse_etapT_key(key):
+def parse_etapT_key(key, maxsplit=-1):
     """Return a 4-tuple of floats 
     (eta_min, eta_max, pT_min, pT_max)
     using info from the key str.
     """
-    eta_part, pT_part = key.split("_")
+    eta_part, pT_part = key.split("_", maxsplit=maxsplit)
     eta_min_str, eta_max_str = eta_part.split("eta")
     pT_min_str, pT_max_str = pT_part.split("pT")
     eta_min = float(eta_min_str)
@@ -118,8 +118,8 @@ def get_binedges_from_keys(eta, pT, pT_corr_factor_dict):
     key_ls = list(pT_corr_factor_dict['dpTOverpT_vs_qd0'].keys())
     for key in key_ls:
         eta_min, eta_max, pT_min, pT_max = parse_etapT_key(key)
-        within_eta = (eta_min < abs_eta) and (abs_eta < eta_max)
-        within_pT = (pT_min < pT) and (pT < pT_max)
+        within_eta = (eta_min <= abs_eta) and (abs_eta <= eta_max)
+        within_pT = (pT_min <= pT) and (pT <= pT_max)
         if within_eta and within_pT:
             return (eta_min, eta_max, pT_min, pT_max)
     err_msg = f"eta ({eta}) and pT ({pT}) did not fit in any of pT_corr_factor_dict keys"

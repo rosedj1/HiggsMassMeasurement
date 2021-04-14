@@ -823,6 +823,9 @@ def iterative_fit_gaus_unbinned(num_iters, data,
 #--------------------------------------#
 #----- Error Propagation Formulae -----#
 #--------------------------------------#
+# TODO:
+# Some of these functions return floats while others return arrays.
+# Convert all to produce arrays or return the same type that was input?
 def prop_err_x_plus_y(x, y, dx, dy):
     """
     Return the sum of two numbers (z = x + y) and the 
@@ -836,6 +839,10 @@ def prop_err_x_plus_y(x, y, dx, dy):
             dz/dy = 1
         So:
             dz = sqrt( (dx)^2 + (dy)^2 )
+
+    Returns
+    -------
+
     """
     x = np.array(x, dtype=float)
     y = np.array(y, dtype=float)
@@ -905,6 +912,7 @@ def prop_err_x_div_y(x, y, dx, dy):
 def prop_err_on_dsigoversig(sig1, sig2, sig_err1, sig_err2):
     """
     Returns the error on (sig2 - sig1) / sig1 (as a fraction, not percentage).
+    Return value type is the same as the input type.
 
     If we let: 
         r = (n - b) / b = n/b - 1
@@ -939,10 +947,21 @@ def prop_err_on_dsigoversig(sig1, sig2, sig_err1, sig_err2):
     sig_err2 : float or array-like
         The error on sig2.
     """
-    sig1 = np.array([sig1], dtype=float) if not isinstance(sig1, np.ndarray) else np.array(sig1, dtype=float)
-    sig2 = np.array([sig2], dtype=float) if not isinstance(sig2, np.ndarray) else np.array(sig2, dtype=float)
-    sig_err1 = np.array([sig_err1], dtype=float) if not isinstance(sig_err1, np.ndarray) else np.array(sig_err1, dtype=float)
-    sig_err2 = np.array([sig_err2], dtype=float) if not isinstance(sig_err2, np.ndarray) else np.array(sig_err2, dtype=float)
+    # if isinstance(x, list) or isinstance(x, np.array):
+    #         = ensure_array(sig1)
+    #     sig2 = ensure_array(sig2)
+    #     sig_err1 = ensure_array(sig_err1)
+    #     sig_err2 = ensur
+
+    #     np.array(x, dtype=float)
+    # sig1 = ensure_array(sig1)
+    # sig2 = ensure_array(sig2)
+    # sig_err1 = ensure_array(sig_err1)
+    # sig_err2 = ensure_array(sig_err2)
+    # sig1 = np.array([sig1], dtype=float) if not isinstance(sig1, np.ndarray) else np.array(sig1, dtype=float)
+    # sig2 = np.array([sig2], dtype=float) if not isinstance(sig2, np.ndarray) else np.array(sig2, dtype=float)
+    # sig_err1 = np.array([sig_err1], dtype=float) if not isinstance(sig_err1, np.ndarray) else np.array(sig_err1, dtype=float)
+    # sig_err2 = np.array([sig_err2], dtype=float) if not isinstance(sig_err2, np.ndarray) else np.array(sig_err2, dtype=float)
     
     relsig1 = sig_err1 / sig1
     relsig2 = sig_err2 / sig2

@@ -25,13 +25,14 @@ from Utils_Python.SlurmManager import SLURMSubmitter
 from d0_Studies.kinematic_bins import equal_entry_bin_edges_eta_mod1_wholenum, bin_edges_pT_sevenfifths_to1000GeV_wholenum
 
 verbose = 1
-overwrite = 1
+overwrite = 0
 delete_kb2d_muon_ls = 1
 corrections_derived_from = "DY"
 method = "AdHoc"
 
 inpkl_path_pTcorrfactordict = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/muoncollwithfitstats/muoncoll_itergaussfitsonKB3Ds_pTcorrfactors.pkl"
 inpkl_kb2d_path_glob = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/*.pkl"
+# inpkl_kb2d_path_glob = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/*.pkl"
 # inpkl_kb2d_path_glob = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_nogenmatching/kb2d_dicts_beforeafterGeoFitcorr__0p01_d0_1000p0/*eta*_*pT*0.pkl"
 fullpath_main_script = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/singlekb2ditergaussfit_slurm_template.py"
 
@@ -65,8 +66,24 @@ outpkl_dir    = os.path.join(outdir, "pickles/")
 assert corrections_derived_from in inpkl_path_pTcorrfactordict
 assert "." not in new_filename_prefix
 # Perform iterated Gaussian fits on each KinBin2D.
-# outpkl_dir = os.path.dirname(inpkl_kb2d_path_glob)
+# kb2d_pkl_ls = [
+#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/0p4eta0p6_27p0pT38p0.pkl",
+#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/0p8eta1p0_20p0pT27p0.pkl",
+#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/0p8eta1p0_27p0pT38p0.pkl",
+#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/0p8eta1p0_38p0pT50p0.pkl",
+#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/1p0eta1p25_38p0pT50p0.pkl",
+#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/1p25eta1p5_27p0pT38p0.pkl",
+#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/1p25eta1p5_38p0pT50p0.pkl",
+#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/1p25eta1p5_50p0pT75p0.pkl",
+#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/1p5eta1p75_38p0pT50p0.pkl",
+#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/1p5eta1p75_75p0pT100p0.pkl",
+#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/1p75eta2p0_38p0pT50p0.pkl",
+#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/1p75eta2p0_50p0pT75p0.pkl",
+#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/2p0eta2p1_20p0pT27p0.pkl",
+#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/2p2eta2p3_27p0pT38p0.pkl",
+# ]
 kb2d_pkl_ls = glob(inpkl_kb2d_path_glob)
+assert len(kb2d_pkl_ls) > 0, "[ERROR] No files found."
 # template_basename = template.rstrip(".py")
 for inpkl_path in kb2d_pkl_ls:
     # Create main copy.
