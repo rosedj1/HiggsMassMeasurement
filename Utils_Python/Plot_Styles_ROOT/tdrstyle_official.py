@@ -80,9 +80,9 @@ def setTDRStyle(show_statsbox=True):
   # tdrStyle.SetStatH(0.05)  # 0.05 is pretty good. 0.02 is too small
   # tdrStyle.SetStatW(0.20)  # 0.15 is pretty good.
   # tdrStyle.SetStatStyle(Style_t style = 1001)
-  tdrStyle.SetStatX(0.95)  # x-pos of top-right corner of stats box.
+  tdrStyle.SetStatX(0.90)  # x-pos of top-right corner of stats box.
   # tdrStyle.SetStatX(0.46)
-  tdrStyle.SetStatY(0.90)  # y-pos of top-right corner of stats box.
+  tdrStyle.SetStatY(0.85)  # y-pos of top-right corner of stats box.
 
 #For the fit/function:
   tdrStyle.SetOptFit(1)

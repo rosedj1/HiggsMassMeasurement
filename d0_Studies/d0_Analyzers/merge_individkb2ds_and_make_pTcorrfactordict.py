@@ -1,6 +1,6 @@
 """KB2D Merger
 
-Finds pickled KB2Ds with fit stats, merges them together into a MyMuonCollection.
+Finds pickled KB2Ds and merges them together into a MyMuonCollection.
 
 NOTE:
 - User has the option to save the pT correction factor dict
@@ -27,19 +27,20 @@ from natsort import natsorted
 year = "2016"
 prod_mode = "DY2mu"
 inpkl_path_template = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/ApplyCorr/MC2016DY2mu/individKB2Ds_beforeaftercorr/pickles/*_withkb2dfits.pkl"
+# inpkl_path_template = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/individKB2DwithitergaussfitsonKB3Ds_fitwithzerointerc_redo/pickles/*.pkl"
 # inpkl_path_template = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/individKB2DwithitergaussfitsonKB3Ds_fitwithzerointerc/pickles/individKB2DwithitergaussfitsonKB3Ds_fitwithzerointerc_*.pkl"
 # inpkl_path_template = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_nogenmatching/kb2d_dicts_beforeafterGeoFitcorr__0p01_d0_1000p0/unbinnedfit_widerwindow_fitwholerangefirstiter*.pkl"
 # inpkl_path_template = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_nogenmatching/kb2d_dicts_beforeafterGeoFitcorr__0p0_d0_0p01/unbinnedfit_*.pkl"
 # inpkl_path_template = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY/pickles/MC2016DY_individKB2D_withitergaussfitsonKB3Ds_0p0_d0_0p01/MC2016DY_individKB2D_withitergaussfitsonKB3Ds_0p0_d0_0p01_*eta*_*pT*.pkl"
-overwrite = 1
+outpkl_dir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/"
+overwrite = 0
 # Make a separate pkl with the pT correction factor dict.
 make_pTcorrdict = 0
 
 outfilename_base = "muoncoll_withKB2Dfits_beforeaftercorr"
-# outfilename_base = "muoncoll_itergaussfitsonKB3Ds"
+# outfilename_base = "muoncoll_itergaussfitsonKB3Ds_redo"
 # outfilename_base = "muoncoll_itergaussfitsonKB2Ds_0p01_d0_1000p0_unbinned_widerwindow_fitwholerangefirstiter"
 # outfilename_base = "MC2016DY_finalmuoncoll_allitergaussfitsonKB2DsandKB3Ds_0p0_d0_0p01"
-outpkl_dir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/"
 
 def prep_area(d, overwrite=False):
     """Make directory `d` and check overwrite."""
@@ -75,8 +76,7 @@ def main():
     # inpkl_path_ls = glob(inpkl_path_template.replace("ETAPART", eta_name))
     inpkl_path_ls = glob(inpkl_path_template)
     n_files = len(inpkl_path_ls)
-    if n_files == 0:
-        raise ValueError('[ERROR] No files to glob!')
+    assert n_files > 0, '[ERROR] No files to glob!'
     # path_ls_etasorted = sorted(inpkl_path_ls)
     inpkl_path_ls_etapTsorted = natsorted(inpkl_path_ls)
     # May not be perfectly sorted still:

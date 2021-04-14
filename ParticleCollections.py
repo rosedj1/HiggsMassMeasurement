@@ -1086,13 +1086,13 @@ class MyMuonCollection:
             slope = fit.GetParameter(1)
             eqn  = r"%.0f < p_{T} < %.0f GeV: " % (gr.pT_min, gr.pT_max)
             if scale_by_1divpT:
-                eqn += r"#Deltap_{T}/p_{T} #upoint 1/<p_{T}> = %.3E/GeV + (%.3f/[cm#upointGeV]) #upoint qd_{0}" % (interc, slope)
+                eqn += r"#Deltap_{T}/p_{T}#upoint (1/<p_{T}>) = %.3E/GeV + (%.3f/[cm#upointGeV]) #upoint qd_{0}" % (interc, slope)
             elif scale_by_avgOf1divpT:
-                eqn += r"#Deltap_{T}/p_{T} #upoint <1/p_{T}> = %.3E/GeV + (%.3f/[cm#upointGeV]) #upoint qd_{0}" % (interc, slope)
+                eqn += r"#Deltap_{T}/p_{T}#upoint (<1/p_{T}>) = %.3E/GeV + (%.3f/[cm#upointGeV]) #upoint qd_{0}" % (interc, slope)
             elif scale_by_muOf1divpT:
-                eqn += r"#Deltap_{T}/p_{T} #upoint #mu_{Gauss}(1/p_{T}) = %.3E/GeV + (%.3f/[cm#upointGeV]) #upoint qd_{0}" % (interc, slope)
+                eqn += r"#Deltap_{T}/p_{T}#upoint (#mu_{Gauss}(1/p_{T})) = %.3E/GeV + (%.3f/[cm#upointGeV]) #upoint qd_{0}" % (interc, slope)
             else:
-                eqn += r"#Deltap_{T}/p_{T} = %.3E + (%.3f/cm)#upointqd_{0}" % (interc, slope)
+                eqn += r"#Deltap_{T}/p_{T} = %.3E + (%.3f/cm) #upoint qd_{0}" % (interc, slope)
             txt = leg.AddText(eqn)
             txt.SetTextColor(fit.text_color)
             fit.Draw("same")

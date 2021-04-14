@@ -76,7 +76,7 @@ The resulting skimmed `.pkl` file has 28M muons.
    
    - Processing time: `00:03:18`
 
-1. Do recursive Gaussian fits on the dpT/pT and q*d0 dists of each KB3D with:
+1. Do recursive Gaussian fits on the dpT/pT dists of each KB3D with:
 
    ```bash
    python slurm_inbatch_singlekb2d_itergaussfitsonkb3ds.py
@@ -121,14 +121,18 @@ There are a few different scripts to apply pT corrections.
 
    - Which calls:
       - `singlekb2ditergaussfit_slurm_template.py`
-   - Processing time for 5 **unbinned** IGFs on 9E6 entries: `00:24:41`
-      - Most KB2Ds will have O(1E5) muons
+   - Processing time for 5 **unbinned** IGFs: ~`00:15:00`
    
-   NOTE: This part analyzes KB2Ds that still have their `muon_ls`.
-   Thus, you may need to combine the produced KB2Ds from here
-   with the ones which were analyzed in the **Derive Corrections** section.
+1. Merge KB2Ds in MyMuonCollection without creating a new pT corr dict:
 
-1. Combine the new KB2Ds with those from the previous step:
+   ```bash
+   python merge_individkb2ds_and_make_pTcorrfactordict.py
+   ```
+
+   - Set `make_pTcorrdict = 0`.
+
+   Then merge this muon_coll with the other muon_coll you made from
+   **Derive Corrections**:
 
    ```bash
    python merge_muoncoll_withgraphsandwithbeforeaftercorr.py
@@ -153,7 +157,8 @@ There are a few different scripts to apply pT corrections.
 
 ### Check Results
 
-1. Do an unbinned DSCB fit of the m(4mu) dist and plot it with:
+1. Check the improvement on sigma of m(4mu) by performing an unbinned DSCB fit
+on the m(4mu) dist and plot it with:
 
    ```bash
    root -l DSCB_fit_m4mu_beforeafterpTcorr.C

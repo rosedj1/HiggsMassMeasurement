@@ -5,6 +5,7 @@ from pprint import pprint
 
 from Utils_Python.Plot_Styles_ROOT.tdrstyle_official import fixOverlay
 from Utils_Python.Utils_StatsAndFits import prop_err_on_dsigoversig
+from Utils_Python.printing import print_header_message
 from Utils_ROOT.ROOT_Plotting import Root_Hist_GetLastBinRightEdge, make_new_xframe
 from Utils_ROOT.ROOT_fns import skip_black_yellow_fit_line_colors
 from Utils_ROOT.ROOT_classes import make_TGraphErrors, make_TLegend
@@ -214,7 +215,7 @@ def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None,
     # xframe.SetStats(True)  # In RooFitStats box 
 
     # Put the Gaussian fit parameters on the plot.
-    if (count == 5) and not force_line_color:
+    if count == 5 and not force_line_color:
         # Avoid yellow because it is difficult to read.
         line_color = rt.kOrange
 
@@ -249,7 +250,7 @@ def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None,
 
     # Put fit stats on plot.
     text_y_min = 0.86 - 0.11*(count-1)
-    pave = rt.TPaveText(0.17, text_y_min-0.11, 0.37, text_y_min, "NDC")
+    pave = rt.TPaveText(0.17, text_y_min-0.11, 0.40, text_y_min, "NDC")
     pave.SetFillColor(0)
     pave.SetBorderSize(0) # Use 0 for no border.
     pave.SetTextAlign(12) # 22 is centered vert and horiz.
@@ -285,6 +286,8 @@ def RooFit_gaus_fit(data, binned_fit=True, fit_range=None, xframe=None,
     xframe.addObject(tmp_hist.FindObject("stats").Clone())
     xframe.Draw("same")
     xframe.findObject("stats").Draw()
+    xframe.findObject("stats").SetX2NDC(0.95)
+    xframe.findObject("stats").SetY2NDC(0.90)
     # rt.gPad.RedrawAxis()
     # rt.gPad.Modified()
     # rt.gPad.Update()
@@ -314,7 +317,7 @@ def RooFit_iterative_gaus_fit(data, binned_fit=False, switch_to_binned_fit=2000,
                               n_bins=100, x_lim=None, fit_whole_range_first_iter=False,
                               xframe=None, x_label="Independent var", title="", units="", marker_color=1,
                               force_last_line_color=None, only_draw_last=False, verbose=False, view_plot=False,
-                              use_data_in_xlim=False):
+                              use_data_in_xlim=False, use_smart_window=False):
     """Return a 2-tuple: 
         (dict of the fit statistics from iterative Gaussian fits on given data, 
          xframe on which the fits can be drawn)
@@ -371,8 +374,9 @@ def RooFit_iterative_gaus_fit(data, binned_fit=False, switch_to_binned_fit=2000,
     only_draw_last : bool, optional
         If True, only draw the very last fit on the frame. 
     switch_to_binned_fit : int, optional
-        The max number of entries in an array on which an UNBINNED fit should be performed.
-        If n_entries in array > switch_to_binned_fit, then a binned fit will be done.
+        The max number of entries in an array on which an UNBINNED fit should
+        be performed. If n_entries in array > switch_to_binned_fit, then a
+        binned fit will be done.
     line_color : ROOT.TColor (int), optional
     marker_color : ROOT.TColor (int), optional
     force_last_line_color : ROOT.TColor (int), optional
@@ -385,7 +389,14 @@ def RooFit_iterative_gaus_fit(data, binned_fit=False, switch_to_binned_fit=2000,
         and the terminal will hang, waiting for user input.
         Used for testing purposes.
     use_data_in_xlim : bool
-        If True, only values between x_lim[0] and x_lim[1] are fit to.
+        If True, only values between x_lim[0] and x_lim[1] are used to begin
+        the fits.
+    use_smart_window : bool
+        If True, then set left edge of window at the first x val whose bin
+        height > 5% of the max bin height. Right edge is set to last such bin.
+        Still works with `use_data_in_xlim`, which just trims data range.
+        Overrides any values passed to x_lim.
+        Overrides `fit_whole_range_first_iter`.
 
     Returns
     -------
@@ -435,6 +446,26 @@ def RooFit_iterative_gaus_fit(data, binned_fit=False, switch_to_binned_fit=2000,
         msg = f"The type of data ({type(data)}) must be `list`, `numpy.ndarray`, or `ROOT.TH1`"
         raise TypeError(msg)
 
+    if use_smart_window:
+        print("...Using smart window for iter fit.")
+        if x_lim is not None:
+            print_header_message(
+                f"[WARNING] Overriding specified x_lim: {x_lim}."
+                )
+        # Use Suzanne's clever trick of setting x_lim based on BIN HEIGHT!
+        binedges = np.linspace(data_x_min, data_x_max, n_bins + 1)
+        print(f"binedges:\n{binedges}")
+        binentries, _ = np.histogram(data, bins=binedges)
+        print(f"binentries:\n{binentries}")
+        # Set x window to start at first bin whose height > 5% of max.
+        mask = binentries > (0.05 * max(binentries))
+        print(f"mask[:50]:\n{mask[:50]}")
+        # Mask is shorter than binedges. Look at left/right cases separately.
+        _xmin = min(binedges[:-1][mask]) # Left edge of first good bin.
+        _xmax = max(binedges[1:][mask])  # Right edge of last good bin.
+        x_lim = (_xmin, _xmax)
+        print(f"new x_lim: {x_lim}")
+
     if xframe is None:
         x_min, x_max, x_roofit, xframe = make_new_xframe(data_x_min, data_x_max, x_lim,
                                                          x_label, units, n_bins, title)
@@ -454,16 +485,27 @@ def RooFit_iterative_gaus_fit(data, binned_fit=False, switch_to_binned_fit=2000,
         count += 1 
         if count == 1:
             # Determine starting fit range:
-            if fit_whole_range_first_iter:
+            if use_smart_window:
+                # Use full smart window.
+                x_min_fit = x_lim[0]
+                x_max_fit = x_lim[1]
+            elif fit_whole_range_first_iter:
+                # Use entire data range.
                 x_min_fit = data_x_min
                 x_max_fit = data_x_max
             else:
+                # Use a range based on hist stats.
                 x_min_fit = data_mean - num_sigmas * abs(data_rms)
                 x_max_fit = data_mean + num_sigmas * abs(data_rms)
         else:
             # Make a fit range based on previous fit result.
             x_min_fit = mean_ls[-1] - num_sigmas * abs(std_ls[-1])
             x_max_fit = mean_ls[-1] + num_sigmas * abs(std_ls[-1])
+        # If we pass data limits, then use min/max.
+        if x_min_fit < data_x_min:
+            x_min_fit = data_x_min
+        if x_max_fit > data_x_max:
+            x_max_fit = data_x_max
         fit_range = (x_min_fit, x_max_fit)
         # Set color of fit line.
         color = count
@@ -488,6 +530,7 @@ def RooFit_iterative_gaus_fit(data, binned_fit=False, switch_to_binned_fit=2000,
                     msg = (f"[INFO] Switching to BINNED fit since len(data) {len(data)} > the limit set {switch_to_binned_fit}:\n")
                     print(msg)
                 do_binned = True
+
 
         fit_stats_ls, xframe = RooFit_gaus_fit(data, binned_fit=do_binned, fit_range=fit_range, xframe=xframe, 
                                                count=count,

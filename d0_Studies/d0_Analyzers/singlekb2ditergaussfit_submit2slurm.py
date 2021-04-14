@@ -20,6 +20,7 @@ Updated: 2021-04-12
 import os
 import shutil
 from glob import glob
+from natsort import natsorted
 from Utils_Python.Utils_Files import open_pkl, check_overwrite, replace_value, make_dirs
 from Utils_Python.SlurmManager import SLURMSubmitter
 from d0_Studies.kinematic_bins import equal_entry_bin_edges_eta_mod1_wholenum, bin_edges_pT_sevenfifths_to1000GeV_wholenum
@@ -30,24 +31,26 @@ delete_kb2d_muon_ls = 1
 corrections_derived_from = "DY"
 method = "AdHoc"
 
-inpkl_path_pTcorrfactordict = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/muoncollwithfitstats/muoncoll_itergaussfitsonKB3Ds_pTcorrfactors.pkl"
+inpkl_path_pTcorrfactordict = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/muoncoll_itergaussfitsonKB3Ds_redo_pTcorrfactors.pkl"
+# inpkl_path_pTcorrfactordict = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/muoncollwithfitstats/muoncoll_itergaussfitsonKB3Ds_pTcorrfactors.pkl"
 inpkl_kb2d_path_glob = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/*.pkl"
 # inpkl_kb2d_path_glob = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/*.pkl"
 # inpkl_kb2d_path_glob = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_nogenmatching/kb2d_dicts_beforeafterGeoFitcorr__0p01_d0_1000p0/*eta*_*pT*0.pkl"
 fullpath_main_script = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/singlekb2ditergaussfit_slurm_template.py"
 
 new_filename_prefix = "" #"unbinnedfit_widerwindow_fitwholerangefirstiter"
-outdir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/individKB2Ds_beforeaftercorr/"
+outdir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/ApplyCorr/MC2016DY2mu/individKB2Ds_beforeaftercorr/"
 # outcopies_dir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/beforeafterGeoFitCorr/0p01_d0_1000p0/copies/"
 # outtxt_dir    = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/beforeafterGeoFitCorr/0p01_d0_1000p0/output/"
 
 # eta_binedge_ls = equal_entry_bin_edges_eta_mod1_wholenum
 # pT_binedge_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum
 
-bins_dpTOverpT = 500
-bins_qd0 = 500
+bins_dpTOverpT = 200
+bins_qd0 = 200
 x_lim_dpTOverpT = [-0.5, 0.5]
 x_lim_qd0 = [-0.01, 0.01]
+use_smart_window = 1  # Disregards user-specified x limits.
 iters = 5
 
 switch_to_binned_fit = 99E9
@@ -66,23 +69,9 @@ outpkl_dir    = os.path.join(outdir, "pickles/")
 assert corrections_derived_from in inpkl_path_pTcorrfactordict
 assert "." not in new_filename_prefix
 # Perform iterated Gaussian fits on each KinBin2D.
-# kb2d_pkl_ls = [
-#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/0p4eta0p6_27p0pT38p0.pkl",
-#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/0p8eta1p0_20p0pT27p0.pkl",
-#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/0p8eta1p0_27p0pT38p0.pkl",
-#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/0p8eta1p0_38p0pT50p0.pkl",
-#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/1p0eta1p25_38p0pT50p0.pkl",
-#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/1p25eta1p5_27p0pT38p0.pkl",
-#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/1p25eta1p5_38p0pT50p0.pkl",
-#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/1p25eta1p5_50p0pT75p0.pkl",
-#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/1p5eta1p75_38p0pT50p0.pkl",
-#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/1p5eta1p75_75p0pT100p0.pkl",
-#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/1p75eta2p0_38p0pT50p0.pkl",
-#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/1p75eta2p0_50p0pT75p0.pkl",
-#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/2p0eta2p1_20p0pT27p0.pkl",
-#     "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/2p2eta2p3_27p0pT38p0.pkl",
-# ]
 kb2d_pkl_ls = glob(inpkl_kb2d_path_glob)
+kb2d_pkl_ls = natsorted(kb2d_pkl_ls)
+
 assert len(kb2d_pkl_ls) > 0, "[ERROR] No files found."
 # template_basename = template.rstrip(".py")
 for inpkl_path in kb2d_pkl_ls:
@@ -115,6 +104,7 @@ for inpkl_path in kb2d_pkl_ls:
     replace_value("X_LIM_DPTOVERPT", x_lim_dpTOverpT, template_copy)
     replace_value("X_LIM_QD0", x_lim_qd0, template_copy)
     replace_value("ITERS", iters, template_copy)
+    replace_value("USE_SMART_WINDOW", use_smart_window, template_copy)
     
     sbmtr = SLURMSubmitter(verbose=verbose)
     sbmtr.prep_directives(

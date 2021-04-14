@@ -1,7 +1,7 @@
 """SLURM Script Duplicator and Submitter
 
 This code submits SLURM jobs, where each SLURM job performs iterated Gaussian
-fits on a single KB2D. Fits are done on dpT/pT and 1/pT distributions. Fit
+fits on a single KB2D. Fits are done on dpT/pT and q*d0 distributions. Fit
 statistics are saved. The updated KB2D is saved as a new '.pkl'.
 
 Iterated fits can hang for a very long time (memory issues?). A workaround is
@@ -36,7 +36,7 @@ Requires an input pickled dict of KinBin2Ds. You can make the '.pkl' with:
 
 Author: Jake Rosenzweig
 Created: <2021-03-15
-Updated: 2021-04-12
+Updated: 2021-04-14
 """
 from Utils_Python.Utils_Files import replace_value, make_dirs
 from d0_Studies.kinematic_bins import eta_bins_geofitvsVXBS, pT_bins_geofitvsVXBS, equal_entry_bin_edges_eta_mod1_wholenum, bin_edges_pT_sevenfifths_to1000GeV_wholenum
@@ -51,7 +51,7 @@ import sys
 #--- User Parameters ---#
 #-----------------------#
 year = "2016"
-overwrite = 0
+overwrite = 1
 verbose = 1
 
 iters = 5
@@ -59,14 +59,15 @@ fit_with_zero_interc = True
 regions = 12
 min_muons_per_qd0_bin = 100
 fit_whole_range_first_iter = False  # False gives more consistent fits (with no outlier data).
+use_smart_window = True
 use_data_in_xlim = 1
 binned_fit = False
 switch_to_binned_fit = 999999999
 
-job_name_base = "individKB2DwithitergaussfitsonKB3Ds_fitwithzerointerc"  # Also prefix for outfile.
+job_name_base = "individKB2DwithitergaussfitsonKB3Ds_fitwithzerointerc_redo"  # Also prefix for outfile.
 # job_name_base = "MC2016DY_individKB2D_withitergaussfitsonKB3Ds_nogenmatching_0p0_d0_0p01"  # Also prefix for outfile.
 # eta_ls = eta_bins_geofitvsVXBS #equal_entry_bin_edges_eta_mod1_wholenum
-eta_ls = equal_entry_bin_edges_eta_mod1_wholenum[6:]
+eta_ls = equal_entry_bin_edges_eta_mod1_wholenum
 # full_pT_ls = pT_bins_geofitvsVXBS  #[20.0, 30.0, 40.0, 50.0] #bin_edges_pT_sevenfifths_to1000GeV_wholenum
 full_pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum
 
@@ -144,6 +145,7 @@ def replace_vals_in_files(eta_range, pT_range, inpkl_path, outpkl_path,
         replace_value("FIT_WITH_ZERO_INTERC", fit_with_zero_interc, template)
         replace_value("REGIONS", regions, template)
         replace_value("MIN_MUONS_PER_QD0_BIN", min_muons_per_qd0_bin, template)
+        replace_value("USE_SMART_WINDOW", use_smart_window, template)
 
 def print_info(fullpath_copy_main_script, fullpath_copy_slurm_script, 
                 outdir_copies, outdir_pkl, outdir_txt):
@@ -174,7 +176,7 @@ def main():
             shutil.copyfile(template_script_slurm, fullpath_copy_slurm_script)
             print(fullpath_copy_main_script)
             inpkl_path = inpkl_path_template.replace("ETAPART", eta_name).replace("PTPART", pT_name)
-            outpkl_path = os.path.join(outdir_pkl, f"{job_name_base}_{eta_name}_{pT_name}.pkl")
+            outpkl_path = os.path.join(outdir_pkl, f"{eta_name}_{pT_name}.pkl")
             replace_vals_in_files(eta_range=eta_range, pT_range=pT_range,
                                 inpkl_path=inpkl_path, outpkl_path=outpkl_path,
                                 job_name_base=job_name_base, outdir_txt=outdir_txt,

@@ -1,14 +1,21 @@
-"""Derive and Apply AdHoc pT Correction Factors
+"""Derive AdHoc pT Correction Factors
 
+This code runs a series of scripts to derive AdHoc pT correction factors from 
+a muon sample (DY, ggH, etc.)
+
+Parameters
+----------
+infile_path : The root file from which muons will be pulled.
 """
+from Utils_Python.Utils_Files import make_dirs #open_pkl, save_to_pkl, check_overwrite
+sample_type = "MC"  # "MC", "Data"
 year = "2016"
-prod_mode = "DY2mu"
+prod_mode = "DY2mu"  # "DY2mu", "DY2e", "H2mu", "H2e", "H4mu", "H4e"
 outfile_prefix = "fullanalysis_test01"
 infile_path = "/cmsuf/data/store/user/t2/users/ferrico/SingleBS_studies/After/DY_2018_2.root"
 
-outtxt_dir    = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2018DY/output/"
-outcopies_dir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2018DY/copies/"
-outpkl_dir    = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2018/DY/"
+outdir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/"
+
 
 submit_to_slurm = True
 
@@ -30,6 +37,12 @@ mem = (8, 'gb')
 nodes = 4
 burst = True
 
+make_dirs(os.path.join(outdir, ""))
+assert sample_type in ('MC', 'Data')
+
+outtxt_dir    = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2018DY/outtxt"
+outcopies_dir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2018DY/copies"
+outpkl_dir    = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2018/DY/"
 
 import argparse
 parser = argparse.ArgumentParser(description='')
@@ -208,3 +221,15 @@ if submit_to_slurm:
     # outfilename_base = "muoncoll_itergaussfitsonKB3Ds"
     # outpkl_dir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/muoncollwithfitstats"
     python /blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/merge_individkb2ds_and_make_pTcorrfactordict.py
+
+
+# IN APPLY CORRECTION SCRIPT:
+
+# Merge KB2Ds but don't make pT corr dict (it was already made).
+# Name outfile with prefix like: "muoncoll_withKB2Dfits_beforeaftercorr"
+make_pTcorrdict = 0
+python merge_individkb2ds_and_make_pTcorrfactordict.py
+# Take the muoncoll which gets made and pass it into next script:
+
+# Merge MuonColls.
+python /blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/merge_muoncoll_withgraphsandwithbeforeaftercorr.py

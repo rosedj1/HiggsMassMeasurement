@@ -14,7 +14,7 @@ The processed KB2D is then pickled into a new file.
 Syntax: python this_script.py
 Author: Jake Rosenzweig
 Created: 2021-03-14  # Happy pi day!
-Updated: 2021-04-12
+Updated: 2021-04-14
 """
 import os
 from Utils_ROOT.Printer import CanvasPrinter
@@ -37,6 +37,7 @@ x_lim_1OverpT = [0, 0.2] #None
 
 binned_fit = BINNED_FIT
 fit_whole_range_first_iter = False
+use_smart_window = USE_SMART_WINDOW
 iters = ITERS
 num_sigmas = 2.5
 use_data_in_xlim = True
@@ -69,7 +70,8 @@ def do_itergaussfits_on_kb3ds(kb2d):
                             iters=iters, num_sigmas=num_sigmas, 
                             switch_to_binned_fit=switch_to_binned_fit,  
                             verbose=verbose, alarm_level=alarm_level, 
-                            use_data_in_xlim=use_data_in_xlim)
+                            use_data_in_xlim=use_data_in_xlim,
+                            use_smart_window=use_smart_window)
         
         print_header_message(f"KB3D done: eta={kb3d.eta_range} pT={kb3d.pT_range}")
 

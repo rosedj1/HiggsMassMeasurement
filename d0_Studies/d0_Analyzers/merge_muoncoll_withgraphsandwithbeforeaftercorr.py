@@ -24,9 +24,9 @@ from Utils_Python.Utils_Files import open_pkl, save_to_pkl, check_overwrite, mak
 
 overwrite = 0
 # This MyMuonCollection owns KB2Ds used to derive pT corrections.
-inpkl_mucoll_derivecorr = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/muoncollwithfitstats/muoncoll_itergaussfitsonKB3Ds.pkl"
+inpkl_mucoll_derivecorr = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/muoncoll_itergaussfitsonKB3Ds_redo.pkl"
 # This MyMuonCollection owns KB2Ds with before/after pT correction fits.
-inpkl_mucoll_applycorr = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/ApplyCorr/MC2016DY2mu/muoncoll_withKB2Dfits_beforeaftercorr.pkl"
+inpkl_mucoll_applycorr = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/muoncoll_withKB2Dfits_beforeaftercorr.pkl"
 
 mucoll_derivecorr = open_pkl(inpkl_mucoll_derivecorr)
 mucoll_applycorr = open_pkl(inpkl_mucoll_applycorr)
