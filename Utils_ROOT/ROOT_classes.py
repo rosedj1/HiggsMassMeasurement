@@ -368,7 +368,8 @@ def add_branch_pTcorr_fromadhocmethod(tree, pT_corr_factor_dict, outpath_root):
     treeclone.Branch("pTcorr_adhoc", ptr, "m4mu/F")
 
 def get_normcoord_from_screenshot(canv_width, canv_height,
-                                  left_offset, right_offset, bot_offset, top_offset):
+                                  left_offset=None, right_offset=None, bot_offset=None, top_offset=None,
+                                  obj_width=None, obj_height=None):
     """Return a 4-tup of normalized coordinates, given screenshot dimensions.
 
     NOTE: 
@@ -387,10 +388,29 @@ def get_normcoord_from_screenshot(canv_width, canv_height,
     right_offset : float
     bot_offset : float
     top_offset : float
+    obj_width : float
+        If specified, will override any val passed into right_offset.
+    obj_height : float
+        If specified, will override any val passed into top_offset.
+
+    Returns
+    -------
+    (x_min, x_max, y_min, y_max)
     """
     # A fraction of the total width.
     x_min = left_offset / float(canv_width)
-    x_max = 1 - (right_offset / float(canv_width))
+    if obj_width is not None:
+        msg = "Specify either `obj_width` or `right_offset`."
+        assert right_offset is None, msg
+        x_max = x_min + float(obj_width / canv_width)
+    else:
+        x_max = 1 - (right_offset / float(canv_width))
+    # y dimension:
     y_min = bot_offset / float(canv_height)
-    y_max = 1 - (top_offset / float(canv_height))
+    if obj_height is not None:
+        msg = "Specify either `obj_height` or `top_offset`."
+        assert top_offset is None, msg
+        y_max = y_min + float(obj_height / canv_height)
+    else:
+        y_max = 1 - (top_offset / float(canv_height))
     return (x_min, x_max, y_min, y_max)

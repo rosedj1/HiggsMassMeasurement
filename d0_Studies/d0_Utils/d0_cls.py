@@ -22,10 +22,10 @@ from Utils_Python.Utils_Collection_Helpers import weave_lists
 from Utils_ROOT.ROOT_StatsAndFits import RooFit_iterative_gaus_fit
 from Utils_ROOT.ROOT_Plotting import make_TPave
 from Utils_ROOT.ROOT_classes import make_TH1F
-from d0_Utils.d0_fns import (make_binning_array, centers_of_binning_array, get_subset_mask, correct_muon_pT,
+from d0_Studies.d0_Utils.d0_fns import (make_binning_array, centers_of_binning_array, get_subset_mask, correct_muon_pT,
                              make_kinem_subplot, combine_cut_list, calc_x_err_bins_from_bin_centers, 
                              find_equal_hist_regions_unbinned, find_bin_edges_of_value)
-from d0_Utils.d0_dicts import color_dict, label_LaTeX_dict, process_dct
+from d0_Studies.d0_Utils.d0_dicts import color_dict, label_LaTeX_dict, process_dct
 
 from d0_Studies.Plotters_Python.plotter_2D import get_standarderrorofmean
         
@@ -70,20 +70,20 @@ class KinBin2D:
         self.fit_func = None
         
         self.dpTOverpT_vs_qd0_fit_stats_dct = {
-            "dpTOverpT_vs_qd0"       : {"interc_and_err" : None,
-                                        "slope_and_err"  : None,
+            "dpTOverpT_vs_qd0"       : {"interc_and_err" : (None, None),
+                                        "slope_and_err"  : (None, None),
                                         "chi2"           : None,
                                         "NDF"            : None},
-            "dpTOverpTscaled_vs_qd0" : {"interc_and_err" : None,
-                                        "slope_and_err"  : None,
+            "dpTOverpTscaled_vs_qd0" : {"interc_and_err" : (None, None),
+                                        "slope_and_err"  : (None, None),
                                         "chi2"           : None,
                                         "NDF"            : None},
-            "dpTOverpTtimesavgOf1divpT_vs_qd0" : {"interc_and_err" : None,
-                                        "slope_and_err"  : None,
+            "dpTOverpTtimesavgOf1divpT_vs_qd0" : {"interc_and_err" : (None, None),
+                                        "slope_and_err"  : (None, None),
                                         "chi2"           : None,
                                         "NDF"            : None},
-            "dpTOverpTtimesmuOf1divpT_vs_qd0" : {"interc_and_err" : None,
-                                        "slope_and_err"  : None,
+            "dpTOverpTtimesmuOf1divpT_vs_qd0" : {"interc_and_err" : (None, None),
+                                        "slope_and_err"  : (None, None),
                                         "chi2"           : None,
                                         "NDF"            : None},
         }
@@ -193,10 +193,15 @@ class KinBin2D:
             If True, then make and fill new hists using corrected muon pT.
             Either make hists from corrected pTs or original pTs, not both.
         """
-        if self.kinem_hist_ls is None:
+        try:
+            if self.kinem_hist_ls is None:
+                self.kinem_hist_ls = []
+        except AttributeError:
+            # self.kinem_hist_ls doesn't exist yet.
             self.kinem_hist_ls = []
         dim = self.kinbin_dim
         key = self.get_bin_key()
+        key_str = self.get_bin_key(title_friendly=True)
         print(f"...Creating kinematics dists for KB{dim}D: {key}")
         title_prefix = ""
         pT_xmin, pT_xmax = self.pT_range
@@ -207,15 +212,15 @@ class KinBin2D:
         else:
             qd0_xmin, qd0_xmax = (-0.01, 0.01)
 
-        h_pT = make_TH1F("h_pT", title=title_prefix+"p_{T,#mu}^{reco}", n_bins=100, xlabel=r"p_{T,#mu}^{reco}", x_min=pT_xmin, x_max=pT_xmax, units="GeV")
-        h_pT_gen = make_TH1F("h_pT_gen", title=title_prefix+"p_{T,#mu}^{gen}", n_bins=100, xlabel=r"p_{T,#mu}^{gen}", x_min=pT_xmin, x_max=pT_xmax, units="GeV")
-        h_eta = make_TH1F("h_eta", title=title_prefix+"#eta_{#mu}^{reco}", n_bins=100, xlabel=r"#eta_{#mu}^{reco}", x_min=eta_xmin, x_max=eta_xmax, units=None)
-        h_eta_gen = make_TH1F("h_eta_gen", title=title_prefix+"#eta_{#mu}^{gen}", n_bins=100, xlabel=r"#eta_{#mu}^{gen}", x_min=eta_xmin, x_max=eta_xmax, units=None)
-        h_phi = make_TH1F("h_phi", title=title_prefix+"#phi_{#mu}^{reco}", n_bins=50, xlabel=r"#phi_{#mu}^{reco}", x_min=-4, x_max=4, units=None)
-        h_phi_gen = make_TH1F("h_phi_gen", title=title_prefix+"#phi_{#mu}^{gen}", n_bins=50, xlabel=r"#phi_{#mu}^{gen}", x_min=-4, x_max=4, units=None)
-        h_qd0 = make_TH1F("h_qd0", title=title_prefix+"muon qd_{0}", n_bins=100, xlabel=r"qd_{0}", x_min=qd0_xmin, x_max=qd0_xmax, units="cm")
-        h_dpTOverpT = make_TH1F("h_dpTOverpT", title=title_prefix+"(p_{T}^{reco} - p_{T}^{gen})/p_{T}^{gen}", n_bins=100, xlabel=r"#Deltap_{T}^{reco}/p_{T}^{gen}", x_min=-0.3, x_max=0.3, units=None)
-        h_charge = make_TH1F("h_charge", title=title_prefix+"muon charge", n_bins=8, xlabel=r"Charge of muon", x_min=-4, x_max=4, units=None)
+        h_pT = make_TH1F(f"h_{key_str}_pT", title=title_prefix+"p_{T,#mu}^{reco}", n_bins=100, xlabel=r"p_{T,#mu}^{reco}", x_min=pT_xmin, x_max=pT_xmax, units="GeV")
+        h_pT_gen = make_TH1F(f"h_{key_str}_pT_gen", title=title_prefix+"p_{T,#mu}^{gen}", n_bins=100, xlabel=r"p_{T,#mu}^{gen}", x_min=pT_xmin, x_max=pT_xmax, units="GeV")
+        h_eta = make_TH1F(f"h_{key_str}_eta", title=title_prefix+"#eta_{#mu}^{reco}", n_bins=100, xlabel=r"#eta_{#mu}^{reco}", x_min=eta_xmin, x_max=eta_xmax, units=None)
+        h_eta_gen = make_TH1F(f"h_{key_str}_eta_gen", title=title_prefix+"#eta_{#mu}^{gen}", n_bins=100, xlabel=r"#eta_{#mu}^{gen}", x_min=eta_xmin, x_max=eta_xmax, units=None)
+        h_phi = make_TH1F(f"h_{key_str}_phi", title=title_prefix+"#phi_{#mu}^{reco}", n_bins=50, xlabel=r"#phi_{#mu}^{reco}", x_min=-4, x_max=4, units=None)
+        h_phi_gen = make_TH1F(f"h_{key_str}_phi_gen", title=title_prefix+"#phi_{#mu}^{gen}", n_bins=50, xlabel=r"#phi_{#mu}^{gen}", x_min=-4, x_max=4, units=None)
+        h_qd0 = make_TH1F(f"h_{key_str}_qd0", title=title_prefix+"muon qd_{0}", n_bins=100, xlabel=r"qd_{0}", x_min=qd0_xmin, x_max=qd0_xmax, units="cm")
+        h_dpTOverpT = make_TH1F(f"h_{key_str}_dpTOverpT", title=title_prefix+"(p_{T}^{reco} - p_{T}^{gen})/p_{T}^{gen}", n_bins=100, xlabel=r"#Deltap_{T}^{reco}/p_{T}^{gen}", x_min=-0.3, x_max=0.3, units=None)
+        h_charge = make_TH1F(f"h_{key_str}_charge", title=title_prefix+"muon charge", n_bins=8, xlabel=r"Charge of muon", x_min=-4, x_max=4, units=None)
         h_charge.SetYTitle(r"Number of muons")
 
         if muon_pT_corr:
@@ -286,7 +291,7 @@ class KinBin2D:
         """
         TODO: Update docstring.
 
-        Store a TGraph of dpT/pT vs. qd0 using the stored muons in this KinBin.
+        Store a TGraph (dpT/pT vs. qd0) using muon_ls in this KinBin2D.
         Draw and store a best-fit line on the graph.
 
         NOTE: The y-axis can be scaled by one of three methods:
@@ -312,18 +317,39 @@ class KinBin2D:
         if (self.is_qd0_binned):
             y_label = r"#mu_{Gauss}(#Deltap_{T}/p_{T})"
             kb3d_ls = self.KinBin3D_dict.values()
+            print(f"kb3d_ls:\n{kb3d_ls}")
             x_vals = [kb3d.avg_qd0 for kb3d in kb3d_ls]
             y_vals = [kb3d.fit_stats_dict_dpTOverpT["mean_ls"][-1] for kb3d in kb3d_ls]
             y_err_vals = [kb3d.fit_stats_dict_dpTOverpT["mean_err_ls"][-1] for kb3d in kb3d_ls]
             if scale_by_1divpT:
                 # Scale dpT/pT by 1/<pT>.
-                scale_ls = [np.mean([mu.pT for mu in kb3d.muon_ls]) for kb3d in kb3d_ls]
+                # scale_ls = [np.mean([mu.pT for mu in kb3d.muon_ls]) for kb3d in kb3d_ls]
                 # Standard error of the mean.
-                scale_seom_ls = [np.std([mu.pT for mu in kb3d.muon_ls])/len(kb3d.muon_ls) for kb3d in kb3d_ls]
+                # scale_seom_ls = [np.std([mu.pT for mu in kb3d.muon_ls]) / np.sqrt(len(kb3d.muon_ls)) for kb3d in kb3d_ls]
+                scale_ls = []
+                scale_seom_ls = []
+                for kb3d in kb3d_ls:
+                    print(f"kb3d.fit_stats_dict_dpTOverpT = {kb3d.fit_stats_dict_dpTOverpT}")
+                    print(f"kb3d.fit_stats_dict_dpTOverpT['mean_ls'][-1] = {kb3d.fit_stats_dict_dpTOverpT['mean_ls'][-1]}")
+                    # Get mean and standard error of the mean.
+                    pT_ls = [mu.pT for mu in kb3d.muon_ls]
+                    this_kb3d_mean = np.mean(pT_ls)
+                    this_kb3d_seom = get_standarderrorofmean(pT_ls)
+                    scale_ls.append(this_kb3d_mean)
+                    scale_seom_ls.append(this_kb3d_seom)
                 # Now do bestfitmean(dpT/pT) / avg(pT).
+                print(f"y_vals before prop_err_x_div_y={y_vals}")
                 y_vals, y_err_vals = prop_err_x_div_y(y_vals, scale_ls, y_err_vals, scale_seom_ls)
+                print(f"y_vals AFTER prop_err_x_div_y={y_vals}")
                 y_label += r" #upoint #frac{1}{<p_{T}>}"
-                assert len(scale_ls) == len (scale_seom_ls) == len(y_vals) == len(y_err_vals)
+                try:
+                    assert len(scale_ls) == len(scale_seom_ls) == len(y_vals) == len(y_err_vals)
+                except AssertionError:
+                    msg  = f"len(scale_ls)={len(scale_ls)}, "
+                    msg += f"len(scale_seom_ls)={len(scale_seom_ls)}, "
+                    msg += f"len(y_vals)={len(y_vals)}, "
+                    msg += f"len(y_err_vals)={len(y_err_vals)}"
+                    raise AssertionError(msg)
             elif scale_by_avgOf1divpT:
                 # Scale dpT/pT by <1/pT>.
                 # Mean and standard error of the mean were already saved.
@@ -519,7 +545,8 @@ class KinBin2D:
                        fit_whole_range_first_iter=True,
                        iters=3, num_sigmas=2.5, marker_color=None, line_color=None,
                        switch_to_binned_fit=2000, verbose=False, alarm_level="warning",
-                       use_mu_pT_corr=False, only_draw_last=False):
+                       use_mu_pT_corr=False, only_draw_last=False, fit_qd0_dist=False,
+                       use_smart_window=False):
         """Perform an unbinned iterated Gaussian fit on the dpT/pT
         distribution. Store the statistics and best-fit vals of this KinBin.
         
@@ -563,6 +590,14 @@ class KinBin2D:
         use_mu_pT_corr : bool
             If True, use the corrected muon pT (from d0 studies).
             Make a distribution of (pT_corr[rec] - pT_gen)/pT_gen.
+        fit_qd0_dist : bool
+            If True, do the same kind of iterated fits but on the q*d0 dist.
+        use_smart_window : bool
+            If True, then set left edge of window at the first x val whose bin
+            height > 5% of the max bin height. Right edge is set to last such bin.
+            Still works with `use_data_in_xlim`, which just trims data range.
+            Overrides any values passed to x_lim.
+            Overrides `fit_whole_range_first_iter`.
         """
         self.n_entries = len(self.muon_ls)
         try:
@@ -617,7 +652,7 @@ class KinBin2D:
                                 units="",
                                 marker_color=marker_color_after_corr, force_last_line_color=line_color_after_corr,
                                 only_draw_last=only_draw_last, 
-                                verbose=verbose)
+                                verbose=verbose, use_smart_window=use_smart_window)
         else:
             # Perform iter Gauss fit on (pT_reco - pT_gen) / pT_gen:
             data = [(mu.pT - mu.gen_pT) / mu.gen_pT for mu in self.muon_ls]
@@ -635,7 +670,7 @@ class KinBin2D:
                                     units="",
                                     marker_color=marker_color_before_corr, force_last_line_color=line_color_before_corr,
                                     only_draw_last=only_draw_last, 
-                                    verbose=verbose)
+                                    verbose=verbose, use_smart_window=use_smart_window)
 
         # Print info on fit stats convergence.
         for stat in ["mean_ls", "mean_err_ls", "std_ls", "std_err_ls"]:
@@ -649,6 +684,21 @@ class KinBin2D:
                                   max_perc_diff=5,
                                   compare_to_last=3,
                                   alarm_level=alarm_level)
+        # Fit the q*d0 dist.
+        if fit_qd0_dist:
+            self.fit_stats_dict_qd0, self.frame_qd0 = RooFit_iterative_gaus_fit(
+                            [mu.charge * mu.d0 for mu in self.muon_ls], 
+                            binned_fit=False, switch_to_binned_fit=switch_to_binned_fit, 
+                            iters=iters, num_sigmas=num_sigmas,
+                            n_bins=bins_qd0, x_lim=x_lim_qd0,
+                            fit_whole_range_first_iter=fit_whole_range_first_iter,
+                            xframe=None,
+                            x_label=r"q#upointd_{0}",
+                            title="%s" % self.make_latex_bin_cut_str(), 
+                            units="cm",
+                            marker_color=marker_color_before_corr, force_last_line_color=line_color_before_corr,
+                            only_draw_last=only_draw_last, 
+                            verbose=verbose, use_smart_window=use_smart_window)
 
         if verbose:
             end = time.perf_counter()
@@ -689,27 +739,31 @@ class KinBin2D:
         frame_uncorr = self.frame_dpTOverpT.Clone()
         frame_corr   = self.frame_dpTOverpT_corr.Clone()
 
+        frame_uncorr.GetXaxis().SetTitleOffset(1.3)
+        frame_corr.GetXaxis().SetTitleOffset(1.3)
+        
+        # r.gPad.SetOptStat(0)
         # Move the hist stats boxes off of one another.
         statsbox_uncorr = frame_uncorr.findObject("stats")
-        statsbox_uncorr.SetX1NDC(0.70)
-        statsbox_uncorr.SetX2NDC(0.90)
+        statsbox_uncorr.SetX1NDC(0.75)
+        statsbox_uncorr.SetX2NDC(0.95)
         statsbox_uncorr.SetY1NDC(0.75)  # y min.
         statsbox_uncorr.SetY2NDC(0.90)
         statsbox_uncorr.SetTextColor(r.kBlue+2)
 
         statsbox_corr = frame_corr.findObject("stats")
-        statsbox_corr.SetX1NDC(0.70)
-        statsbox_corr.SetX2NDC(0.90)
+        statsbox_corr.SetX1NDC(0.75)
+        statsbox_corr.SetX2NDC(0.95)
         statsbox_corr.SetY1NDC(0.60)  # y min.
         statsbox_corr.SetY2NDC(0.75)
         statsbox_corr.SetTextColor(r.kRed+2)
 
-        # # Move the fit stats boxes off of one another.
+        # Move the fit stats boxes off of one another.
         fit_stats_uncorr = frame_uncorr.findObject("TPave")
-        fit_stats_uncorr.SetX1NDC(0.13)
-        fit_stats_uncorr.SetX2NDC(0.38)
-        fit_stats_uncorr.SetY1NDC(0.77)  # y min.
-        fit_stats_uncorr.SetY2NDC(0.88)
+        fit_stats_uncorr.SetX1NDC(0.179)
+        fit_stats_uncorr.SetX2NDC(0.430)
+        fit_stats_uncorr.SetY1NDC(0.306)  # y min.
+        fit_stats_uncorr.SetY2NDC(0.417)
         fit_stats_uncorr.SetBorderSize(1)
         fit_stats_uncorr.SetTextColor(r.kBlue)
         line2change = fit_stats_uncorr.GetLineWith("Fit")
@@ -717,10 +771,10 @@ class KinBin2D:
         line2change.SetTitle(r"%s before p_{T} corrections:" % oldtext)
 
         fit_stats_corr = frame_corr.findObject("TPave")
-        fit_stats_corr.SetX1NDC(0.13)
-        fit_stats_corr.SetX2NDC(0.38)
-        fit_stats_corr.SetY1NDC(0.66)  # y min.
-        fit_stats_corr.SetY2NDC(0.77)
+        fit_stats_corr.SetX1NDC(0.179)
+        fit_stats_corr.SetX2NDC(0.430)
+        fit_stats_corr.SetY1NDC(0.195)  # y min.
+        fit_stats_corr.SetY2NDC(0.306)
         fit_stats_corr.SetBorderSize(1)
         fit_stats_corr.SetTextColor(r.kRed)
         # Change some of the text in this pave.
@@ -736,6 +790,8 @@ class KinBin2D:
 
         # Make a box showing the improvement.
         pave_sig_improve = make_TPave(w=0.25, h=0.06, topright_corner_pos=(0.38, 0.66))
+        pave_sig_improve.SetY1NDC(0.135)
+        pave_sig_improve.SetY2NDC(0.195)
         txt_improve  = r"#frac{#left|#sigma_{corr.} - #sigma#right|}{#sigma} = "
         txt_improve += r"%.4g #pm %.4g" % (abs(self.sigma_perc_improve), self.sigma_perc_improve_err) + "%"
         pave_sig_improve.AddText(txt_improve)
@@ -854,7 +910,7 @@ class KinBin3D(KinBin2D):
                          binned_fit=False, fit_whole_range_first_iter=True,
                          iters=2, num_sigmas=2.5,
                          switch_to_binned_fit=2000, verbose=False, alarm_level="warning",
-                         use_data_in_xlim=False):
+                         use_data_in_xlim=False, use_smart_window=False):
         """Analyze and store dpT/pT and qd0 muon info within this KinBin3D.
         Also perform iterated Gaussian fits on the dpT/pT dist.
         
@@ -880,6 +936,11 @@ class KinBin3D(KinBin2D):
             If n_entries in array > switch_to_binned_fit, then a binned fit will be done.
         verbose : bool
             If True, print juicy debug info.
+        use_smart_window : bool
+            If True, then set left edge of window at the first x val whose bin
+            height > 5% of the max bin height.
+            Overrides any values passed to x_lim.
+            Still works with `use_data_in_xlim`, which just trims data range.
         """
         self.n_entries = len(self.muon_ls)
         self.fit_type = "BINNED" if binned_fit else "UNBINNED"
@@ -887,12 +948,12 @@ class KinBin3D(KinBin2D):
             print(
                 f"[INFO] Analyzing KinBin3D:"
                 f"[INFO]   {self.get_bin_key()} with {self.n_entries} entries\n"
-                f"[INFO] Performing {iters} Gaussian fits using RooFit."
-                f"[INFO] Making dpT/pT and q*d0 distributions."
+                f"[INFO] Performing {iters} Gaussian fits using RooFit.\n"
+                f"[INFO] Making dpT/pT and q*d0 distributions.\n"
                 f"[INFO] Doing {self.fit_type} fits."
                 )
         # Calculate averages.
-        oneOverpT_ls = [1/mu.pT for mu in self.muon_ls]
+        oneOverpT_ls = [1 / mu.pT for mu in self.muon_ls]
         pT_ls = [mu.pT for mu in self.muon_ls]
         qd0_ls = [mu.charge * mu.d0 for mu in self.muon_ls]
         self.avg_1OverpT = np.mean(oneOverpT_ls)
@@ -903,9 +964,11 @@ class KinBin3D(KinBin2D):
         self.seom_avg_pT = get_standarderrorofmean(pT_ls)
         self.seom_avg_qd0 = get_standarderrorofmean(qd0_ls)
         # Make hists.
-        self.make_dpTOverpT_hist(n_bins=bins_dpTOverpT, x_lim=x_lim_dpTOverpT)
-        self.make_qd0_hist(n_bins=bins_qd0, x_lim=x_lim_qd0)
-        # Perform fits.
+        self.make_kinematic_hists(muon_pT_corr=False)
+        # self.make_dpTOverpT_hist(n_bins=bins_dpTOverpT, x_lim=x_lim_dpTOverpT)
+        # self.make_qd0_hist(n_bins=bins_qd0, x_lim=x_lim_qd0)
+        #--- Perform fits ---#
+        # dpT/pT fits.
         self.fit_stats_dict_dpTOverpT, self.frame_dpTOverpT = RooFit_iterative_gaus_fit(
                                 data=self.get_dpTOverpT_ls(), 
                                 binned_fit=binned_fit, switch_to_binned_fit=switch_to_binned_fit, 
@@ -917,30 +980,34 @@ class KinBin3D(KinBin2D):
                                 units="", marker_color=1,
                                 force_last_line_color=None, only_draw_last=False,
                                 verbose=verbose, view_plot=False,
-                                use_data_in_xlim=use_data_in_xlim)
+                                use_data_in_xlim=use_data_in_xlim,
+                                use_smart_window=use_smart_window)
         for stat in ["mean_ls", "mean_err_ls", "std_ls", "std_err_ls"]:
             check_fit_convergence(self.fit_stats_dict_dpTOverpT[stat],
                                   max_perc_diff=5,
                                   compare_to_last=3,
                                   alarm_level=alarm_level)
         # q*d0 fits.
-        self.fit_stats_dict_1OverpT, self.frame_1OverpT = RooFit_iterative_gaus_fit(
-                                data=[1/mu.pT for mu in self.muon_ls], 
-                                binned_fit=binned_fit, switch_to_binned_fit=switch_to_binned_fit, 
-                                iters=iters, num_sigmas=num_sigmas, 
-                                n_bins=bins_1OverpT, x_lim=x_lim_1OverpT,
-                                fit_whole_range_first_iter=fit_whole_range_first_iter,
-                                xframe=None, x_label=r"1/p_{T}^{RECO}", 
-                                title=r"%s" % self.make_latex_bin_cut_str(), 
-                                units="", marker_color=1,
-                                force_last_line_color=None, only_draw_last=False,
-                                verbose=verbose, view_plot=False,
-                                use_data_in_xlim=use_data_in_xlim)
-        for stat in ["mean_ls", "mean_err_ls", "std_ls", "std_err_ls"]:
-            check_fit_convergence(self.fit_stats_dict_1OverpT[stat],
-                                  max_perc_diff=5,
-                                  compare_to_last=3,
-                                  alarm_level=alarm_level)
+        self.fit_stats_dict_qd0, self.frame_qd0 = None, None
+        # self.fit_stats_dict_qd0, self.frame_qd0 = RooFit_iterative_gaus_fit(
+        #                         data=[mu.charge * mu.d0 for mu in self.muon_ls], 
+        #                         binned_fit=binned_fit, switch_to_binned_fit=switch_to_binned_fit, 
+        #                         iters=iters, num_sigmas=num_sigmas, 
+        #                         n_bins=bins_qd0, x_lim=x_lim_qd0,
+        #                         fit_whole_range_first_iter=fit_whole_range_first_iter,
+        #                         xframe=None, x_label=r"q#upointd_{0}", 
+        #                         title=r"%s" % self.make_latex_bin_cut_str(), 
+        #                         units="cm", marker_color=1,
+        #                         force_last_line_color=None, only_draw_last=False,
+        #                         verbose=verbose, view_plot=False,
+        #                         use_data_in_xlim=use_data_in_xlim,
+        #                         use_smart_window=use_smart_window)
+        # for stat in ["mean_ls", "mean_err_ls", "std_ls", "std_err_ls"]:
+        #     check_fit_convergence(self.fit_stats_dict_qd0[stat],
+        #                           max_perc_diff=5,
+        #                           compare_to_last=3,
+        #                           alarm_level=alarm_level)
+
         # 1/pT fits. Deprecated for now. Don't need these fits.
         self.fit_stats_dict_1OverpT, self.frame_1OverpT = None, None
         # self.fit_stats_dict_1OverpT, self.frame_1OverpT = RooFit_iterative_gaus_fit(
@@ -955,11 +1022,11 @@ class KinBin3D(KinBin2D):
         #                         force_last_line_color=None, only_draw_last=False,
         #                         verbose=verbose, view_plot=False,
         #                         use_data_in_xlim=use_data_in_xlim)
-        for stat in ["mean_ls", "mean_err_ls", "std_ls", "std_err_ls"]:
-            check_fit_convergence(self.fit_stats_dict_1OverpT[stat],
-                                  max_perc_diff=5,
-                                  compare_to_last=3,
-                                  alarm_level=alarm_level)
+        # for stat in ["mean_ls", "mean_err_ls", "std_ls", "std_err_ls"]:
+        #     check_fit_convergence(self.fit_stats_dict_1OverpT[stat],
+        #                           max_perc_diff=5,
+        #                           compare_to_last=3,
+        #                           alarm_level=alarm_level)
 
     def calc_avg_qd0(self):
         """Return the unweighted mean of the qd0 values of all muons in this KinBin3D."""
@@ -969,7 +1036,7 @@ class KinBin3D(KinBin2D):
                            eta_binedge_ls, pT_binedge_ls,
                            verbose=False):
         """Return a list of the MyMuon objects in this KinBin3D
-        with their pT corrected using the ad hoc d0 method."""
+        with their pT corrected using the AdHoc d0 method."""
         corr_mu_ls = []
         for mu in self.muon_ls:
             mu.pT_corr = correct_muon_pT(mu.eta, mu.pT, mu.charge, mu.d0, 

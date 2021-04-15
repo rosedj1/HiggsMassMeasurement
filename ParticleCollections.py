@@ -15,8 +15,8 @@ from Utils_Python.printing import print_header_message
 from Utils_ROOT.ROOT_classes import make_TH1F
 from d0_Studies.d0_Utils.d0_cls import KinBin2D
 from d0_Studies.d0_Utils.d0_fns import (correct_muon_pT, parse_etapT_key,
-                                       get_binedges_from_keys, make_key_from_binedges)
-from d0_Utils.d0_fns import find_bin_edges_of_value
+                                       get_binedges_from_keys, make_key_from_binedges,
+                                       find_bin_edges_of_value)
 from d0_Studies.d0_Utils.d0_dicts import process_dct, color_dict_RooFit
 
 def check_n_muons(prod_mode, muon_ls, per_event=True):
@@ -673,7 +673,7 @@ class MyMuonCollection:
             kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_1divpT=False, fit_with_zero_interc=fit_with_zero_interc)
             kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_1divpT=True, fit_with_zero_interc=fit_with_zero_interc)
             kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_avgOf1divpT=True, fit_with_zero_interc=fit_with_zero_interc)
-            kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_muOf1divpT=True, fit_with_zero_interc=fit_with_zero_interc)
+            # kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_muOf1divpT=True, fit_with_zero_interc=fit_with_zero_interc)
             self.kinbin2d_graph_ls.extend([kb2d.gr_dpTOverpT_vs_qd0])
             self.kinbin2d_graph_ls.extend([kb2d.gr_dpTOverpTscaled_vs_qd0])
             self.kinbin2d_graph_ls.extend([kb2d.gr_dpTOverpTtimesavgOf1divpT])
@@ -1086,13 +1086,13 @@ class MyMuonCollection:
             slope = fit.GetParameter(1)
             eqn  = r"%.0f < p_{T} < %.0f GeV: " % (gr.pT_min, gr.pT_max)
             if scale_by_1divpT:
-                eqn += r"#Deltap_{T}/p_{T} #upoint 1/<p_{T}> = %.3E/GeV + (%.3f/[cm#upointGeV]) #upoint qd_{0}" % (interc, slope)
+                eqn += r"#Deltap_{T}/p_{T}#upoint (1/<p_{T}>) = %.3E/GeV + (%.3f/[cm#upointGeV]) #upoint qd_{0}" % (interc, slope)
             elif scale_by_avgOf1divpT:
-                eqn += r"#Deltap_{T}/p_{T} #upoint <1/p_{T}> = %.3E/GeV + (%.3f/[cm#upointGeV]) #upoint qd_{0}" % (interc, slope)
+                eqn += r"#Deltap_{T}/p_{T}#upoint (<1/p_{T}>) = %.3E/GeV + (%.3f/[cm#upointGeV]) #upoint qd_{0}" % (interc, slope)
             elif scale_by_muOf1divpT:
-                eqn += r"#Deltap_{T}/p_{T} #upoint #mu_{Gauss}(1/p_{T}) = %.3E/GeV + (%.3f/[cm#upointGeV]) #upoint qd_{0}" % (interc, slope)
+                eqn += r"#Deltap_{T}/p_{T}#upoint (#mu_{Gauss}(1/p_{T})) = %.3E/GeV + (%.3f/[cm#upointGeV]) #upoint qd_{0}" % (interc, slope)
             else:
-                eqn += r"#Deltap_{T}/p_{T} = %.3E + (%.3f/cm)#upointqd_{0}" % (interc, slope)
+                eqn += r"#Deltap_{T}/p_{T} = %.3E + (%.3f/cm) #upoint qd_{0}" % (interc, slope)
             txt = leg.AddText(eqn)
             txt.SetTextColor(fit.text_color)
             fit.Draw("same")

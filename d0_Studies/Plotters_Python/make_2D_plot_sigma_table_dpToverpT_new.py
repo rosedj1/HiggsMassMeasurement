@@ -27,7 +27,7 @@
 # SYNTAX: python this_script.py
 # AUTHOR: Jake Rosenzweig
 # CREATED: <=2020-07-24
-# UPDATED: 2021-04-08
+# UPDATED: 2021-04-14
 """
 import os
 import pickle
@@ -41,13 +41,14 @@ from d0_Studies.Plotters_Python.plotter_2D import make_hist_and_errhist
 from Utils_ROOT.ROOT_classes import set_TH2F_errs#make_TH2F
 
 #--- User Parameters ---#
-year = "2017"
-process_derive = r"DY+J/#psi"
+year = "2016"
+process_derive = "DY" #r"DY+J/#psi"
 method = "AdHoc"
-# inpath_sigmadict = f"/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/plots/qd0/MC{year}JpsiDY_2D_plot_qd0dist_gausiterfitsigmas_4unbinnedfits_0p0eta2p4_5p0pT1000p0GeV.pkl"
-# inpath_sigmadict = f"/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/KinBin_Info/20200709_MC{year}_combinesamples_applycorr_fullstats_2p00sigmas__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
-# inpath_sigmadict = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/pkl_and_csv/MC{year}JpsiDY_gausiterfitsigmas_final_delta_pToverRecpT_5unbinnedfits_0p0eta2p4_5p0pT1000p0GeV.pkl"
-inpath_sigmadict = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/FitStats/MC{year}_fitstats_combinesamples_applycorr_fullstats_2p00sigmas__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
+# inpkl_muoncoll = f"/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/plots/qd0/MC{year}JpsiDY_2D_plot_qd0dist_gausiterfitsigmas_4unbinnedfits_0p0eta2p4_5p0pT1000p0GeV.pkl"
+# inpkl_muoncoll = f"/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/KinBin_Info/20200709_MC{year}_combinesamples_applycorr_fullstats_2p00sigmas__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
+# inpkl_muoncoll = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/pkl_and_csv/MC{year}JpsiDY_gausiterfitsigmas_final_delta_pToverRecpT_5unbinnedfits_0p0eta2p4_5p0pT1000p0GeV.pkl"
+# inpkl_muoncoll = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/FitStats/MC{year}_fitstats_combinesamples_applycorr_fullstats_2p00sigmas__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
+inpkl_muoncoll = f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/ApplyCorr/MC2016DY2mu/MC2016DY_finalmuoncoll_allitergaussfitsonKB2DsandKB3Ds_redo.pdf"
 # FOR QD0: outfile_path = f"/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/plots/qd0/MC{year}JpsiDY_2Dplot_qd0dist_gausiterfitsigmas_4unbinnedfits_0p0eta2p4_5p0pT1000p0GeV_final.pdf"
 outfile_path =     f"/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/plots/2Dtables_pTvseta/sigmadpToverpTimprov_MC{year}JpsiDYmuons_6unbinnedfits_0p0eta2p4_5p0pT1000p0GeV_narrowcolor.pdf"
 # outfile_path = f"/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/plots/2D_tables_etavspT/MC{year}JpsiDY_2Dplot_dpToverpTimprovement_gausiterfitsigmas_6unbinnedfits_0p0eta2p4_5p0pT1000p0GeV_final.pdf"
@@ -94,9 +95,9 @@ formatting_improv = ".3f"
 eta_binedge_ls = equal_entry_bin_edges_eta_mod1_wholenum
 pT_binedge_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum
 #--- Local Functions ---#
-def validate(year, inpath_sigmadict, outfile_path):
+def validate(year, inpkl_muoncoll, outfile_path):
     """Make sure specified paths and variables are consistent."""
-    assert all(year in f for f in [inpath_sigmadict, outfile_path])
+    assert all(year in f for f in [inpkl_muoncoll, outfile_path])
 
 def get_associated_keys(dict_sigmas, eta_min, eta_max, pT_min, pT_max):
     """
@@ -109,11 +110,11 @@ def get_associated_keys(dict_sigmas, eta_min, eta_max, pT_min, pT_max):
     key_ls = sorted(keys)  # Goes: [h_2.3eta2.4_1..._dpToverpT, h_2.3eta2.4_1..._dpToverpTcorr]
     return key_ls
 
-def get_sigma_and_err(key, dict_sigmas):
-    """Return the best-fit iterated Gaussian fit sigma from the dict."""
-    sig = dict_sigmas[key]['std_ls'][-1]  # Last element is the last/best fit value.
-    sig_err = dict_sigmas[key]['std_err_ls'][-1]
-    return (sig, sig_err)
+# def get_sigma_and_err(key, kb2d):
+#     """Return the best-fit iterated Gaussian fit sigma from the dict."""
+#     sig = kb2d[key]['std_ls'][-1]  # Last element is the last/best fit value.
+#     sig_err = kb2d[key]['std_err_ls'][-1]
+#     return (sig, sig_err)
 
 def fill_hists_with_dict_dpToverpTvals(eta_binedge_ls, pT_binedge_ls,
                                       h2_before_corr, h2_before_corr_err,
@@ -148,9 +149,13 @@ def fill_hists_with_dict_dpToverpTvals(eta_binedge_ls, pT_binedge_ls,
         If True, dpT/pT 2D tables will show percentages on cells.
     """
     scale = 100.0 if use_percentage else 1.0
+    for kb2d in mu_coll.KinBin2D_dict.values():
+        sigma = kb2d.bestfit_std_beforecorr
+        sigma_err = kb2d.bestfit_stderr_beforecorr
+        sigma_corr = kb2d.bestfit_std_afterecorr
     for eta_min,eta_max in zip(eta_binedge_ls[:-1], eta_binedge_ls[1:]):
         for pT_min,pT_max in zip(pT_binedge_ls[:-1], pT_binedge_ls[1:]):
-            key, key_corr = get_associated_keys(dict_sigmas, eta_min, eta_max, pT_min, pT_max)
+            # key, key_corr = get_associated_keys(dict_sigmas, eta_min, eta_max, pT_min, pT_max)
             sigma, sigma_err = get_sigma_and_err(key, dict_sigmas)
             sigma_corr, sigma_corr_err = get_sigma_and_err(key_corr, dict_sigmas)
             improv = (sigma_corr - sigma) / sigma
@@ -212,9 +217,12 @@ def make_pdf(h_before_corr, h_after_corr, h_improve, outfile_path):
 
 if __name__ == "__main__":
     make_dirs(os.path.dirname(outfile_path))
-    validate(year, inpath_sigmadict, outfile_path)
+    validate(year, inpkl_muoncoll, outfile_path)
     check_overwrite(outfile_path, overwrite=overwrite)
-    dict_sigmas = open_pkl(inpath_sigmadict)
+    # dict_sigmas = open_pkl(inpkl_muoncoll)
+    mu_coll = open_pkl(inpkl_muoncoll)
+    kb2d_ls = list(mu_coll.KinBin2D_dict.values())
+    # Prep tables.
     h2_before_corr, h2_before_corr_err = make_hist_and_errhist("before_corr", title=title_2D_plot_before_corr, 
               n_binsx=pT_binedge_ls, x_label="p_{T}", x_units="GeV",
               n_binsy=eta_binedge_ls, y_label="#left|#eta#right|", y_units=None,

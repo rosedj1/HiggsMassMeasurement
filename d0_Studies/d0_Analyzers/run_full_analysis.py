@@ -1,14 +1,21 @@
-"""Derive and Apply AdHoc pT Correction Factors
+"""Derive AdHoc pT Correction Factors
 
+This code runs a series of scripts to derive AdHoc pT correction factors from 
+a muon sample (DY, ggH, etc.)
+
+Parameters
+----------
+infile_path : The root file from which muons will be pulled.
 """
+from Utils_Python.Utils_Files import make_dirs #open_pkl, save_to_pkl, check_overwrite
+sample_type = "MC"  # "MC", "Data"
 year = "2016"
-prod_mode = "DY2mu"
+prod_mode = "DY2mu"  # "DY2mu", "DY2e", "H2mu", "H2e", "H4mu", "H4e"
 outfile_prefix = "fullanalysis_test01"
 infile_path = "/cmsuf/data/store/user/t2/users/ferrico/SingleBS_studies/After/DY_2018_2.root"
 
-outtxt_dir    = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2018DY/output/"
-outcopies_dir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2018DY/copies/"
-outpkl_dir    = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2018/DY/"
+outdir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/"
+
 
 submit_to_slurm = True
 
@@ -30,6 +37,12 @@ mem = (8, 'gb')
 nodes = 4
 burst = True
 
+make_dirs(os.path.join(outdir, ""))
+assert sample_type in ('MC', 'Data')
+
+outtxt_dir    = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2018DY/outtxt"
+outcopies_dir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2018DY/copies"
+outpkl_dir    = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2018/DY/"
 
 import argparse
 parser = argparse.ArgumentParser(description='')
@@ -148,6 +161,75 @@ if submit_to_slurm:
     
     python /blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/save_kb2ds_separate_dicts.py 
 
-#------------------------------#
-#--- Step 4: Separate KB2Ds ---#
-#------------------------------#
+#-----------------------------#
+#--- Step 4: Analyze KB3Ds ---#
+#-----------------------------#
+    # year = "2016"
+    # overwrite = 0
+    # verbose = 0
+
+    # iters = 2
+    # fit_with_zero_interc = True
+    # regions = 4
+    # min_muons_per_qd0_bin = 100
+    # fit_whole_range_first_iter = False  # False gives more consistent fits (with no outlier data).
+    # use_data_in_xlim = 1
+    # binned_fit = False
+    # switch_to_binned_fit = 999999999
+
+    # job_name_base = "MC2016DY_individKB2D_withitergaussfitsonKB3Ds_fitwithzerointerc"  # Also prefix for outfile.
+    # # job_name_base = "MC2016DY_individKB2D_withitergaussfitsonKB3Ds_nogenmatching_0p0_d0_0p01"  # Also prefix for outfile.
+    # # eta_ls = eta_bins_geofitvsVXBS #equal_entry_bin_edges_eta_mod1_wholenum
+    # eta_ls = equal_entry_bin_edges_eta_mod1_wholenum[0:2]
+    # # full_pT_ls = pT_bins_geofitvsVXBS  #[20.0, 30.0, 40.0, 50.0] #bin_edges_pT_sevenfifths_to1000GeV_wholenum
+    # full_pT_ls = bin_edges_pT_sevenfifths_to1000GeV_wholenum[0:2]
+
+    # template_script_main = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/submit_singlekb2d_itergaussfitsonkb3ds_template.py"
+    # # template_script_main = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/derive_pTcorrfactors_from_ggH_sample_template.py"
+    # template_script_slurm = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/submit_to_slurm_template.sbatch"
+    # # template_script_slurm = "/blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/RochCorrAnalyzers/roch_vs_noroch_slurm.sbatch"
+
+    # # inpkl_path_template = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/pickles/2016/DY/MC2016DY_skim_fullstats_nogenmatching/kb2d_dictsnofitinfo/MC2016DY_fullstats_muoncoll_withkb3dbins_nogenmatching_0p0_d0_0p01__ETAPART_PTPART.pkl"
+    # inpkl_path_template = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/skim_fullstats_verify/pickles/kb2d_dicts/ETAPART_PTPART.pkl"
+
+    # # /cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/output/DeriveCorrections/2016DY/individualKB2Ditergaussfits/MC2016DY_kb2d_ETARANGE_PTRANGE_error.log
+    # outdir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu"
+    # outdir_copies = os.path.join(outdir, f"{job_name_base}/copies")
+    # outdir_pkl    = os.path.join(outdir, f"{job_name_base}/pickles")
+    # outdir_txt    = os.path.join(outdir, f"{job_name_base}/output")
+    # outdir_pdf    = os.path.join(outdir, f"{job_name_base}/plots")
+
+    # # SLURM directives.
+    # partition = "hpg2-compute"
+    # mem = (8, 'gb')
+    # nodes = 1
+    # burst = True
+    # time = "01:00:00"  # hh:mm:ss
+
+    step4_flags = ()
+    python /blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/slurm_inbatch_singlekb2d_itergaussfitsonkb3ds.py
+
+#---------------------------#
+#--- Step 5: Merge KB2Ds ---#
+#---------------------------#
+    # Inputs:
+    # year = "2016"
+    # prod_mode = "DY2mu"
+    # inpkl_path_template = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/individKB2DwithitergaussfitsonKB3Ds_fitwithzerointerc/pickles/individKB2DwithitergaussfitsonKB3Ds_fitwithzerointerc_*.pkl"
+    # overwrite = 0
+    # make_pTcorrdict = 1
+    # outfilename_base = "muoncoll_itergaussfitsonKB3Ds"
+    # outpkl_dir = "/cmsuf/data/store/user/t2/users/rosedj1/HiggsMassMeasurement/d0_studies/DeriveCorr/MC2016DY2mu/muoncollwithfitstats"
+    python /blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/merge_individkb2ds_and_make_pTcorrfactordict.py
+
+
+# IN APPLY CORRECTION SCRIPT:
+
+# Merge KB2Ds but don't make pT corr dict (it was already made).
+# Name outfile with prefix like: "muoncoll_withKB2Dfits_beforeaftercorr"
+make_pTcorrdict = 0
+python merge_individkb2ds_and_make_pTcorrfactordict.py
+# Take the muoncoll which gets made and pass it into next script:
+
+# Merge MuonColls.
+python /blue/avery/rosedj1/HiggsMassMeasurement/d0_Studies/d0_Analyzers/merge_muoncoll_withgraphsandwithbeforeaftercorr.py

@@ -139,7 +139,7 @@ class SLURMSubmitter:
             print("[FAIL] You need to specify some commands.")
             return 1
         slurm_outpath += ".sbatch" if ".sbatch" not in slurm_outpath else ""
-        check_overwrite(slurm_outpath, overwrite)
+        # check_overwrite(slurm_outpath, overwrite)
         # output = shell_cmd(f"touch {slurm_outpath}")  # Doesn't delete file if file exists.
         with open(slurm_outpath, "w") as f:
             if self.verbose:

@@ -9,7 +9,7 @@ import numpy as np
 # from matplotlib.colors import ListedColormap
 
 from Utils_Python.Utils_Files import make_dirs, make_str_title_friendly
-from d0_Utils.d0_fns import account_for_underoverflow_entries
+from d0_Studies.d0_Utils.d0_fns import account_for_underoverflow_entries
 
 def change_cmap_bkg_to_white(colormap, n=256):
     """

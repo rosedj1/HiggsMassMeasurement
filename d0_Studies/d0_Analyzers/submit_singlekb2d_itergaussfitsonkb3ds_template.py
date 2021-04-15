@@ -14,7 +14,7 @@ The processed KB2D is then pickled into a new file.
 Syntax: python this_script.py
 Author: Jake Rosenzweig
 Created: 2021-03-14  # Happy pi day!
-Updated: 2021-04-09
+Updated: 2021-04-14
 """
 import os
 from Utils_ROOT.Printer import CanvasPrinter
@@ -37,7 +37,8 @@ x_lim_1OverpT = [0, 0.2] #None
 
 binned_fit = BINNED_FIT
 fit_whole_range_first_iter = False
-iters = 5
+use_smart_window = USE_SMART_WINDOW
+iters = ITERS
 num_sigmas = 2.5
 use_data_in_xlim = True
 # auto_range = True
@@ -45,8 +46,8 @@ switch_to_binned_fit = 999999999
 alarm_level = "warning"
 fit_with_zero_interc = FIT_WITH_ZERO_INTERC
 
-regions = 12  # Number of q*d0 bins per KB2D.
-min_muons_per_qd0_bin = 100
+regions = REGIONS  # Number of q*d0 bins per KB2D.
+min_muons_per_qd0_bin = MIN_MUONS_PER_QD0_BIN
 
 delete_kb3d_muons = True
 
@@ -69,7 +70,8 @@ def do_itergaussfits_on_kb3ds(kb2d):
                             iters=iters, num_sigmas=num_sigmas, 
                             switch_to_binned_fit=switch_to_binned_fit,  
                             verbose=verbose, alarm_level=alarm_level, 
-                            use_data_in_xlim=use_data_in_xlim)
+                            use_data_in_xlim=use_data_in_xlim,
+                            use_smart_window=use_smart_window)
         
         print_header_message(f"KB3D done: eta={kb3d.eta_range} pT={kb3d.pT_range}")
 
@@ -101,7 +103,7 @@ def main():
     kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_1divpT=False, fit_with_zero_interc=fit_with_zero_interc)
     kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_1divpT=True, fit_with_zero_interc=fit_with_zero_interc)
     kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_avgOf1divpT=True, fit_with_zero_interc=fit_with_zero_interc)
-    kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_muOf1divpT=True, fit_with_zero_interc=fit_with_zero_interc)
+    # kb2d.make_dpTOverpT_graph(color=4, do_fit=True, scale_by_muOf1divpT=True, fit_with_zero_interc=fit_with_zero_interc)
     # Also make dpT/pT * <1/pT> vs. qd0 plots (notice where < > is!).
     if delete_kb3d_muons:
         for kb3d in kb2d.KinBin3D_dict.values():
