@@ -7,15 +7,23 @@ class CanvasPrinter:
 
     def __init__(self, show_plots=False, show_statsbox=True, canv=None):
         r.gROOT.SetBatch(not show_plots)  # SetBatch(True) means don't show plots.
-        self.make_plots_pretty(show_statsbox=show_statsbox)
+        self.style = self.make_plots_pretty(show_statsbox=show_statsbox)
         # self.canv = r.TCanvas("c1", "c1", 550, 600) if canv is None else canv
         self.canv = r.TCanvas() if canv is None else canv
 
-    def make_plots_pretty(self, show_statsbox=True):
+    def make_plots_pretty(self, show_statsbox=True,
+                                pad_top_margin=0.10,
+                                pad_bottom_margin=0.10,
+                                pad_left_margin=0.15,
+                                pad_right_margin=0.05):
         """Activate a TStyle which sets a consistent style for all plots."""
-        tdrStyle = setTDRStyle(show_statsbox=show_statsbox)
-        tdrGrid(tdrStyle, gridOn=True)
-        # return tdrStyle
+        tdrStyle = setTDRStyle(show_statsbox=show_statsbox,
+                pad_top_margin=pad_top_margin,
+                pad_bottom_margin=pad_bottom_margin,
+                pad_left_margin=pad_left_margin,
+                pad_right_margin=pad_right_margin)
+        tdrGrid(tdrStyle, gridOn=False)
+        return tdrStyle
 
     def make_pdf_of_plots(self, plot_ls, outpdf_path):#, use_TDR_style=True):
         """For each plot in plot_ls, draw the plots to outpdf_path."""

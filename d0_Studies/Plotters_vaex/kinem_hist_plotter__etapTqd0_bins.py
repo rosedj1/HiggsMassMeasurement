@@ -27,7 +27,7 @@ from d0_Studies.kinematic_bins import (equal_entry_bin_edges_eta_mod1)
 from d0_Utils.d0_dicts import label_LaTeX_dict
 from d0_Utils.d0_fns import make_binning_array
 
-from Utils_Python.printing import print_header_message
+from Utils_Python.printing import announce
 from PyUtils.Utils_Physics import perc_diff
 from PyUtils.Utils_Files import makeDirs, make_str_title_friendly, check_overwrite
 from PyUtils.Utils_Plotting import hist_y_label, make_1D_dist, ncolsrows_from_nplots
@@ -217,7 +217,7 @@ for k in range(len(eta_ls)-1):
             plt.close("all")
 
             msg = "  Page {}/{} made. Time taken: {:.2f} s".format(j+1, n_pages, t_end - t_start)
-            print_header_message(msg)
+            announce(msg)
             print()
 
         # End pT loop. Make next page.

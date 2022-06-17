@@ -24,7 +24,7 @@ from glob import glob
 from pprint import pprint
 from ParticleCollections import MyMuonCollection
 from Utils_Python.Utils_Files import open_pkl, save_to_pkl, check_overwrite
-from Utils_Python.printing import print_header_message
+from Utils_Python.printing import announce
 from d0_Studies.kinematic_bins import (equal_entry_bin_edges_eta_mod1_wholenum,
                                        bin_edges_pT_sevenfifths_to1000GeV_wholenum,
                                        eta_bins_geofitvsVXBS, pT_bins_geofitvsVXBS)
@@ -69,7 +69,7 @@ for indir in indirs:
     file_ls = glob(os.path.join(indir, glob_template))
     pkl_file_ls.extend(file_ls)
 assert len(pkl_file_ls) > 0, "No files were globbed."
-print_header_message(f"Globbed {len(pkl_file_ls)} files:")
+announce(f"Globbed {len(pkl_file_ls)} files:")
 pprint(pkl_file_ls)
 # Empty muon collection to which all others will add.
 mu_coll = MyMuonCollection(prod_mode)

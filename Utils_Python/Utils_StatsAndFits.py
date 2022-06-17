@@ -8,7 +8,7 @@ from d0_Studies.d0_Utils.d0_dicts import color_dict, label_LaTeX_dict
 # from Utils_ROOT.ROOT_StatsAndFits import RooFit_gaus_fit  # FIXME: Giving circular import error.
 from Utils_Python.Utils_Plotting import make_stats_legend_for_gaus_fit
 from Utils_Python.Utils_Physics import perc_diff
-from Utils_Python.printing import print_header_message
+from Utils_Python.printing import announce
 
 #-----------------------------#
 #----- Fitting Functions -----#
@@ -583,7 +583,7 @@ def iterative_fit_gaus(iterations, bin_edges, bin_vals,
                 # if either ydata or xdata contain NaNs, or if incompatible options are used.
                 error = "ValueError"
                 msg = "[WARNING] {} encountered during fit. Continuing on...".format(error)
-                print_header_message(msg, pad_char="!", n_center_pad_chars=10)
+                announce(msg, pad_char="!", n_center_pad_chars=10)
                 if (skip_bad_fit):
                     fit_converged = False
                 else:
@@ -593,7 +593,7 @@ def iterative_fit_gaus(iterations, bin_edges, bin_vals,
                 # if the least-squares minimization fails.
                 error = "RuntimeError"
                 msg = "[WARNING] {} encountered during fit. Continuing on...".format(error)
-                print_header_message(msg, pad_char="!", n_center_pad_chars=10)
+                announce(msg, pad_char="!", n_center_pad_chars=10)
                 if (skip_bad_fit):
                     fit_converged = False
                 else:
@@ -603,7 +603,7 @@ def iterative_fit_gaus(iterations, bin_edges, bin_vals,
                 # if the least-squares minimization fails.
                 error = "OptimizeWarning"
                 msg = "[WARNING] {} encountered during fit. Continuing on...".format(error)
-                print_header_message(msg, pad_char="!", n_center_pad_chars=10)
+                announce(msg, pad_char="!", n_center_pad_chars=10)
                 if (skip_bad_fit):
                     fit_converged = False
                 else:
@@ -1048,3 +1048,15 @@ def get_bestfit_vals_from_statsdict(d, check_convergence=False):
     bf_std      = d["std_ls"][-1]
     bf_std_err  = d["std_err_ls"][-1]
     return (bf_mean, bf_mean_err, bf_std, bf_std_err)
+
+def get_total_uncert(*uncert_vals):
+    """Return the total uncertainty by using uncertainty formula.
+
+    1/(uncert_1)^2 + 1/(uncert_2)^2 + ... = 1/(uncert_tot)^2
+
+    Returns `uncert_tot`
+    """
+    tot_inv_sq = 0
+    for val in uncert_vals:
+        tot_inv_sq += (1 / float(val) ** 2)
+    return np.sqrt(1 / tot_inv_sq)

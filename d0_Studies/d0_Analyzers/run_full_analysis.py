@@ -53,6 +53,7 @@ if args.v:
 
 # With `action="store_true"`, just specify the flag;
 # don't provide an option, in the true spirit of flags.
+parser.add_argument("--outpath", dest="outpath", type=str)
 parser.add_argument("-v", "--verbose", help="increase output verbosity",
                     action="store_true", default=False)
 parser.add_argument('--min', dest='min_Zmass', type=float, help='min for Zmass')
@@ -63,7 +64,8 @@ parser.add_argument('--doubleCB_tail',dest='doubleCB_tail', nargs='+', help='', 
 args = parser.parse_args()
 
 # Retrieve values from args object.
-args.Z_width
+zwidth = args.Z_width
+
 massZErr_rel_min = args.min_relM2lErr
 
 # This is the correct way to handle accepting multiple arguments.

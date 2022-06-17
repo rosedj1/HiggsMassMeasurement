@@ -3,6 +3,8 @@ import ROOT as r
 ID_charge_dct = {
      13 : -1,
     -13 :  1,
+     11 : -1,
+    -11 :  1,
 }
 
 class MyParticle:
@@ -31,6 +33,26 @@ class MyParticle:
         self.charge = None
         self.ID = None
         self.d0 = None
+
+    def __add__(self, mypart2, kind):
+        """Return new MyParticle from self + mypart2 using LorentzVectors.
+
+        Args:
+            mypart2 (MyParticle): {article whose kinematics are added to self.
+            kind (str): The kind of kinematics: from "gen", "reco", "withFSR".
+
+        Returns:
+            MyParticle: Whose kinematics are filled.
+        """
+        new_part = MyParticle()
+        new_lorvec = self.get_LorentzVector(kind=kind) + mypart2.get_LorentzVector(kind=kind)
+        new_part.set_PtEtaPhiMass_fromLorentzVector(new_lorvec, kind=kind)
+        return new_part
+
+    def set_PtEtaPhiMass_fromLorentzVector(self, lorvec, kind):
+        """Store the kinematics from LorentzVector into this MyParticle."""
+        # lorvec.Get
+        pass
 
     def charge_from_ID(self, ID):
         return ID_charge_dct[ID]
@@ -110,3 +132,24 @@ class MyMuon(MyParticle):
             return -13
         else:
             raise TypeError(f"Based on the charge ({q}), this is not a muon!")
+
+class MyElectron(MyParticle):
+    """A class to organize electron info."""
+
+    def __init__(self, q):
+        """Initialize an electron using it's charge (q)."""
+        self.isFermion = True
+        self.isLepton = True
+        self.flavor = "electron"
+        self.gen_mass = 0.000511  # GeV
+        self.charge = q
+
+        self.ID = self.ID_from_charge(q)
+
+    def ID_from_charge(self, q):
+        if q == -1:
+            return 11
+        elif q == 1: 
+            return -11
+        else:
+            raise TypeError(f"Based on the charge ({q}), this is not an electron!")

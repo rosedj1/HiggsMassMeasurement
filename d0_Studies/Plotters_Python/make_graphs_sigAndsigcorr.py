@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 # Local imports.
 from Utils_Python.Utils_StatsAndFits import Andrey_prop_err_on_dsigoversig
 from Utils_Python.Utils_Files import check_overwrite, make_str_title_friendly
-from Utils_Python.printing import print_header_message
+from Utils_Python.printing import announce
 from d0_Utils.d0_fns import calc_x_err_bins_from_bin_edges
 #----- Main -----#
 inpath_pkl = "/ufrc/avery/rosedj1/HiggsMassMeasurement/d0_Studies/KinBin_Info/20200709_MC2017_combinesamples_applycorr_fullstats_2p00sigmas__0p0_eta_2p4__5p0_pT_1000p0_GeV.pkl"
@@ -160,4 +160,4 @@ with PdfPages(outpath_pdf) as pdf:
         pdf.savefig()
         plt.clf()
     # End eta_bin loop.
-print_header_message(f"PDF succesfully made at:\n{outpath_pdf}")
+announce(f"PDF succesfully made at:\n{outpath_pdf}")

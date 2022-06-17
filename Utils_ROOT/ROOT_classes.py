@@ -1,13 +1,17 @@
 import numpy as np
 import ROOT
 from array import array
+from ROOT import TPaveText
 
-#-----------#
-#--- TH1 ---#
-#-----------#
-def make_TH1F(internal_name, title=None, n_bins=100,
-              xlabel=None, x_min=0, x_max=10,
-              ylabel=None, units=None):
+#######################
+#--- TH1 Functions ---#
+#######################
+def make_TH1F(
+    internal_name, title=None, n_bins=100,
+    xlabel=None, x_min=0, x_max=10,
+    ylabel=None, y_min=None, y_max=None,
+    units=None, sum_squared_weights=True
+    ):
     """A function to quickly make TH1F. Return the TH1F.
     
     NOTE: 
@@ -25,24 +29,45 @@ def make_TH1F(internal_name, title=None, n_bins=100,
     """
     h = ROOT.TH1F(internal_name, "", n_bins, x_min, x_max)
     bin_w = (x_max - x_min) / float(n_bins)
-    ylabel = r"Events / (%s)" % bin_w if ylabel is None else ylabel
-    xlabel = "" if xlabel is None else xlabel
+    if ylabel is None:
+        ylabel = r"Events / (%.2g)" % bin_w
+    if xlabel is None:
+        xlabel = ""
     if units is not None:
         xlabel += r" (%s)" % units
         ylabel = ylabel.rstrip(")") + r" %s)" % units
     h.SetTitle(xlabel) if title is None else h.SetTitle(title)
     h.SetXTitle(xlabel)
     h.SetYTitle(ylabel)
+    # Change the y-axis limits.
+    if (y_min is not None) and (y_max is not None):
+        h.GetYaxis().SetRangeUser(y_min, y_max)
+    elif (y_min is None) and (y_max is not None):
+        h.SetMaximum(y_max)
+    elif (y_min is not None) and (y_max is None):
+        h.SetMinimum(y_min)
+    if sum_squared_weights:
+        h.Sumw2()
     return h
 
-#-----------#
-#--- TH2 ---#
-#-----------#
-def make_TH2F(internal_name, title=None, 
-              n_binsx=5, x_label="", x_units=None, x_min=0, x_max=10,
-              n_binsy=5, y_label="", y_units=None, y_min=0, y_max=10,
-              z_min=None, z_max=None, z_label_size=None,
-              n_contour=100):
+def set_neg_bins_to_zero(h):
+    """Return hist, where negative bin content is set to zero."""
+    for bin_num in range(1, h.GetNbinsX()+1):
+        if h.GetBinContent(bin_num) < 0:
+            h.SetBinContent(bin_num, 0)
+    return h
+#######################
+#--- TH2 Functions ---#
+#######################
+def make_TH2F(
+    internal_name, title=None, 
+    n_binsx=5, x_label="", x_units=None, x_min=0, x_max=10,
+    n_binsy=5, y_label="", y_units=None, y_min=0, y_max=10,
+    z_min=None, z_max=None, z_label_size=None,
+    n_contour=100, center_labels=True,
+    n_ticks_x_pri=None, n_xticks_sec=None, n_xticks_ter=None,
+    n_ticks_y_pri=None, n_yticks_sec=None, n_yticks_ter=None,
+    ):
     """A function to quickly make TH2F. Return the TH2F.
     
     TODO: Update docstring.
@@ -56,7 +81,6 @@ def make_TH2F(internal_name, title=None,
     Parameters
     ----------
     internal_name : str
-        asdfasdfasdf
     title : str
         The title of the histogram.
     n_binsx : int or list
@@ -109,6 +133,18 @@ def make_TH2F(internal_name, title=None,
     if z_label_size is not None:
         h2.GetZaxis().SetLabelSize(z_label_size)
     h2.SetContour(n_contour)
+    if center_labels:
+        h2.GetXaxis().CenterLabels()
+        h2.GetYaxis().CenterLabels()
+    if n_ticks_x_pri is not None:
+        n_divx = n_ticks_x_pri + 1
+        h2.GetXaxis().SetNdivisions(n_divx, False)
+    if n_ticks_y_pri is not None:
+        n_divy = n_ticks_y_pri + 1
+        h2.GetYaxis().SetNdivisions(n_divy, False)
+    # 510 means 10 primary divisions and 5 secondary divisions. The formula is:
+    # n = n1 + 100*n2 + 10000*n3
+    # n1 : num primary div, n2 : num secondary div, n3 : num tertiary div.
     return h2
 
 def fill_TH2F(h2, x_vals, y_vals, z_vals, zerr_vals=None):
@@ -147,6 +183,38 @@ def set_TH2F_errs(h2, h2_err):
             # Similar cells (e.g. (2,3)) in both hists correspond to each other.
             err = h2_err.GetBinContent(binx, biny)
             h2.SetBinError(binx, biny, err)
+
+def normalize_TH2_per_column(h2):
+    """Return a new TH2F with cells normalized to sum(cols) in which the cell
+    is found.
+    
+    NOTE:
+    - Doesn't affect under/overflow bins.
+    - Errors should be handled more properly.
+    """
+    h2_norm = h2.Clone()
+    h2_norm.Reset()
+    # Go column by column and get the integral:
+    nx_bins = h2.GetNbinsX()
+    ny_bins = h2.GetNbinsY()
+    for x_bin in range(1, nx_bins+1):
+        proj_y = h2.ProjectionY(f"proj_y_{x_bin}", x_bin, x_bin)
+        integ = proj_y.Integral()
+        del proj_y
+        if integ == 0:
+            # Column completely empty.
+            continue
+        # Scale each cell in this column by the integral:
+        y_sum = 0
+        for y_bin in range(1, ny_bins+1):
+            glob_bin = h2.GetBin(x_bin, y_bin)
+            val = h2.GetBinContent(glob_bin)
+            err = h2.GetBinError(glob_bin)
+            fill_val = val / float(integ)
+            fill_val_err = err / float(integ)
+            h2_norm.SetBinContent(glob_bin, fill_val)
+            h2_norm.SetBinError(glob_bin, fill_val_err)
+    return h2_norm
 #--------------#
 #--- TGraph ---#
 #--------------#
@@ -414,3 +482,13 @@ def get_normcoord_from_screenshot(canv_width, canv_height,
     else:
         y_max = 1 - (top_offset / float(canv_height))
     return (x_min, x_max, y_min, y_max)
+
+def make_pave(xmin=0.15, ymin=0.8, xmax=0.4, ymax=0.9):
+    """Return a TPave with simple stats located at (xmin, ymin, xmax, ymax)."""
+    pave = TPaveText(xmin, ymin, xmax, ymax, "NDC")  # NDC = normalized coord.
+    pave.SetFillColor(0)
+    pave.SetFillStyle(1001)  # Solid fill.
+    pave.SetBorderSize(1) # Use 0 for no border.
+    pave.SetTextAlign(11)
+    pave.SetTextSize(0.02)
+    return pave

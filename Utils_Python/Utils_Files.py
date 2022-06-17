@@ -4,25 +4,27 @@ from shutil import copy2
 import pickle
 import subprocess
 
-def make_dirs(d, verbose=True):                       
+def make_dirs(*d, verbose=True):                       
     """If the directory (d) does not exist, then make it. 
     
     NOTE: Makes directories recursively.
     """
-    if not os.path.exists(d):
-        if (verbose):
-            print(f"[INFO] Directory not found. Creating it:\n{d}")    
-        os.makedirs(os.path.abspath(d))
+    for thisdir in d:
+        if not os.path.exists(thisdir):
+            if (verbose):
+                print(f"[INFO] Directory not found. Creating it:\n{thisdir}")
+            os.makedirs(os.path.abspath(thisdir))
 
-def check_overwrite(outfile, overwrite=False):
+def check_overwrite(*outfiles, overwrite=False):
     """Raise an error if outfile exists and overwrite == False."""
-    if os.path.exists(outfile) and not (overwrite):
-        emsg = (
-            f"Not allowed to overwrite file since it already exists"
-            f"\n{outfile}\n"
-            f"To write over this file, set overwrite = True.\n"
-            )
-        raise RuntimeError(emsg)
+    for f in outfiles:
+        if os.path.exists(f) and not overwrite:
+            emsg = (
+                f"Not allowed to overwrite file since it already exists"
+                f"\n{f}\n"
+                f"To write over this file, set overwrite = True."
+                )
+            raise RuntimeError(emsg)
     
 def make_str_title_friendly(str_, keep_whitespace=False):
     title = str_.replace('-13','muPlus')
@@ -52,11 +54,11 @@ def open_json(inpath):
     with open(inpath, "rb") as p: 
         return json.load(p)
 
-def save_to_json(obj, outpath, overwrite=True):
+def save_to_json(obj, outpath, overwrite=True, sort_keys=False):
     """Write one obj to 'outpath.json'."""
     check_overwrite(outpath, overwrite=overwrite)
     with open(outpath, 'w') as f:
-        json.dump(obj, f, indent=4, sort_keys=True)
+        json.dump(obj, f, indent=4, sort_keys=sort_keys)
     print(f"[INFO] JSON file written:\n{outpath}\n")
 
 def save_to_pkl(obj, outpkl_path, overwrite=True):
@@ -67,7 +69,7 @@ def save_to_pkl(obj, outpkl_path, overwrite=True):
     print(f"[INFO] Pickle file written:\n{outpkl_path}\n")
 
 def replace_value(old, new, script):
-    """Use the `sed` command to replace `old` with `new` in `script`"""
+    """Use the `sed` command to replace `old` with `new` in `script`."""
     cmd = ["sed", "-i", f"s|{old}|{new}|g", script]
     output = subprocess.run(cmd)
 

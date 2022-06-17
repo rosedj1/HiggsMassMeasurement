@@ -1,3 +1,5 @@
+# For an updated version, check out:
+# https://wiki.physik.uzh.ch/cms/plots:cmsstyle
 import ROOT
 
 def tdrGrid(tdrStyle, gridOn=True):
@@ -8,7 +10,13 @@ def tdrGrid(tdrStyle, gridOn=True):
 def fixOverlay(): 
   ROOT.gPad.RedrawAxis()
 
-def setTDRStyle(show_statsbox=True):
+def setTDRStyle(
+  show_statsbox=True,
+  pad_top_margin=0.10,
+  pad_bottom_margin=0.10,
+  pad_left_margin=0.15,
+  pad_right_margin=0.05
+  ):
   # ROOT.gROOT.Reset()
   font_num = 42 #132
   # ROOT.gROOT.SetStyle("Plain")
@@ -94,10 +102,10 @@ def setTDRStyle(show_statsbox=True):
   tdrStyle.SetFuncWidth(1)
 
 # Margins (controls the space between the axes and the edge of canvas):
-  tdrStyle.SetPadTopMargin(0.10)  #0.05
-  tdrStyle.SetPadBottomMargin(0.10)  #0.13
-  tdrStyle.SetPadLeftMargin(0.15)  #0.16
-  tdrStyle.SetPadRightMargin(0.05)  #0.10, 0.02
+  tdrStyle.SetPadTopMargin(pad_top_margin)  #0.05
+  tdrStyle.SetPadBottomMargin(pad_bottom_margin)  #0.13
+  tdrStyle.SetPadLeftMargin(pad_left_margin)  #0.16
+  tdrStyle.SetPadRightMargin(pad_right_margin)  #0.10, 0.02
 
 # For the Global title:
   tdrStyle.SetOptTitle(1)  # 0 is "off": no title.
@@ -118,18 +126,18 @@ def setTDRStyle(show_statsbox=True):
 # For the axis titles:
   tdrStyle.SetTitleColor(1, "XYZ")
   tdrStyle.SetTitleFont(font_num, "XYZ")
-  tdrStyle.SetTitleSize(0.030, "XYZ")
+  tdrStyle.SetTitleSize(0.045, "XYZ")  # 0.06 # Font size of axis titles.
   # tdrStyle.SetTitleXSize(Float_t size = 0.02) # Another way to set the size?
   # tdrStyle.SetTitleYSize(Float_t size = 0.02)
-  tdrStyle.SetTitleXOffset(1.3)  # 1.0, 0.9
-  tdrStyle.SetTitleYOffset(1.7)  # 1.5, 1.3, 1.0, 1.10, 1.25
+  tdrStyle.SetTitleXOffset(0.9)  # 1.3, 1.0
+  tdrStyle.SetTitleYOffset(1.25)  # 1.7, 1.5, 1.3, 1.0, 1.10
   # tdrStyle.SetTitleOffset(1.1, "Y") # Another way to set the Offset
 
 # For the axis labels:
   tdrStyle.SetLabelColor(1, "XYZ")
   tdrStyle.SetLabelFont(font_num, "XYZ")  #  This is font style, not size!
   tdrStyle.SetLabelOffset(0.007, "XYZ")
-  tdrStyle.SetLabelSize(0.02, "XYZ")
+  tdrStyle.SetLabelSize(0.04, "XYZ")  # 0.02. Font size of numbers on axes.
 
 # For the axis:
   tdrStyle.SetAxisColor(1, "XYZ")

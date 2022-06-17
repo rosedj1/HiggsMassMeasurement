@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from ROOT import Math
 
 #--------------------------------------------#
 #--- Essential Particle Physics functions ---#
@@ -88,3 +89,33 @@ def calc_Hmass(mu_ls):
         msg = f"mu_ls must have length 2 or 4, but has length {len_}."
         return ValueError(msg)
     return H.M()
+
+def calc_mass4l_from_idcs(tree, lep_idcs, kind):
+    """Return the mass4l value (FSR included) using leptons with indices `lep_idcs`.
+
+    Args:
+        tree (ROOT.TTree): Tree with branches of `kind`.
+        lep_idcs (list): Contains lepton indices to search through lep kinematic vectors.
+        kind (str): What kind of mass4l to compute.
+            Options:
+                "lepFSR" -> mass4l with FSR.
+                "vtxLepFSR_BS" -> mass4l with FSR and VX+BS.
+    """
+    zz = Math.PtEtaPhiMVector(0, 0, 0, 0)
+    if kind == "lepFSR":
+        for idx in lep_idcs:
+            zz += Math.PtEtaPhiMVector(
+                tree.lepFSR_pt[idx],
+                tree.lepFSR_eta[idx],
+                tree.lepFSR_phi[idx],
+                tree.lepFSR_mass[idx]
+                )
+    elif kind == "vtxLepFSR_BS":
+        for idx in lep_idcs:
+            zz += Math.PtEtaPhiMVector(
+                tree.vtxLepFSR_BS_pt[idx],
+                tree.vtxLepFSR_BS_eta[idx],
+                tree.vtxLepFSR_BS_phi[idx],
+                tree.vtxLepFSR_BS_mass[idx]
+                )
+    return zz.M()

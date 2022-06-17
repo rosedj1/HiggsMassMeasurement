@@ -52,7 +52,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 # Local imports.
 from Utils_vaex.vaex_fns import prepare_vaex_df, vaex_apply_masks
-from Utils_Python.printing import print_header_message
+from Utils_Python.printing import announce
 from Samples.sample_info import Sample
 from d0_Utils.d0_dicts import label_LaTeX_dict
 from d0_Utils.d0_fns import make_binning_array
@@ -420,7 +420,7 @@ for sample_name in sample_name_ls:
                     assert stats_ls_pT[0] == stats_ls_qd0[0]
                     assert stats_ls_pT[0] == len(data)
     
-                    if (do_unbinned_fit): print_header_message("--- Doing unbinned fit ---")
+                    if (do_unbinned_fit): announce("--- Doing unbinned fit ---")
                     # Plot the kinem hist.
                     ax, bin_vals, bin_edges, stats_binned = make_1D_dist(
                                                         ax=ax, 
@@ -507,7 +507,7 @@ for sample_name in sample_name_ls:
                 plt.close("all")
                 
                 msg = f"Page {j+1}/{n_pages} made for {sample_name} sample. Time taken: {(t_end - t_start):.2f} s"
-                print_header_message(msg)
+                announce(msg)
                 print()
                 # End all q*d0 regions for this list.
                 # Save this 1 eta reg, 1 pT reg, and all q*d0 plots on one page. 
@@ -515,7 +515,7 @@ for sample_name in sample_name_ls:
         # PDF made and closed.
         t_end_page = time.perf_counter()
         msg_made_pdf = f"PDF {k+1}/{n_pdfs} made"
-        print_header_message(msg_made_pdf, pad_char="@", n_center_pad_chars=5)
+        announce(msg_made_pdf, pad_char="@", n_center_pad_chars=5)
         print(f"location:\n  {outpath_pdf}")
         print(f"(took {(t_end_page - t_start_page):.2f} s)\n")
     # End eta loop.

@@ -3,7 +3,7 @@ import math
 import numpy as np
 import pandas as pd
 from Utils_Python.Utils_Physics import perc_diff
-from Utils_Python.printing import print_header_message
+from Utils_Python.printing import announce
 
 def get_pT_corr_factors(pT_corr_factor_dict, correction_type, eta_min, eta_max, pT_min, pT_max):
     """
@@ -960,7 +960,7 @@ def find_equal_hist_regions_unbinned(vals_arr, regions, algo=("normal", -1), ver
         while entries_per_reg < find_at_least_per_reg:
             if (regions == 2): 
                 msg = "[WARNING] Could not find at least {} entries per region.".format(find_at_least_per_reg)
-                print_header_message(msg)
+                announce(msg)
                 break
             # There are too few actual entries per region. 
             # Decrement the number of regions.  

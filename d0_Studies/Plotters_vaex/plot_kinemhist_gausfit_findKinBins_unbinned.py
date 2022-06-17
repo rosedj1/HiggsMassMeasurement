@@ -49,7 +49,7 @@ from d0_Utils.d0_dicts import label_LaTeX_dict
 from d0_Utils.d0_fns import make_binning_array
 from d0_Utils.d0_cls import KinBin3D
 
-from Utils_Python.printing import print_header_message
+from Utils_Python.printing import announce
 from Utils_Python.Utils_Physics import perc_diff
 from Utils_Python.Utils_Files import makeDirs, make_str_title_friendly, check_overwrite
 from Utils_Python.Utils_Plotting import hist_y_label, make_1D_dist, ncolsrows_from_nplots, get_stats_1Dhist
@@ -333,7 +333,7 @@ for k in range(len(eta_ls)-1):
                 # data = np.concatenate((selected_DY_arr, selected_Jpsi_arr))
                 data = np.concatenate((selected_muons_DY, selected_muons_Jpsi))
 
-                print_header_message("--- Doing unbinned fit ---")
+                announce("--- Doing unbinned fit ---")
                 # Plot the kinem hist.
                 ax, bin_vals, bin_edges, stats = make_1D_dist(
                                                     ax=ax, 
@@ -409,13 +409,13 @@ for k in range(len(eta_ls)-1):
             plt.close("all")
 
             msg = "Page {}/{} made. Time taken: {:.2f} s".format(j+1, n_pages, t_end - t_start)
-            print_header_message(msg)
+            announce(msg)
             print()
 
         # End pT loop. Make next page.
     t_end_page = time.perf_counter()
     msg_made_pdf = "PDF {}/{} made".format(k+1, n_pdfs)
-    print_header_message(msg_made_pdf, pad_char="@", n_center_pad_chars=5)
+    announce(msg_made_pdf, pad_char="@", n_center_pad_chars=5)
     print("location:\n  {}".format(outpath_pdf))
     print("(took {:.2f} s)\n".format(t_end_page - t_start_page))
     # Save this 1 eta reg, 1 pT reg, and all q*d0 plots on one page. 

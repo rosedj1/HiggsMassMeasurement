@@ -11,7 +11,7 @@ from Utils_Python.Selections import (build_muons_from_HZZ4mu_event,
                                      build_muons_from_DY_event)
 from Utils_Python.Utils_Physics import calc_Hmass, perc_diff
 from Utils_Python.Utils_Files import check_overwrite, save_to_pkl, make_dirs
-from Utils_Python.printing import print_header_message
+from Utils_Python.printing import announce
 from Utils_ROOT.ROOT_classes import make_TH1F
 from d0_Studies.d0_Utils.d0_cls import KinBin2D
 from d0_Studies.d0_Utils.d0_fns import (correct_muon_pT, parse_etapT_key,
@@ -233,7 +233,7 @@ class MyMuonCollection:
                 pT_corr_factor_dict = self.pT_corr_factor_dict[correction_type]
             if use_GeoFit_algo:
                 msg = "Using GeoFit Correction Algorithm"
-                print_header_message(msg, pad_char="@", n_center_pad_chars=5)
+                announce(msg, pad_char="@", n_center_pad_chars=5)
                 
         print(f"[INFO] ROOT file opened.")
         f = ROOT.TFile(infile_path, "read")
@@ -251,14 +251,14 @@ class MyMuonCollection:
             n_evt_end = all_evts - 1
             n_requested_evts = all_evts
             msg = f"Running over ALL ({all_evts}) events."
-            print_header_message(msg, pad_char="-", n_center_pad_chars=5)
+            announce(msg, pad_char="-", n_center_pad_chars=5)
         elif n_evt_beg is None and n_evt_end is None:
             # User specified n_evts < max.
             n_evt_beg = 0
             n_evt_end = n_evts - 1
             n_requested_evts = n_evts
             msg = f"Running over the first {n_requested_evts} events."
-            print_header_message(msg, pad_char="-", n_center_pad_chars=5)
+            announce(msg, pad_char="-", n_center_pad_chars=5)
         else:
             # User specified range of events.
             assert n_evt_beg is not None and n_evt_end is not None
@@ -550,7 +550,7 @@ class MyMuonCollection:
                 n_muons_skipped = n_mu - n_muons_in_KB2Ds
                 print(f"Skipped {n_muons_skipped}/{n_mu} muons ({n_muons_skipped/n_mu * 100.0:.3f})%\n")
         print("[INFO] All muons assigned to KinBin2Ds.\n")
-        print_header_message("Overwriting MyMuonCollection.muon_ls to save space.", pad_char="*")
+        announce("Overwriting MyMuonCollection.muon_ls to save space.", pad_char="*")
         self.muon_ls = "overwritten"
 
     def make_bin_key(self, eta_min, eta_max, pT_min, pT_max, title_friendly=False):

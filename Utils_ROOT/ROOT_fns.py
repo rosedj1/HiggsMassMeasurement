@@ -3,9 +3,18 @@ import numpy as np
 
 from Utils_Python.Selections import Selector
 from Utils_Python.Utils_Physics import calc_dphi, calc_dR  
-from Utils_Python.printing import print_header_message
+from Utils_Python.printing import announce
 from d0_Studies.d0_Utils.d0_fns import find_bin_edges_of_value, correct_muon_pT, calc_num_bins
 
+def get_TDir_name(tfile):
+    """Return the name (str) of the TDirectoryFile in `tfile`."""
+    all_keys = list(tfile.GetListOfKeys())
+    for key in all_keys:
+        name = key.GetName()
+        obj = tfile.Get(name)
+        if isinstance(obj, TDirectoryFile):
+            return name
+            
 def read_cpp_as_txt(cpp_file):
     """Return a string of all the C++ code store in cpp_file."""
     with open(cpp_file, "r") as f:
@@ -651,7 +660,7 @@ def fill_dict_of_dpToverpT_hists(tree, hist_dict, hist_type,
         assert isinstance(hist_dict, list)
         assert isinstance(hist_type, list)
         assert len(hist_dict) == len(hist_type)
-        print_header_message("Applying correction factors, behbeh")
+        announce("Applying correction factors, behbeh")
 
         someone_is_bad = any([x is None for x in (eta_binedge_ls, pT_binedge_ls, pT_corr_factor_dict)])
         assert not someone_is_bad

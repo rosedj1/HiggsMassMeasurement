@@ -5,7 +5,7 @@ from pprint import pprint
 
 from Utils_Python.Plot_Styles_ROOT.tdrstyle_official import fixOverlay
 from Utils_Python.Utils_StatsAndFits import prop_err_on_dsigoversig
-from Utils_Python.printing import print_header_message
+from Utils_Python.printing import announce
 from Utils_ROOT.ROOT_Plotting import Root_Hist_GetLastBinRightEdge, make_new_xframe
 from Utils_ROOT.ROOT_fns import skip_black_yellow_fit_line_colors
 from Utils_ROOT.ROOT_classes import make_TGraphErrors, make_TLegend
@@ -449,7 +449,7 @@ def RooFit_iterative_gaus_fit(data, binned_fit=False, switch_to_binned_fit=2000,
     if use_smart_window:
         print("...Using smart window for iter fit.")
         if x_lim is not None:
-            print_header_message(
+            announce(
                 f"[WARNING] Overriding specified x_lim: {x_lim}."
                 )
         # Use Suzanne's clever trick of setting x_lim based on BIN HEIGHT!

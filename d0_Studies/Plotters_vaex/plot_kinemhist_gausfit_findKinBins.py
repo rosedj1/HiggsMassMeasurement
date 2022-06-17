@@ -50,7 +50,7 @@ from d0_Utils.d0_dicts import label_LaTeX_dict
 from d0_Utils.d0_fns import make_binning_array
 from d0_Utils.d0_cls import KinBin3D
 
-from Utils_Python.printing import print_header_message
+from Utils_Python.printing import announce
 from PyUtils.Utils_Physics import perc_diff
 from PyUtils.Utils_Files import makeDirs, make_str_title_friendly, check_overwrite
 from PyUtils.Utils_Plotting import hist_y_label, make_1D_dist, ncolsrows_from_nplots, get_stats_1Dhist
@@ -377,13 +377,13 @@ for k in range(len(eta_ls)-1):
             plt.close("all")
 
             msg = "Page {}/{} made. Time taken: {:.2f} s".format(j+1, n_pages, t_end - t_start)
-            print_header_message(msg)
+            announce(msg)
             print()
 
         # End pT loop. Make next page.
     t_end_page = time.perf_counter()
     msg_made_pdf = "PDF {}/{} made".format(k+1, n_pdfs)
-    print_header_message(msg_made_pdf, pad_char="@", n_center_pad_chars=5)
+    announce(msg_made_pdf, pad_char="@", n_center_pad_chars=5)
     print("location:\n  {}".format(outpath_pdf))
     print("(took {:.2f} s)\n".format(t_end_page - t_start_page))
     # Save this 1 eta reg, 1 pT reg, and all q*d0 plots on one page. 

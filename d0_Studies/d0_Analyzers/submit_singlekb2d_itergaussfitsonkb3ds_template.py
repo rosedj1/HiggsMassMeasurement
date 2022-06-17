@@ -19,7 +19,7 @@ Updated: 2021-04-14
 import os
 from Utils_ROOT.Printer import CanvasPrinter
 from Utils_Python.Utils_Files import open_pkl, save_to_pkl, check_overwrite, make_dirs
-from Utils_Python.printing import print_header_message
+from Utils_Python.printing import announce
 from d0_Studies.d0_Analyzers.slurm_inbatch_derive_pTcorrfactors import make_name_from_ls
 from pprint import pprint
 
@@ -73,7 +73,7 @@ def do_itergaussfits_on_kb3ds(kb2d):
                             use_data_in_xlim=use_data_in_xlim,
                             use_smart_window=use_smart_window)
         
-        print_header_message(f"KB3D done: eta={kb3d.eta_range} pT={kb3d.pT_range}")
+        announce(f"KB3D done: eta={kb3d.eta_range} pT={kb3d.pT_range}")
 
 def prep_area(outpkl_path, overwrite=False):
     """Make dirs, check overwrite."""
